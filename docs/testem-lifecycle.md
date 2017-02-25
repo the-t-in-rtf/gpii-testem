@@ -4,7 +4,7 @@
 events.  The `gpii.testem` component exposes these as standard [Infusion events](http://docs.fluidproject.org/infusion/development/InfusionEventSystem.html).
 
 | Testem Event   | Component Event | Description (taken from [the manual](https://github.com/testem/testem/blob/master/docs/config_file.md)) |
-| ============== | =============== | ====================== |
+| -------------- | --------------- | ---------------------- |
 | `on_start`     | `onStart`       | Runs on suite startup. |
 | `before_tests` | `beforeTests`   | Runs before every run of tests. |
 | `after_tests`  | `afterTests`    | Runs after every run of tests. |
