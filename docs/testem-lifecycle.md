@@ -49,6 +49,6 @@ fluid.defaults("my.testem.grade", {
     }
 });
 
-module.exports = my.testem.grade().testemOptions;
+module.exports = my.testem.grade().getTestemOptions();
 
 ```
