@@ -14,14 +14,10 @@ Testem fires each of these events with the same three arguments, namely:
 
 * `config`: The configuration options for testem itself.
 * `data`: The data returned from the previous lifecycle steps, typically test results or errors.
-* `callback`: A `callback` that your code is expected to call when it is safe for Testem to continue
-with the rest of the lifecycle.
+* `callback`: A function your code is expected to call when it is safe for Testem to continue with the rest of the lifecycle.
 
 Failure to call the callback may leave Testem in a state where your only option is to kill its process.  So, you must
-ensure that:
-
-1. Your listener is passed the callback.
-2. Even in the event of an error, you should always ensure that you call the callback.
+ensure that, even in the event of an error, you always call the callback.
 
 See below for an example.
 
