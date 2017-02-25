@@ -18,7 +18,7 @@ In order to use the code coverage features of this grade, you'll need to have
 # Usage instructions
 
 To use this grade from Testem, install this package as a development dependency using a command like
-`npm install --save-dev gpii-testem` or ``yarn add --dev gpii-testem`.
+`npm install --save-dev gpii-testem` or `yarn add --dev gpii-testem`.
 
 Once you've done that, you will need to create a javascript configuration file, which will allow you to make use of the
 [dynamic configuration options available via the `testem.js` file](https://github.com/testem/testem/blob/master/examples/dynamic_config/testem.js).

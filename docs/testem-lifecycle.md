@@ -3,12 +3,12 @@
 [Testem's configuration](https://github.com/testem/testem/blob/master/docs/config_file.md) supports four key lifecycle
 events.  The `gpii.testem` component exposes these as standard [Infusion events](http://docs.fluidproject.org/infusion/development/InfusionEventSystem.html).
 
-|| Testem Event || Component Event || Description (taken from [the manual](https://github.com/testem/testem/blob/master/docs/config_file.md)) ||
-|| ============ || =============== || ====================== ||
-| `on_start`     | `onStart`     | Runs on suite startup. |
-| `before_tests` | `beforeTests` | Runs before every run of tests. |
-| `after_tests`  | `afterTests`  | Runs after every run of tests. |
-| `on_exit`      | `onExit`      | Runs before suite exits. |
+| Testem Event   | Component Event | Description (taken from [the manual](https://github.com/testem/testem/blob/master/docs/config_file.md)) |
+| ============== | =============== | ====================== |
+| `on_start`     | `onStart`       | Runs on suite startup. |
+| `before_tests` | `beforeTests`   | Runs before every run of tests. |
+| `after_tests`  | `afterTests`    | Runs after every run of tests. |
+| `on_exit`      | `onExit`        | Runs before suite exits. |
 
 Testem fires each of these events with the same three arguments, namely:
 

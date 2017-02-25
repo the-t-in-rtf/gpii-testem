@@ -13,8 +13,8 @@ see below.
 
 # Component Options
 
-|| Option                  || Type       || Description                          ||
-|| ----------------------- || ---------- || ------------------------------------ ||
+| Option                    | Type        | Description                           |
+| ------------------------- | ----------- | ------------------------------------- |
 | `coveragePort` (required) | `{Number}`  | The port gpii-express should listen on to record coverage data. Defaults to `7000`.|
 | `coverageDir` (required)  | `{String}`  | The full or package-relative path where coverage data should be saved. By default, a unique subdirectory is created in `os.tmpdir()`. |
 | `reportsDir` (required)   | `{String}`  | The full or package-relative path where coverage reports and test results should be saved. By default, a unique subdirectory is created in `os.tmpdir()`. |
@@ -28,11 +28,19 @@ see below.
 # Component Invokers
 
 ## `{gpii.testem}.handleTestemStart(config, data, callback)`
+* `config`: The configuration information Testem exposes as part of its lifecycle.
+* `data`: The data Testem exposes as part of its lifecycle.
+* `callback`: A function to be called when it is safe for Testem to run tests.  If you do not call this callback, Testem will hang indefinitely before running tests.
+* Returns: Nothing.
 
 An invoker which is called before testem begins its test run.  Used to start test fixtures, instrument code, and perform
 other preparatory work.  See ["The Testem Event Lifecycle"](testem-lifecycle.md) for more details.
 
 ## `{gpii.testem}.handleTestemExit(config, data, callback)`
+* `config`: The configuration information Testem exposes as part of its lifecycle.
+* `data`: The data Testem exposes as part of its lifecycle.
+* `callback`: A function to be called when it is safe for Testem to exit.  If you do not call this callback, you will not be able to quit Testem without killing the process.
+* Returns: Nothing.
 
 An invoker which is called when Testem has completed all tests.  Used to stop test fixtures, prepare reports, and remove
 temporary content.  See ["The Testem Event Lifecycle"](testem-lifecycle.md) for more details.
