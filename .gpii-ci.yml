@@ -17,6 +17,7 @@ stages:                # Stages to perform when 'ci test' command is invoked
 setup_job:
   stage: setup         # name of the stage
   script:
+    - choco upgrade firefox
     - choco install nodejs.install --version 6.9.1 --forcex86 -y
     - npm install -g istanbul testem nyc
     - npm install
