@@ -1,0 +1,27 @@
+# QI Configuration file, see: https://github.com/amatas/vagrant-gpii-ci
+---
+
+.ci_env:
+  vms:
+    windows10:
+      cpu: 2                   # number of cpus
+      memory: 2048             # amount of RAM memory
+      clone: true              # use the linked_clone Vagrant feature
+      autostart: true
+      box: inclusivedesign/windows10-eval
+
+stages:                # Stages to perform when 'ci test' command is invoked
+  - setup              # name of the first stage to execute
+  - test               # name of the second stage to execute
+
+setup_job:
+  stage: setup         # name of the stage
+  script:
+    - choco install nodejs.install --version 6.9.1 --forcex86 -y
+    - npm install -g istanbul testem nyc
+    - npm install
+
+test_job:
+  stage: test          # name of the stage
+  script:              # One line per command to execute
+    - do.ps1 -c "npm test"
