@@ -14,19 +14,16 @@ collecting code coverage in your tests is to:
 6. Run your tests.
 7. (Once all tests are complete) Compile an overall coverage report.
 
-By default, the `gpii.testem` grade does everything but step 5 for you.
-
-will take care of steps 1, 2, 3, and 4 for you.  The last step, compiling the
-reports, will take place if `options.compileCoverageReport` is set to true.  This option is provided so that you can
-(for example) prepare a combined coverage report for node and browser fixtures in a "posttest" npm script.
-
-Step 5 requires loading a piece of code in your browser, using a line like the following:
+By default, the `gpii.testem` grade does everything but step 5 for you.  Step 5 requires loading a piece of code in your
+browser, using a line like the following:
 
 ```
 <script type="text/javascript" src="/coverage/coverageSender.js"></script>
 ```
 
 This needs to be loaded after testem, but before your tests.
+
+The last step (preparing coverage reports) is optional, but enabled by default.  Read on for details.
 
 # Disabling Instrumentation and Code Coverage Reporting
 
