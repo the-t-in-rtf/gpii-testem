@@ -19,11 +19,25 @@ see below.
 | `coverageDir` (required)  | `{String}`  | The full or package-relative path where coverage data should be saved. By default, a unique subdirectory is created in `os.tmpdir()`. |
 | `reportsDir` (required)   | `{String}`  | The full or package-relative path where coverage reports and test results should be saved. By default, a unique subdirectory is created in `os.tmpdir()`. |
 | `instrumentSource`        | `{Boolean}` | Whether to instrument the source in `options.SourceFiles` (see below).  Defaults to `true`. |
+| `instrumentedSourceDir`   | `{String}`  | The location in which to store instrumented code.  Defaults to the "instrumented" subdirectory in the directory from which the script is run.|
 | `generateCoverageReport`  | `{Boolean}` | Whether to generate coverage reports at the end of the test suite run.  Defaults to `true`. |
 | `sourceDirs`              | `{Array}`   | One or more source directories to load, relative to the directory in which your configuration file is stored (see "paths" below).  Note that although Testem itself supports globbing and file patterns, you are expected to supply only directory paths here. |
 | `testPages`               | `{Array}`   | One or more test pages to load in the browser, relative to the directory in which your configuration file is stored (see "paths" below). |
 | `serveDirs`               | `{Array}`   | One or more directories to host within the Testem environment. |
 | `testemOptions`           | `{Object}`  | The raw configuration options to pass to Testem.  See [the Testem docs](https://github.com/testem/testem/blob/master/docs/config_file.md) for supported options. |
+| `cleanup.initial`         | `{Array}`   | An array of cleanup definitions (see below) to be cleaned up before the tests are run. |
+| `cleanup.final`           | `{Array}`   | An array of cleanup definitions (see below) to be cleaned up after the tests are run and all reporting is complete. |
+
+## Cleanup Definitions
+
+The initial and final cleanup options expect to be passed an array of "cleanup definitions", which support the following
+attributes:
+
+| Option            | Type         | Description                           |
+| ----------------- | ------------ | ------------------------------------- |
+| `name` (required) | `{String}`   | A "nickname" to use for this directory in log messages. |
+| `path` (required) | `{String}`   | The path to remove. |
+| `isTestemContent` | `{Boolean}`  | If this directory contains testem-generated content, we use a different cleanup method. |
 
 # Component Invokers
 
@@ -33,8 +47,8 @@ see below.
 * `callback`: A function to be called when it is safe for Testem to run tests.  If you do not call this callback, Testem will hang indefinitely before running tests.
 * Returns: Nothing.
 
-An invoker which is called before testem begins its test run.  Used to start test fixtures, instrument code, and perform
-other preparatory work.  See ["The Testem Event Lifecycle"](testem-lifecycle.md) for more details.
+An invoker which is called before testem begins its test run.  Starts a chain of events which cleanup before the tests, instrument code, start test fixtures, and perform
+other preparatory work.  For details on how this works, see ["The Testem Event Lifecycle"](testem-lifecycle.md).
 
 ## `{gpii.testem}.handleTestemExit(config, data, callback)`
 * `config`: The configuration information Testem exposes as part of its lifecycle.
@@ -43,14 +57,14 @@ other preparatory work.  See ["The Testem Event Lifecycle"](testem-lifecycle.md)
 * Returns: Nothing.
 
 An invoker which is called when Testem has completed all tests.  Used to stop test fixtures, prepare reports, and remove
-temporary content.  See ["The Testem Event Lifecycle"](testem-lifecycle.md) for more details.
+temporary content.  For details on how this works, see ["The Testem Event Lifecycle"](testem-lifecycle.md).
 
 ## `{gpii.testem}.getTestemOptions()`
 
 An invoker which exposes the final Testem options in a way that Testem can read from a configuration file.  See
 [the README file](../README.md) for a usage example.
 
-# Paths
+## Paths
 
 By default, Testem resolves paths to source code, files to be served, and test pages relative to the directory from
 which you run the command.  The `gpii.testem` component makes this more consistent by setting the effective working
@@ -61,7 +75,7 @@ content outside of the current working directory.
 To avoid problems with both, it's best to store your testem configuration javascript file in a directory higher up than
 all of the code and test pages you need, and to use relative paths for `sourceDirs`, `testPages`, and `serveDirs`.
 
-# Cleanup
+## Cleanup
 
 By default, Testem generates browser content in the directory [`os.tmpdir()`](https://nodejs.org/api/os.html#os_os_tmpdir),
 which it does not clean up when the test run is complete.  The `gpii.testem` component automatically cleans this up by
@@ -70,3 +84,11 @@ default.
 You can also make use of the underlying static cleanup function, `gpii.testem.cleanupTestemContent(path, callback)`,
 which will remove any directories that match `testem-*` from `path`.  If `callback` is supplied, it will be called when
 the cleanup process completes.
+
+# `gpii.testem.coverageDataOnly`
+
+If your work involves a mixture of node and browser tests, you may want to collect coverage data across a range of test
+runs and then collate it yourself.   The `gpii.testem.coverageDataOnly` is provided for this purpose.  This grade
+disables coverage reporting and the cleanup of the raw coverage data.  It does so by overriding
+`options.dirsToCleanOnShutdown` and  `options.generateCoverageReport` (see above).
+

@@ -51,7 +51,7 @@ gpii.testem.init = function (that, config, data, callback) {
  *
  */
 gpii.testem.shutdown = function (that, config, data, callback) {
-    that.events.onCleanupComplete.addListener(function () {
+    that.events.finalCleanupComplete.addListener(function () {
         fluid.log("Triggering Testem shutdown...");
         callback();
     });
@@ -60,56 +60,49 @@ gpii.testem.shutdown = function (that, config, data, callback) {
 
 /**
  *
- * A static function to resolve a range of paths in a single pass.
- *
- * @param pathsToResolve - A `String` value representing a single path, or an array of `String` values representing multiple paths.  Supports full and package-relative paths.
- * @returns {Array} - An array of resolved paths.
- */
-gpii.testem.resolvePaths = function (pathsToResolve) {
-    return fluid.transform(fluid.makeArray(pathsToResolve), fluid.module.resolvePath);
-};
-
-/**
- *
  * Optionally instrument the source code under test.
  *
  * @param that - The component itself.
+ * @param eventCallback - The event callback to fire when our work is complete.
  *
  */
-gpii.testem.instrumentAsNeeded = function (that) {
+gpii.testem.instrumentAsNeeded = function (that, eventCallback) {
     if (that.options.instrumentSource) {
-        var workingDir = that.options.testemOptions.cwd || process.cwd();
-        var instrumentedDir = path.resolve(workingDir, "instrumented");
+        try {
+            // Create our instrumentation directory if it doesn't already exist.
+            mkdirp.sync(that.options.instrumentedSourceDir);
+            fluid.each(fluid.makeArray(that.options.sourceDirs), function (sourcePath) {
+                var resolvedSourcePath = path.resolve(that.options.testemOptions.cwd, sourcePath);
+                var parsedPath = path.parse(resolvedSourcePath);
 
-        // Create our instrumentation directory if it doesn't already exist.
-        mkdirp.sync(instrumentedDir);
-        fluid.each(fluid.makeArray(that.options.sourceDirs), function (sourcePath) {
-            var resolvedSourcePath = path.resolve(workingDir, sourcePath);
+                var pathStats = fs.statSync(resolvedSourcePath);
+                var lastDirSegment = pathStats.isDirectory() ? parsedPath.base : path.baseName(parsedPath.dir);
 
-            var parsedPath = path.parse(resolvedSourcePath);
+                var targetPath = path.resolve(that.options.instrumentedSourceDir, lastDirSegment);
 
-            var pathStats = fs.statSync(resolvedSourcePath);
-            var lastDirSegment = pathStats.isDirectory() ? parsedPath.base : path.baseName(parsedPath.dir);
+                // Instrument each directory to its own subdirectory using a command like:
+                // istanbul instrument --output /tmp/instrumentSource/src src
+                var commandSegments = ["istanbul instrument --output", targetPath, resolvedSourcePath];
+                var command = commandSegments.join(" ");
 
-            var targetPath = path.resolve(instrumentedDir, lastDirSegment);
+                exec(command, function (error) {
+                    if (error) {
+                        console.error("Error running instrumentation command:", error);
+                    }
+                });
 
-            // Instrument each directory to its own subdirectory using a command like:
-            // istanbul instrument --output /tmp/instrumentSource/src src
-            var commandSegments = ["istanbul instrument --output", targetPath, resolvedSourcePath];
-            var command = commandSegments.join(" ");
+                // Add a "route" so that the instrumented code will seamlessly replace its uninstrumented counterpart.
+                that.generatedOptions.routes[path.join("/", lastDirSegment)] = path.join("instrumented", lastDirSegment);
 
-            exec(command, function (error) {
-                if (error) {
-                    console.error("Error instrumenting code:", error);
-                }
+                return targetPath;
             });
-
-            // Add a "route" so that the instrumented code will seamlessly replace its uninstrumented counterpart.
-            that.generatedOptions.routes[path.join("/", lastDirSegment)] = path.join("instrumented", lastDirSegment);
-
-            return targetPath;
-        });
+        }
+        catch (error) {
+            console.error("Error instrumenting code:", error);
+        }
     }
+
+    eventCallback();
 };
 
 /**
@@ -130,81 +123,113 @@ gpii.testem.getTestemOptions = function (that) {
  * Remove all Testem browser data from this run.
  *
  * @param path {String} - The path to the directory which contains Testem's browser data from this run.
- * @param callback {Function} - An optional callback to call when the cleanup is complete.
  * @returns {Promise} - A promise that will be resolved when cleanup is complete, or rejected if there is an error.
  *
  */
-gpii.testem.cleanupTestemContent = function (path, callback) {
+gpii.testem.cleanupTestemContent = function (path) {
     var testemRegexp = /testem-.+/;
     var togo = fluid.promise();
 
-    if (callback) {
-        togo.then(callback, callback);
+    try {
+        var resolvedPath = fluid.module.resolvePath(path);
+
+        fs.readdir(resolvedPath, function (error, testemDirs) {
+            if (error) {
+                togo.reject(error);
+            }
+            else {
+                var cleanupPromises = [];
+                fluid.each(testemDirs, function (dirName) {
+                    var testemDirCleanupPromise = fluid.promise();
+                    cleanupPromises.push(testemDirCleanupPromise);
+                    if (dirName.match(testemRegexp)) {
+                        rimraf(dirName, function (error) {
+                            if (error) { testemDirCleanupPromise.reject(error); }
+                            else { testemDirCleanupPromise.resolve(dirName); }
+                        });
+                    }
+                });
+                var cleanupSequence = fluid.promise.sequence(cleanupPromises);
+                cleanupSequence.then(togo.resolve, togo.reject);
+            }
+        });
     }
-
-    var resolvedPath = fluid.module.resolvePath(path);
-
-    var cleanupPromises = [];
-    fs.readdir(resolvedPath, function (error, testemDirs) {
-        if (error) {
-            togo.reject(error);
-        }
-        else {
-            fluid.each(testemDirs, function (dirName) {
-                var testemDirCleanupPromise = fluid.promise();
-                cleanupPromises.push(testemDirCleanupPromise);
-                if (dirName.match(testemRegexp)) {
-                    rimraf(dirName, function (error) {
-                        if (error) { testemDirCleanupPromise.reject(error); }
-                        else { testemDirCleanupPromise.resolve(dirName); }
-                    });
-                }
-            });
-        }
-    });
-
-    var cleanupSequence = fluid.promise.sequence(cleanupPromises);
-    cleanupSequence.then(togo.resolve, togo.reject);
+    catch (error) {
+        togo.reject(error);
+    }
 
     return togo;
 };
 
 /**
  *
- * Once we no longer need it, remove the instrumented code generated for this run.
+ * A static function to remove directories.  Expects to be passed an object like:
+ * {
+ *  path: "/path/to/junk",
+ *  name: "random junk",
+ *  isTestemContent: true
+ * }
  *
- * @param that - The component itself.
+ * @param cleanupDef {Object} - A cleanup definition, see example above.
+ * @param promise {Function} - The promise to resolve or reject when our async tasks are complete.
  *
  */
-gpii.testem.cleanupInstrumentedCode = function (that) {
-    var workingDir = that.options.testemOptions.cwd || process.cwd();
-    var instrumentedDir = path.resolve(workingDir, "instrumented");
-
-    gpii.testem.cleanupRegularDir(instrumentedDir, "instrumented", that.events.onInstrumentedCleanupComplete.fire);
+gpii.testem.cleanupDir = function (cleanupDef) {
+    if (cleanupDef.isTestemContent) {
+        return gpii.testem.cleanupTestemContent(cleanupDef.path);
+    }
+    else {
+        var promise = fluid.promise();
+        try {
+            if (fs.existsSync(cleanupDef.path)) {
+                fluid.log("No content exists for " + cleanupDef.name + ", skipping cleanup...");
+                promise.resolve();
+            }
+            else {
+                rimraf(cleanupDef.path, function (error) {
+                    if (error) {
+                        fluid.log("Error removing ", cleanupDef.name, " content:", error);
+                        promise.reject(error);
+                    }
+                    else {
+                        promise.resolve();
+                        fluid.log("Removed ", cleanupDef.name, " content...");
+                    }
+                });
+            }
+        }
+        catch (error) {
+            promise.reject(error);
+        }
+        return promise;
+    }
 };
 
 /**
  *
- * A static function to remove plain old directories (i.e. ones where we don't need to look for a pattern like the
- * Testem cleanup).
+ * Clean up a bunch of directories based on test definitions that look like:
  *
- * @param pathToRemove {String} - A full or package-relative path to a directory that should be removed.
- * @param nickName {String} - A nickname for this directory, used in logging).
- * @param callback {Function} - An optional callback to call when our work is complete.
+ * {
+ *  path: "/path/to/junk",
+ *  name: "random junk",
+ *  isTestemContent: true
+ * }
+ *
+ * @param cleanupDefs  An array of cleanup definitions (see example above).
+ * @param eventCallback The event to fire when cleanup is complete.
  *
  */
-gpii.testem.cleanupRegularDir = function (pathToRemove, nickName, callback) {
-    rimraf(pathToRemove, function (error) {
-        if (error) {
-            fluid.log("Error removing ", nickName, " source code:", error);
-        }
-        else {
-            fluid.log("Removed ", nickName, " source code...");
-        }
-        if (callback) {
-            callback();
-        }
+gpii.testem.cleanup = function (cleanupDefs, eventCallback) {
+    var cleanupPromises = [];
+    fluid.each(cleanupDefs, function (singleDirEntry) {
+        var cleanupPromise = gpii.testem.cleanupDir(singleDirEntry);
+        cleanupPromises.push(cleanupPromise);
     });
+
+    var sequence = fluid.promise.sequence(cleanupPromises);
+
+    // Because of the high cost of failing to call Testem callbacks, we choose to continue even if there are errors.
+    sequence.then(eventCallback, eventCallback);
 };
 
 /**
@@ -217,8 +242,13 @@ gpii.testem.cleanupRegularDir = function (pathToRemove, nickName, callback) {
  * @returns {String} - The full path to the unique subdirectory.
  */
 gpii.testem.generateUniqueDirName = function (basePath, prefix, suffix) {
-    var resolvedBasePath = fluid.module.resolvePath(basePath);
-    return path.resolve(resolvedBasePath, prefix + "-" + suffix);
+    try {
+        var resolvedBasePath = fluid.module.resolvePath(basePath);
+        return path.resolve(resolvedBasePath, prefix + "-" + suffix);
+    }
+    catch (error) {
+        console.log("Error generating unique dir name:", error);
+    }
 };
 
 /**
@@ -227,31 +257,79 @@ gpii.testem.generateUniqueDirName = function (basePath, prefix, suffix) {
  *
  * @param that - The component itself.
  */
-gpii.testem.generateCoverageReportIfNeeded = function (that) {
+gpii.testem.generateCoverageReportIfNeeded = function (that, eventCallback) {
     if (that.options.generateCoverageReport) {
-        var commandSegments = ["istanbul report --root", that.options.coverageDir, "--dir", that.options.reportsDir, "text-summary html json-summary"];
-        var command = commandSegments.join(" ");
+        var promise = fluid.promise();
+        promise.then(eventCallback, eventCallback);
 
-        exec(command, function (error, stdout) {
-            fluid.log(stdout);
-            if (error) {
-                fluid.log("Error generating coverage report:", error);
-            }
-            else {
-                fluid.log("Created coverage report in '", that.options.reportsDir, "'...");
-            }
+        try {
+            var commandSegments = ["istanbul report --root", that.options.coverageDir, "--dir", that.options.reportsDir, "text-summary html json-summary"];
+            var command = commandSegments.join(" ");
 
-            that.events.onCoverageReportComplete.fire();
-        });
+            exec(command, function (error, stdout) {
+                fluid.log(stdout);
+                if (error) {
+                    fluid.log("Error generating coverage report:", error);
+                    promise.reject(error);
+                }
+                else {
+                    fluid.log("Created coverage report in '", that.options.reportsDir, "'...");
+                    promise.resolve();
+                }
+            });
+        }
+        catch (error) {
+            promise.reject(error);
+        }
     }
     else {
-        that.events.onCoverageReportComplete.fire();
+        eventCallback();
+    }
+};
+
+fluid.registerNamespace("gpii.testem.dirs");
+
+// A convenience variable to assist in cleaning up everything but the coverage data.
+gpii.testem.dirs.everythingButCoverage = [
+    {
+        name: "instrumented",
+        path: "{that}.options.instrumentedSourceDir"
+    },
+    {
+        name:            "testem",
+        path:            "{that}.options.testemDir",
+        isTestemContent: true
+    }
+
+];
+
+// A convenience variable to assist in cleaning up everything, including coverage data.
+gpii.testem.dirs.everything = gpii.testem.dirs.everythingButCoverage.concat([
+    {
+        name: "coverage",
+        path: "{that}.options.coverageDir"
+    }
+]);
+
+gpii.testem.resolveSafely = function (pathToResolve, filename) {
+    try {
+        return path.resolve(pathToResolve, filename);
+    }
+    catch (error) {
+        console.error(error);
     }
 };
 
 fluid.defaults("gpii.testem", {
     gradeNames:  ["fluid.component"],
     coveragePort: 7000,
+    mergePolicy: {
+        cleanup: "none"
+    },
+    cleanup: {
+        initial:  gpii.testem.dirs.everything,
+        final:    gpii.testem.dirs.everything
+    },
     coverageUrl: {
         expander: {
             funcName: "fluid.stringTemplate",
@@ -270,7 +348,20 @@ fluid.defaults("gpii.testem", {
             args:     [os.tmpdir(), "reports", "{that}.id"] // basePath, prefix, suffix
         }
     },
+    testemDir: {
+        expander: {
+            funcName: "gpii.testem.generateUniqueDirName",
+            args:     [os.tmpdir(), "user_data_dir", "{that}.id"] // basePath, prefix, suffix
+        }
+    },
     instrumentSource: true,
+    // Code to be served must live under the cwd in order to work with Testem.
+    instrumentedSourceDir: {
+        expander: {
+            funcName: "gpii.testem.resolveSafely",
+            args:     ["{that}.options.testemOptions.cwd", "instrumented"]
+        }
+    },
     generateCoverageReport: true,
     sourceDirs: [],
     testPages:   [],
@@ -281,7 +372,16 @@ fluid.defaults("gpii.testem", {
         }
     },
     events: {
+        initialCleanupComplete: null,
         constructFixtures: null,
+        sourceInstrumented: null,
+        safeToConstructFixtures: {
+            events: {
+                initialCleanupComplete: "initialCleanupComplete",
+                constructFixtures:      "constructFixtures",
+                sourceInstrumented:     "sourceInstrumented"
+            }
+        },
         onExpressStarted: null,
         onFixturesConstructed: {
             events: {
@@ -302,40 +402,22 @@ fluid.defaults("gpii.testem", {
                 onCoverageReportComplete: "onCoverageReportComplete"
             }
         },
-        onCleanup: null,
-        onInstrumentedCleanupComplete: null,
-        onTestemCleanupComplete: null,
-        onCoverageCleanupComplete: null,
-        onCleanupComplete: {
-            events: {
-                onInstrumentedCleanupComplete: "onInstrumentedCleanupComplete",
-                onTestemCleanupComplete:       "onTestemCleanupComplete",
-                onCoverageCleanupComplete:     "onCoverageCleanupComplete"
-            }
-        }
+        finalCleanup: null,
+        finalCleanupComplete: null
     },
     testemOptions: {
         framework:   "qunit",
         report_file: {
             expander: {
-                funcName: "path.resolve",
+                funcName: "gpii.testem.resolveSafely",
                 args:     ["{that}.options.reportsDir", "report.tap"]
             }
         },
-        user_data_dir: {
-            expander: {
-                funcName: "gpii.testem.generateUniqueDirName",
-                args:     [os.tmpdir(), "user_data_dir", "{that}.id"] // basePath, prefix, suffix
-            }
-        },
+        cwd: process.cwd(),
+        user_data_dir: "{that}.options.testemDir",
         on_start: "{that}.handleTestemStart",
         on_exit:  "{that}.handleTestemExit",
-        test_page: {
-            expander: {
-                funcName: "gpii.testem.resolvePaths",
-                args:     ["{that}.options.testPages"]
-            }
-        },
+        test_page: "{that}.options.testPages",
         proxies: {
             "/coverage": {
                 "target": "{that}.options.coverageUrl"
@@ -357,9 +439,18 @@ fluid.defaults("gpii.testem", {
         }
     },
     listeners: {
-        "onCreate.instrumentSourceIfNeeded": {
+        "onCreate.cleanup": {
+            funcName: "gpii.testem.cleanup",
+            args:     ["{that}.options.cleanup.initial", "{that}.events.initialCleanupComplete.fire"] // cleanupDefs, eventCallback
+        },
+        "initialCleanupComplete.log": {
+            priority: "first",
+            funcName: "fluid.log",
+            args:     "Initial cleanup complete..."
+        },
+        "initialCleanupComplete.instrumentSourceIfNeeded": {
             funcName: "gpii.testem.instrumentAsNeeded",
-            args:     ["{that}"]
+            args:     ["{that}", "{that}.events.sourceInstrumented.fire"] // eventCallback
         },
         // Disable default behavior to avoid double-stop.
         "onDestroy.stopServer": {
@@ -384,33 +475,24 @@ fluid.defaults("gpii.testem", {
         },
         "createReports.coverageReport": {
             funcName: "gpii.testem.generateCoverageReportIfNeeded",
-            args:     ["{that}"]
+            args:     ["{that}", "{that}.events.onCoverageReportComplete.fire"] // eventCallback
         },
         "onReportsComplete.log": {
             priority: "first",
             funcName: "fluid.log",
             args: ["Reports complete..."]
         },
-        "onReportsComplete.cleanup": {
-            func: "{that}.events.onCleanup.fire"
+        "onReportsComplete.finalCleanup": {
+            func: "{that}.events.finalCleanup.fire"
         },
-        "onCleanup.cleanupInstrumentedCode": {
-            funcName: "gpii.testem.cleanupInstrumentedCode",
-            args:     ["{that}"]
+        "finalCleanup.cleanup": {
+            funcName: "gpii.testem.cleanup",
+            args:     ["{that}.options.cleanup.final", "{that}.events.finalCleanupComplete.fire"] // cleanupDefs, eventCallback
         },
-        "onCleanup.cleanupTestemContent": {
-            funcName: "gpii.testem.cleanupTestemContent",
-            args:     ["{that}.options.testemOptions.user_data_dir", "{that}.events.onTestemCleanupComplete.fire"]
-        },
-        "onCleanup.cleanupCoverageData": {
-            priority: "after:coverageReport",
-            funcName: "gpii.testem.cleanupRegularDir",
-            args:     ["{that}.options.coverageDir", "coverage", "{that}.events.onCoverageCleanupComplete.fire"] // pathToRemove, nickName, callback
-        },
-        "onCleanupComplete.log": {
+        "finalCleanupComplete.log": {
             priority: "first",
             funcName: "fluid.log",
-            args:     "Cleanup complete..."
+            args:     "Final cleanup complete..."
         }
     },
     distributeOptions: {
@@ -420,7 +502,7 @@ fluid.defaults("gpii.testem", {
     components: {
         coverageExpressInstance: {
             type: "gpii.testem.coverage.express",
-            createOnEvent: "constructFixtures",
+            createOnEvent: "safeToConstructFixtures",
             options: {
                 port: "{gpii.testem}.options.coveragePort",
                 listeners: {
@@ -434,5 +516,14 @@ fluid.defaults("gpii.testem", {
 
             }
         }
+    }
+});
+
+fluid.defaults("gpii.testem.coverageDataOnly", {
+    gradeNames: ["gpii.testem"],
+    generateCoverageReport: false,
+    cleanup: {
+        initial:  gpii.testem.dirs.everythingButCoverage,
+        final:    gpii.testem.dirs.everythingButCoverage
     }
 });

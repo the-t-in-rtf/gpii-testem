@@ -88,6 +88,11 @@ fluid.defaults("gpii.tests.testem.runner", {
             name:        "Running a suite of tests without test coverage...",
             command:     "testem ci --file testem-fixtures/testem-no-coverage.js",
             hasCoverage: false
+        },
+        failure: {
+            name:        "Running a suite of tests with gross configuration errors...",
+            command:     "testem ci --file testem-fixtures/testem-failure-modes.js",
+            hasCoverage: false
         }
     },
     listeners: {

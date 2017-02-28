@@ -42,7 +42,7 @@ To make use of the code coverage support provided by gpii.testem, you must load 
 fixtures, for example, using the markup below:
 
 ```
-<script type="text/javascript" src="/coverage/coverageSender.js"></script>
+<script type="text/javascript" src="/coverage/client/coverageSender.js"></script>
 ```
 
 The "coverage sender" needs to be loaded after Testem, but before your tests.  See [the coverage docs](docs/coverage.md)

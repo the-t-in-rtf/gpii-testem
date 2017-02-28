@@ -18,18 +18,21 @@ By default, the `gpii.testem` grade does everything but step 5 for you.  Step 5 
 browser, using a line like the following:
 
 ```
-<script type="text/javascript" src="/coverage/coverageSender.js"></script>
+<script type="text/javascript" src="/coverage/client/coverageSender.js"></script>
 ```
 
 This needs to be loaded after testem, but before your tests.
 
 The last step (preparing coverage reports) is optional, but enabled by default.  Read on for details.
 
-# Disabling Instrumentation and Code Coverage Reporting
+# Configuring Instrumentation and Code Coverage Reporting
 
-The instrumentation and code coverage reports built into the `gpii.testem` grade can be disabled using
-configuration options.  For example, if you want to disable the coverage reporting so that you can collate
-coverage reports for browser and node fixtures yourself, you can set `options.generateCoverageReport` to `false`.
+By default, `gpii.testem` will instrument source code, collect code coverage data, prepare a coverage report, and remove
+the remove the raw coverage data once it has finished its run.  If you are running multiple test suites (for example,
+one for code that runs in node, one for code that runs in a browser), you can use the `gpii.testem.coverageDataOnly`
+grade ([see the docs](./testem-component.md#gpiitestemcoverageDataOnly)), which does not generate a coverage report, and which leaves the raw coverage data so that you can collate it
+using an Istanbul command.
 
-Similarly, set `options.instrumentSource` to `false` if you do not wish to instrument your code.  If you want to avoid
-generating an empty coverage report, you should also set `options.generateCoverageReport` to `false`.
+If you need more control, you can toggle the instrumentation and cleanup behavior using individual options.  See
+[the component docs](testem-component.md) for details.
+
