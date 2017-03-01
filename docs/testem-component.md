@@ -67,23 +67,16 @@ An invoker which exposes the final Testem options in a way that Testem can read 
 ## Paths
 
 By default, Testem resolves paths to source code, files to be served, and test pages relative to the directory from
-which you run the command.  The `gpii.testem` component makes this more consistent by setting the effective working
-directory (`options.testemOptions.cwd`) to the directory in which the configuration file is stored, so that tests will
-not fail simply because you have run them from another directory.  Testem also has safeguards to avoid serving up
-content outside of the current working directory.
-
-To avoid problems with both, it's best to store your testem configuration javascript file in a directory higher up than
-all of the code and test pages you need, and to use relative paths for `sourceDirs`, `testPages`, and `serveDirs`.
+which you run the command.  To avoid problems, it's best to store your testem configuration javascript file in a
+directory higher up than all of the code and test pages you need, and to use relative paths for `sourceDirs`,
+`testPages`, and `serveDirs`.  For, example, a `testem.js` file in the root of your repository will be able to reference
+all of your tests and code using relative paths.
 
 ## Cleanup
 
 By default, Testem generates browser content in the directory [`os.tmpdir()`](https://nodejs.org/api/os.html#os_os_tmpdir),
 which it does not clean up when the test run is complete.  The `gpii.testem` component automatically cleans this up by
-default.
-
-You can also make use of the underlying static cleanup function, `gpii.testem.cleanupTestemContent(path, callback)`,
-which will remove any directories that match `testem-*` from `path`.  If `callback` is supplied, it will be called when
-the cleanup process completes.
+default.  It also cleans up instrumented code and raw coverage data.
 
 # `gpii.testem.coverageDataOnly`
 
