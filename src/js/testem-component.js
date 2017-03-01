@@ -311,6 +311,8 @@ gpii.testem.dirs.everything = gpii.testem.dirs.everythingButCoverage.concat([
     }
 ]);
 
+// If we call path.resolve directly from an expansion definition, we can't cleanly handle errors.  So, we use this
+// convenience function.  It's important to trap errors which might prevent Testem callbacks from being triggered.
 gpii.testem.resolveSafely = function (pathToResolve, filename) {
     try {
         return path.resolve(pathToResolve, filename);
@@ -324,7 +326,7 @@ fluid.defaults("gpii.testem", {
     gradeNames:  ["fluid.component"],
     coveragePort: 7000,
     mergePolicy: {
-        cleanup: "none"
+        cleanup: "nomerge"
     },
     cleanup: {
         initial:  gpii.testem.dirs.everything,
