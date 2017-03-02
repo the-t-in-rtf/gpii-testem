@@ -82,7 +82,7 @@ gpii.testem.instrumentAsNeeded = function (that, eventCallback) {
 
                 // Instrument each directory to its own subdirectory using a command like:
                 // istanbul instrument --output /tmp/instrumentSource/src src
-                var commandSegments = ["istanbul instrument --output", targetPath, resolvedSourcePath];
+                var commandSegments = ["istanbul instrument --output", targetPath, resolvedSourcePath, "--complete-copy"];
                 var command = commandSegments.join(" ");
 
                 exec(command, function (error) {
