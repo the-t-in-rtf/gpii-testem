@@ -18,7 +18,7 @@
   "homepage": "https://github.com/the-t-in-rtf/gpii-testem#readme",
   "dependencies": {
     "gpii-express": "1.0.2",
-    "infusion": "3.0.0-dev.20170127T130413Z.103de6e",
+    "infusion": "git://github.com/amb26/infusion.git#3ee14d99e2169e9870dffcbd1119aa109a3277c8",
     "istanbul": "0.4.5",
     "node-jqunit": "1.1.4",
     "qunitjs": "2.1.1",

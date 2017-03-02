@@ -1381,6 +1381,12 @@ infusion@3.0.0-dev.20170127T130413Z.103de6e:
   dependencies:
     fluid-resolve "1.2.0"
 
+"infusion@git://github.com/amb26/infusion.git#3ee14d99e2169e9870dffcbd1119aa109a3277c8":
+  version "3.0.0"
+  resolved "git://github.com/amb26/infusion.git#3ee14d99e2169e9870dffcbd1119aa109a3277c8"
+  dependencies:
+    fluid-resolve "1.2.0"
+
 inherits@2, inherits@2.0.3, inherits@^2.0.1, inherits@^2.0.3, inherits@~2.0.1:
   version "2.0.3"
   resolved "https://registry.yarnpkg.com/inherits/-/inherits-2.0.3.tgz#633c2c83e3da42a502f52466022480f4208261de"
