@@ -21,7 +21,12 @@ gpii.tests.testem.runner.runSingleTest = function (testDef) {
         jqUnit.stop();
         exec(testDef.command, {cwd: __dirname }, function (error, stdout) {
             jqUnit.start();
-            jqUnit.assertFalse("There should be no errors running testem...", error);
+            if (testDef.hasTestemErrors) {
+                jqUnit.assertNotUndefined("There should be an error running testem...", error);
+            }
+            else {
+                jqUnit.assertFalse("There should be no errors running testem...", error);
+            }
 
             var matches = stdout.match(/= START TESTEM COMPONENT OPTIONS =\n([^]+)= END TESTEM COMPONENT OPTIONS =\n/);
             jqUnit.assertTrue("There should be component options in the output...", matches && matches[1]);
@@ -90,9 +95,10 @@ fluid.defaults("gpii.tests.testem.runner", {
             hasCoverage: false
         },
         failure: {
-            name:        "Running a suite of tests with gross configuration errors...",
-            command:     "testem ci --file testem-fixtures/testem-failure-modes.js",
-            hasCoverage: false
+            name:            "Running a suite of tests with gross configuration errors...",
+            command:         "testem ci --file testem-fixtures/testem-failure-modes.js",
+            hasCoverage:     false,
+            hasTestemErrors: true
         }
     },
     listeners: {
