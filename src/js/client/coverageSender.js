@@ -10,7 +10,7 @@
     Adapted from https://github.com/testem/testem/blob/master/examples/coverage_istanbul/tests.html#L11
 
  */
-/* globals Testem */
+/* globals QUnit */
 (function (fluid, $, Testem) {
     "use strict";
     var gpii = fluid.registerNamespace("gpii");

@@ -263,7 +263,7 @@ gpii.testem.generateCoverageReportIfNeeded = function (that, eventCallback) {
         promise.then(eventCallback, eventCallback);
 
         try {
-            var commandSegments = ["istanbul report --root", that.options.coverageDir, "--dir", that.options.reportsDir, "text-summary html json-summary"];
+            var commandSegments = ["istanbul report --root", fluid.module.resolvePath(that.options.coverageDir), "--dir", that.options.reportsDir, "text-summary html json-summary"];
             var command = commandSegments.join(" ");
 
             exec(command, function (error, stdout) {
