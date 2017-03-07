@@ -9,8 +9,11 @@
 
     Adapted from https://github.com/testem/testem/blob/master/examples/coverage_istanbul/tests.html#L11
 
+    The harness included with this package will concatenate this with a bit of javascript that instantiates the
+    sender with the right port information.  If you are using this script in another context, you will need to take
+    care of that yourself.
+
  */
-/* globals QUnit */
 (function (fluid, $, Testem) {
     "use strict";
     var gpii = fluid.registerNamespace("gpii");
@@ -24,7 +27,13 @@
     gpii.testem.coverage.sender.sendCoverageData = function (that, config, data, callback) {
         if (window.__coverage__) {
             // TODO: Convert to using fluid.dataSource.AJAX once that's been reviewed.
-            var requestOptions = fluid.extend(that.options.ajaxOptions, { data: { coverage: JSON.stringify(window.__coverage__, null, 2)}, complete: callback});
+            var requestOptions = fluid.extend(that.options.ajaxOptions, {
+                data: { coverage: JSON.stringify(window.__coverage__, null, 2)},
+                complete: function () {
+                    // Temporary delay to help us investigate disconnects when sending coverage data.
+                    setTimeout(callback, 250);
+                }
+            });
             $.ajax(requestOptions);
         }
     };
@@ -48,7 +57,13 @@
             method:      "POST",
             url:         "{that}.options.coverageUrl"
         },
-        coverageUrl: "/coverage",
+        coveragePort: 7000,
+        coverageUrl: {
+            expander: {
+                funcName: "fluid.stringTemplate",
+                args:     ["http://localhost:%port/coverage", { port: "{that}.options.coveragePort"}]
+            }
+        },
         listeners: {
             "onCreate.wireTestem": {
                 funcName: "gpii.testem.coverage.sender.wireTestem",
@@ -70,6 +85,4 @@
             }
         }
     });
-
-    gpii.testem.coverage.sender();
 })(fluid, jQuery, Testem);

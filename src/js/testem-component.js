@@ -20,6 +20,8 @@ var path    = require("path");
 var process = require("process");
 var rimraf  = require("rimraf");
 
+require("./coverageServer");
+
 fluid.registerNamespace("gpii.testem");
 
 /**

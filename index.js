@@ -6,4 +6,3 @@ var fluid = require("infusion");
 fluid.module.register("gpii-testem", __dirname, require);
 
 require("./src/js/testem-component");
-require("./src/js/coverageReceiver");
