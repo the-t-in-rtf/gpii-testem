@@ -10,7 +10,7 @@
       autostart: true
       box: inclusivedesign/windows10-eval
 
-stages:                # Stages to perform when 'ci test' command is invoked
+.ci_stages:                # Stages to perform when 'ci test' command is invoked
   - setup              # name of the first stage to execute
   - test               # name of the second stage to execute
 
