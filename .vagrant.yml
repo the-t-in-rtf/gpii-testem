@@ -17,12 +17,17 @@
 setup_job:
   stage: setup         # name of the stage
   script:
-    - choco upgrade firefox
+    - choco upgrade firefox -y
     - choco install nodejs.install --version 6.9.1 --forcex86 -y
-    - npm install -g istanbul testem nyc
+    - npm install -g istanbul testem nyc rimraf
     - npm install
 
 test_job:
   stage: test          # name of the stage
   script:              # One line per command to execute
+    - rimraf c:/users/vagrant/cloned
+    - git diff > c:/users/vagrant/diff
+    - git clone c:/vagrant c:/users/vagrant/cloned
+    - cd c:/users/vagrant/cloned
+    - git apply c:/users/vagrant/diff
     - do.ps1 -c "npm test"
