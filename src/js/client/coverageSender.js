@@ -27,8 +27,13 @@
     gpii.testem.coverage.sender.sendCoverageData = function (that, config, data, callback) {
         if (window.__coverage__) {
             // TODO: Convert to using fluid.dataSource.AJAX once that's been reviewed.
+            var payload = {
+                document:  fluid.filterKeys(document, ["title", "URL"]),
+                navigator: fluid.filterKeys(navigator, ["userAgent", "vendor", "vendorSub", "product", "productSub", "appCodeName", "appName"]),
+                coverage:  window.__coverage__
+            };
             var requestOptions = fluid.extend(that.options.ajaxOptions, {
-                data: { coverage: JSON.stringify(window.__coverage__, null, 2)},
+                data: { payload: JSON.stringify(payload, null, 2)},
                 complete: function () {
                     // Temporary delay to help us investigate disconnects when sending coverage data.
                     setTimeout(callback, 250);
@@ -73,7 +78,7 @@
         invokers: {
             "sendCoverageData": {
                 funcName: "gpii.testem.coverage.sender.sendCoverageData",
-                args: ["{that}", "{arguments}.0", "{arguments}.1", "{arguments}.2"] // config, data, callback
+                args: ["{that}", "{arguments}.0", "{arguments}.1", "{arguments}.2"] // config, data, callbackn
             },
             "handleSuccess": {
                 funcName: "gpii.testem.coverage.sender.handleSuccess",
