@@ -41,6 +41,10 @@
             });
             $.ajax(requestOptions);
         }
+        else {
+            fluid.log("No coverage data, firing test completion callback immediately...");
+            callback();
+        }
     };
 
     gpii.testem.coverage.sender.handleSuccess = function (that, data, textStatus, jqXHR) {
