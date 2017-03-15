@@ -13,9 +13,7 @@ var testemComponent = gpii.tests.testem.harness({
     coverageDir: null,
     reportsDir: null,
     testemDir: null,
-    testemOptions: {
-        cwd: __dirname // required because we are working outside of our package root.
-    }
+    cwd: __dirname // required because we are working outside of our package root.
 });
 
 module.exports = testemComponent.getTestemOptions();

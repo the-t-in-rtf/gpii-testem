@@ -12,9 +12,7 @@ var testemComponent = gpii.tests.testem.harness({
     testPages:   ["no-coverage.html"],
     instrumentSource: false,
     generateCoverageReport: false,
-    testemOptions: {
-        cwd: __dirname // required because we are working outside of our package root.
-    }
+    cwd: __dirname // required because we are working outside of our package root.
 });
 
 module.exports = testemComponent.getTestemOptions();

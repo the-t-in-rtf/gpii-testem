@@ -87,7 +87,7 @@ gpii.testem.instrumentAsNeeded = function (that, eventCallback) {
                 var commandSegments = ["istanbul instrument --output", targetPath, resolvedSourcePath, "--complete-copy"];
                 var command = commandSegments.join(" ");
 
-                exec(command, function (error) {
+                exec(command, { cwd: that.options.cwd }, function (error) {
                     if (error) {
                         console.error("Error running instrumentation command:", error);
                     }
@@ -268,7 +268,7 @@ gpii.testem.generateCoverageReportIfNeeded = function (that, eventCallback) {
             var commandSegments = ["istanbul report --root", fluid.module.resolvePath(that.options.coverageDir), "--dir", that.options.reportsDir, "text-summary html json-summary"];
             var command = commandSegments.join(" ");
 
-            exec(command, function (error, stdout) {
+            exec(command, { cwd: that.options.cwd }, function (error, stdout) {
                 fluid.log(stdout);
                 if (error) {
                     fluid.log("Error generating coverage report:", error);
@@ -330,6 +330,7 @@ fluid.defaults("gpii.testem", {
     mergePolicy: {
         cleanup: "nomerge"
     },
+    cwd: process.cwd(),
     cleanup: {
         initial:  gpii.testem.dirs.everything,
         final:    gpii.testem.dirs.everything
@@ -417,7 +418,7 @@ fluid.defaults("gpii.testem", {
                 args:     ["{that}.options.reportsDir", "report.tap"]
             }
         },
-        cwd: process.cwd(),
+        cwd: "{that}.options.cwd",
         user_data_dir: "{that}.options.testemDir",
         on_start: "{that}.handleTestemStart",
         on_exit:  "{that}.handleTestemExit",
