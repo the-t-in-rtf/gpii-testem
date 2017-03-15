@@ -1,7 +1,7 @@
 # QI Configuration file, see: https://github.com/amatas/vagrant-gpii-ci
 ---
 
-.ci_env:
+env:
   vms:
     windows10:
       cpu: 2                   # number of cpus
@@ -10,7 +10,7 @@
       autostart: true
       box: inclusivedesign/windows10-eval
 
-.ci_stages:                # Stages to perform when 'ci test' command is invoked
+stages:                # Stages to perform when 'ci test' command is invoked
   - setup              # name of the first stage to execute
   - test               # name of the second stage to execute
 
@@ -19,15 +19,18 @@ setup_job:
   script:
     - choco upgrade firefox -y
     - choco install nodejs.install --version 6.9.1 --forcex86 -y
-    - npm install -g istanbul testem nyc rimraf
-    - npm install
+    - do.ps1 -c "npm install -g istanbul testem nyc rimraf"
+    - do.ps1 -c "npm config set bin-links false"
 
 test_job:
   stage: test          # name of the stage
   script:              # One line per command to execute
+    - do.ps1 -c "npm install"
     - rimraf c:/users/vagrant/cloned
+    - do.ps1 -c "net use v: \\vboxsrv\vagrant"
+    - v:
     - git diff > c:/users/vagrant/diff
-    - git clone c:/vagrant c:/users/vagrant/cloned
+    - git clone v:/ c:/users/vagrant/cloned
     - cd c:/users/vagrant/cloned
     - git apply c:/users/vagrant/diff
     - do.ps1 -c "npm test"
