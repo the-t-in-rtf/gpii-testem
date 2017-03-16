@@ -61,7 +61,7 @@ fluid.defaults("gpii.tests.testem.runner", {
     tests: {
         complete: {
             name: "Running a suite of tests that results in complete coverage...",
-            command: "testem ci --file testem-fixtures/testem-complete-coverage.js",
+            command: "node ../node_modules/testem/testem.js ci --file testem-fixtures/testem-complete-coverage.js",
             hasCoverage: true,
             expectedCoverage: {
                 total: {
@@ -76,7 +76,7 @@ fluid.defaults("gpii.tests.testem.runner", {
         },
         incomplete: {
             name: "Running a suite of tests that results in incomplete coverage...",
-            command: "testem ci --file testem-fixtures/testem-incomplete-coverage.js",
+            command: "node ../node_modules/testem/testem.js ci --file testem-fixtures/testem-incomplete-coverage.js",
             hasCoverage: true,
             expectedCoverage: {
                 total: {
@@ -91,12 +91,12 @@ fluid.defaults("gpii.tests.testem.runner", {
         },
         noCoverage: {
             name:        "Running a suite of tests without test coverage...",
-            command:     "testem ci --file testem-fixtures/testem-no-coverage.js",
+            command:     "node ../node_modules/testem/testem.js ci --file testem-fixtures/testem-no-coverage.js",
             hasCoverage: false
         },
         failure: {
             name:            "Running a suite of tests with gross configuration errors...",
-            command:         "testem ci --file testem-fixtures/testem-failure-modes.js",
+            command:         "node ../node_modules/testem/testem.js ci --file testem-fixtures/testem-failure-modes.js",
             hasCoverage:     false,
             hasTestemErrors: true
         }
