@@ -19,6 +19,7 @@ var os      = require("os");
 var path    = require("path");
 var process = require("process");
 var rimraf  = require("rimraf");
+var url     = require("url");
 
 require("./coverageServer");
 
@@ -87,14 +88,19 @@ gpii.testem.instrumentAsNeeded = function (that, eventCallback) {
                 var commandSegments = ["istanbul instrument --output", targetPath, resolvedSourcePath, "--complete-copy"];
                 var command = commandSegments.join(" ");
 
-                exec(command, { cwd: that.options.cwd }, function (error) {
+                exec(command, { cwd: that.options.cwd }, function (error, stdout, stderr) {
+                    fluid.log(stdout);
+                    fluid.log(stderr);
                     if (error) {
                         console.error("Error running instrumentation command:", error);
                     }
                 });
 
                 // Add a "route" so that the instrumented code will seamlessly replace its uninstrumented counterpart.
-                that.generatedOptions.routes[path.join("/", lastDirSegment)] = path.join("instrumented", lastDirSegment);
+                // Routes must be URL segments, and not paths.
+                var originalSourcePath = url.resolve("/", lastDirSegment);
+                var instrumentedSourcePath = url.resolve("instrumented/", lastDirSegment);
+                that.generatedOptions.routes[originalSourcePath] = instrumentedSourcePath;
 
                 return targetPath;
             });
@@ -268,8 +274,9 @@ gpii.testem.generateCoverageReportIfNeeded = function (that, eventCallback) {
             var commandSegments = ["istanbul report --root", fluid.module.resolvePath(that.options.coverageDir), "--dir", that.options.reportsDir, "text-summary html json-summary"];
             var command = commandSegments.join(" ");
 
-            exec(command, { cwd: that.options.cwd }, function (error, stdout) {
+            exec(command, { cwd: that.options.cwd }, function (error, stdout, stderr) {
                 fluid.log(stdout);
+                fluid.log(stderr);
                 if (error) {
                     fluid.log("Error generating coverage report:", error);
                     promise.reject(error);
