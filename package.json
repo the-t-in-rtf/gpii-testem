@@ -25,7 +25,7 @@
     "node-jqunit": "1.1.4",
     "qunitjs": "2.1.1",
     "rimraf": "2.6.1",
-    "testem": "1.15.0"
+    "testem": "1.13.0"
   },
   "devDependencies": {
     "eslint": "3.17.1",
