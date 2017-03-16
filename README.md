@@ -66,5 +66,5 @@ For more information, check out the documentation links below:
 
 # Running the Tests in this Package
 
-Although you are not required to do to so in your own package, to run the tests in this package, you must have Testem
-installed globally.  Once you have that, run the tests using a command like `npm test` or `yarn test`.
+You can run the tests using a command like `npm test` or `yarn test`.  You are not required to have Testem installed
+globally to run the tests.
