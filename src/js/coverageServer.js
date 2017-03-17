@@ -40,7 +40,7 @@ fluid.defaults("gpii.testem.coverage.router", {
             type: "gpii.express.middleware.bodyparser.json",
             options: {
                 priority: "after:client",
-                bodyParserOptions: {
+                middlewareOptions: {
                     limit: 12500000 // Allow coverage payloads of up to 100Mb instead of the default 100Kb
                 }
             }
@@ -49,7 +49,7 @@ fluid.defaults("gpii.testem.coverage.router", {
             type: "gpii.express.middleware.bodyparser.urlencoded",
             options: {
                 priority: "after:json",
-                bodyParserOptions: {
+                middlewareOptions: {
                     limit: 12500000 // Allow coverage payloads of up to 100Mb instead of the default 100Kb
                 }
             }
