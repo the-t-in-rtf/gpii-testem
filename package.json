@@ -1,7 +1,7 @@
 {
   "name": "gpii-testem",
   "version": "1.0.0",
-  "description": "A library to assist in using Testem.",
+  "description": "A library to assist in using Testem within the Fluid ecosystem.",
   "main": "index.js",
   "scripts": {
     "test": "node_modules/.bin/nyc -r text -r lcov node tests/all-tests.js"
