@@ -8,17 +8,22 @@ var fs = require("fs");
 fluid.require("%gpii-express");
 
 fluid.registerNamespace("gpii.testem.middleware.coverageClient");
-
 gpii.testem.middleware.coverageClient.middlewareImpl = function (that, req, res, next) {
     fs.readFile(fluid.module.resolvePath(that.options.baseClientSource), function (error, data) {
         if (error) {
             next(error);
         }
         else {
-            var invokerCode = fluid.stringTemplate(that.options.clientInvokerTemplate, that.options);
-            var combinedPayload = [data, invokerCode].join("\n");
-
-            res.set("Content-Type", "text/javascript").status(200).send(combinedPayload);
+            try {
+                var resolvedInvokerTemplatePath = fluid.module.resolvePath(that.options.clientInvokerTemplatePath);
+                var invokerTemplateContent = fs.readFileSync(resolvedInvokerTemplatePath, "utf8");
+                var invokerCode = fluid.stringTemplate(invokerTemplateContent, that.options);
+                var combinedPayload = [data, invokerCode].join("\n");
+                res.set("Content-Type", "text/javascript").status(200).send(combinedPayload);
+            }
+            catch (error) {
+                next (error);
+            }
         }
     });
 };
@@ -27,7 +32,7 @@ fluid.defaults("gpii.testem.middleware.coverageClient", {
     gradeNames: ["gpii.express.middleware"],
     path:    "/client",
     baseClientSource: "%gpii-testem/src/js/client/coverageSender.js",
-    clientInvokerTemplate: "(function (fluid){ \"use strict\"; var fluid = fluid || require(\"infusion\"); var gpii = fluid.registerNamespace(\"gpii\"); gpii.testem.coverage.sender({ coveragePort: %coveragePort});})(fluid);\n",
+    clientInvokerTemplatePath: "%gpii-testem/src/templates/coverage-client-invoker.handlebars" ,
     coveragePort: 7000,
     invokers: {
         middleware: {
