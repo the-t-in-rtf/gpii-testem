@@ -14,14 +14,17 @@
     care of that yourself.
 
  */
-(function (fluid, $, Testem) {
+(function (fluid, $, Testem, QUnit) {
     "use strict";
+    QUnit.config.autostart = false;
+
     var gpii = fluid.registerNamespace("gpii");
 
     fluid.registerNamespace("gpii.testem.coverage.sender");
 
     gpii.testem.coverage.sender.wireTestem = function (that) {
         Testem.afterTests(that.sendCoverageData);
+        QUnit.start();
     };
 
     gpii.testem.coverage.sender.sendCoverageData = function (that, config, data, callback) {
@@ -94,4 +97,4 @@
             }
         }
     });
-})(fluid, jQuery, Testem);
+})(fluid, jQuery, Testem, QUnit);
