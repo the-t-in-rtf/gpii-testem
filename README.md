@@ -41,14 +41,7 @@ module.exports = my.testem.grade().getTestemOptions();
 ```
 
 To make use of the code coverage support provided by gpii.testem, you must load the "coverage sender" in your HTML
-fixtures, for example, using the markup below:
-
-```
-<script type="text/javascript" src="/coverage/client/coverageSender.js"></script>
-```
-
-The "coverage sender" needs to be loaded after Testem, but before your tests.  See [the coverage docs](docs/coverage.md)
-for details.   Like Infusion itself, the "coverage sender" requires jQuery.
+fixtures.  See [the coverage docs](docs/coverage.md) for details.
 
 Once you have created your configuration javascript file, you can launch Testem with your configuration using a command
 like the following:

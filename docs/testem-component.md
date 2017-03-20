@@ -28,6 +28,9 @@ see below.
 | `cleanup.initial`         | `{Array}`   | An array of cleanup definitions (see below) to be cleaned up before the tests are run. |
 | `cleanup.final`           | `{Array}`   | An array of cleanup definitions (see below) to be cleaned up after the tests are run and all reporting is complete. |
 
+Please note, although you can change `options.testemOptions.framework`, `gpii.testem` is only tested with QUnit and is
+unlikely to work with other frameworks supported by Testem.
+
 ## Cleanup Definitions
 
 The initial and final cleanup options expect to be passed an array of "cleanup definitions", which support the following

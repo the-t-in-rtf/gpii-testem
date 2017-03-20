@@ -14,14 +14,31 @@ collecting code coverage in your tests is to:
 6. Run your tests.
 7. (Once all tests are complete) Compile an overall coverage report.
 
-By default, the `gpii.testem` grade does everything but step 5 for you.  Step 5 requires loading a piece of code in your
-browser, using a line like the following:
+By default, the `gpii.testem` grade does everything but step 5 for you.  Step 5 requires you to load the client-side
+coverage sender using markup like the following:
 
 ```
+<script type="text/javascript" src="../../../lib/qunit/js/qunit.js"></script>
+<script type="text/javascript" src="../../../test-core/jqUnit/js/jqUnit.js"></script>
+<script type="text/javascript" src="/testem.js"></script>
+
+<!-- These are required for the coverage client -->
+<script type="text/javascript" src="../../../../src/lib/jquery/core/js/jquery.js"></script>
+<script type="text/javascript" src="../../../../src/framework/core/js/Fluid.js"></script>
+<script type="text/javascript" src="../../../../src/framework/core/js/DataBinding.js"></script>
+<script type="text/javascript" src="../../../../src/framework/core/js/FluidDocument.js"></script>
+<script type="text/javascript" src="../../../../src/framework/core/js/FluidIoC.js"></script>
+
 <script type="text/javascript" src="/coverage/client/coverageSender.js"></script>
+
+<script type="text/javascript" src="path/to/myTests.js"></script>
 ```
 
-This needs to be loaded after testem, but before your tests.
+Please note, as shown in the above example:
+
+1. Testem itself must be loaded, and must be loaded after QUnit.
+2. The "coverage sender" needs to be loaded after jQuery, its Fluid dependencies, and Testem.
+3. The "coverage sender" needs to be loaded before your tests.
 
 The last step (preparing coverage reports) is optional, but enabled by default.  Read on for details.
 
