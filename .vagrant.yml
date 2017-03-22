@@ -11,26 +11,37 @@ env:
       box: inclusivedesign/windows10-eval
 
 stages:                # Stages to perform when 'ci test' command is invoked
-  - setup              # name of the first stage to execute
-  - test               # name of the second stage to execute
+  - setup              # Install our system-level dependencies, etc.
+#  - clone              # Clone our working repo to a local filesystem.
+  - test               # Run the actual tests
 
 setup_job:
-  stage: setup         # name of the stage
+  stage: setup
   script:
     - choco upgrade firefox -y
     - choco install nodejs.install --version 6.9.1 --forcex86 -y
-    - do.ps1 -c "npm install -g istanbul testem nyc rimraf"
-    - do.ps1 -c "npm config set bin-links false"
+    - do.ps1 -c "npm install -g istanbul testem nyc rimraf node-inspector"
+    - do.ps1 -c "npm config set bin-links false --global"
+
+clone_job:
+  stage: clone
+  script:
+    - "net use v: \\\\vboxsrv\\vagrant"
+    - "rimraf c:/users/vagrant/diff"
+    - "rimraf c:/users/vagrant/cloned"
+    - "v:; git config core.safecrlf false"
+    # TODO: Review with the team.  This works from the shell, but results in an unusable patch when run here.
+    - "v:; git diff > c:/users/vagrant/diff"
+    - "v:; git clone -q v:/ c:/users/vagrant/cloned"
+    - "cd c:/users/vagrant/cloned; git apply ../diff"
 
 test_job:
   stage: test          # name of the stage
   script:              # One line per command to execute
-    - do.ps1 -c "npm install"
-    - rimraf c:/users/vagrant/cloned
-    - do.ps1 -c "net use v: \\vboxsrv\vagrant"
-    - v:
-    - git diff > c:/users/vagrant/diff
-    - git clone v:/ c:/users/vagrant/cloned
-    - cd c:/users/vagrant/cloned
-    - git apply c:/users/vagrant/diff
-    - do.ps1 -c "npm test"
+    - "net use v: \\\\vboxsrv\\vagrant"
+    - "v:; npm install"
+    - do.ps1 -c "v:; npm test"
+    # TODO: Get working with the "clone" approach.
+#    - "cd c:/users/vagrant/cloned; rimraf node_modules/*"
+#    - "cd c:/users/vagrant/cloned; npm install"
+#    - do.ps1 -c "cd c:/users/vagrant/cloned; npm test"
