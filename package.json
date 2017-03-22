@@ -17,7 +17,7 @@
   },
   "homepage": "https://github.com/the-t-in-rtf/gpii-testem#readme",
   "dependencies": {
-    "gpii-express": "1.0.5",
+    "gpii-express": "1.0.6-dev.20170322T123731Z.a886905",
     "gpii-handlebars": "1.0.0",
     "infusion": "git://github.com/amb26/infusion.git#3ee14d99e2169e9870dffcbd1119aa109a3277c8",
     "istanbul": "0.4.5",
