@@ -3,7 +3,8 @@
 var fluid = require("infusion");
 var gpii  = fluid.registerNamespace("gpii");
 
-fluid.require("%gpii-express");
+require("gpii-express");
+//fluid.require("%gpii-express");
 
 var fs     = require("fs");
 var path   = require("path");

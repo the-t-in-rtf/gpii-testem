@@ -10,7 +10,8 @@ fluid.setLogging(true);
 
 var gpii  = fluid.registerNamespace("gpii");
 
-fluid.require("%gpii-express");
+require("gpii-express");
+// fluid.require("%gpii-express");
 
 var exec    = require("child_process").exec;
 var fs      = require("fs");

@@ -3,7 +3,8 @@
 var fluid = require("infusion");
 var gpii  = fluid.registerNamespace("gpii");
 
-fluid.require("%gpii-testem");
+// fluid.require("%gpii-testem");
+require("../");
 
 fluid.registerNamespace("gpii.tests.testem.harness");
 
