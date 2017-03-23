@@ -40,7 +40,7 @@ test_job:
   script:              # One line per command to execute
     - "net use v: \\\\vboxsrv\\vagrant"
     - "v:; npm install"
-    - do.ps1 -c "v:; npm test"
+    - "v:; npm test"
     # TODO: Get working with the "clone" approach.
 #    - "cd c:/users/vagrant/cloned; rimraf node_modules/*"
 #    - "cd c:/users/vagrant/cloned; npm install"
