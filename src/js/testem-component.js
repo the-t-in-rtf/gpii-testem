@@ -10,8 +10,7 @@ fluid.setLogging(true);
 
 var gpii  = fluid.registerNamespace("gpii");
 
-require("gpii-express");
-// fluid.require("%gpii-express");
+fluid.require("%gpii-express");
 
 var exec    = require("child_process").exec;
 var fs      = require("fs");
@@ -28,38 +27,47 @@ fluid.registerNamespace("gpii.testem");
 
 /**
  *
- * Initialize all required test fixtures, instrument code, etc. before informing Testem that we are ready to proceed.
+ * Fire a pseudo-event, ensuring that a Testem callback is always called regardless of the result.
  *
- * @param that - The component itself.
- * @param config - Configuration options, provided by Testem when calling this function.
- * @param data - Data included by Testem.  See their docs for details.
- * @param callback - A callback to be called when we are ready for Testem to run the tests.
+ * @param componentEvent - The component event to be fired using `fluid.promise.fireTransformEvent`.
+ * @param testemCallback - A function that will be called when we are ready for Testem to run the tests.
  *
  */
-gpii.testem.init = function (that, config, data, callback) {
-    that.events.onFixturesConstructed.addListener(function () {
-        fluid.log("Fixtures constructed, triggering Testem test run...");
-        callback();
-    });
-    that.events.constructFixtures.fire();
+gpii.testem.handleTestemLifecycleEvent = function (componentEvent, testemCallback) {
+    var startupTransformChain = fluid.promise.fireTransformEvent(componentEvent);
+    startupTransformChain.then(function() { testemCallback();} , testemCallback);
 };
 
 /**
  *
- * Stop all fixtures, prepare reports, and cleanup temporary content before information Testem that it is safe to shutdown.
+ * A function to wrap a secondary component event so that we can represent the entire startup and shutdown as two chains.
  *
  * @param that - The component itself.
- * @param config - Configuration options, provided by Testem when calling this function.
- * @param data - Data included by Testem.  See their docs for details.
- * @param callback - A callback to be called when we are ready for Testem to shut down.
- *
+ * @param event - The event to listen to.
+ * @returns {Promise} - A promise that will be resolved the next time `event` is fired.
  */
-gpii.testem.shutdown = function (that, config, data, callback) {
-    that.events.finalCleanupComplete.addListener(function () {
-        fluid.log("Triggering Testem shutdown...");
-        callback();
-    });
-    that.events.stopFixtures.fire();
+gpii.testem.wrapSecondaryEvent = function (that, event) {
+    var promise = fluid.promise();
+
+    // We use a timeout to ensure that the Testem callback will always eventually be given the chance to
+    var timeoutID = setTimeout(function () {
+        if (!promise.disposition) {
+            promise.reject("Timed out while waiting for event '" + event.name + "' to fire...");
+        }
+    }, that.options.wrappedEventTimeout);
+
+    // Clear the timeout if the promise is resolved or rejected externally.
+    promise.then(
+        function(){
+            fluid.log("Resolved promise when '", event.name, "' was fired...");
+            clearTimeout(timeoutID);
+        },
+        function(){ clearTimeout(timeoutID); }
+    );
+
+    event.addListener(promise.resolve);
+
+    return promise;
 };
 
 /**
@@ -67,10 +75,10 @@ gpii.testem.shutdown = function (that, config, data, callback) {
  * Optionally instrument the source code under test.
  *
  * @param that - The component itself.
- * @param eventCallback - The event callback to fire when our work is complete.
- *
+ * @returns {Promise} - A promise that will be resolved or rejected when the instrumentation pass finishes.
  */
-gpii.testem.instrumentAsNeeded = function (that, eventCallback) {
+gpii.testem.instrumentAsNeeded = function (that) {
+    var instrumentationPromises = [];
     if (that.options.instrumentSource) {
         try {
             // Create our instrumentation directory if it doesn't already exist.
@@ -89,21 +97,25 @@ gpii.testem.instrumentAsNeeded = function (that, eventCallback) {
                 var commandSegments = ["istanbul instrument --output", targetPath, resolvedSourcePath, "--complete-copy"];
                 var command = commandSegments.join(" ");
 
-                exec(command, { cwd: that.options.cwd }, function (error, stdout, stderr) {
-                    fluid.log(stdout);
-                    fluid.log(stderr);
-                    if (error) {
-                        console.error("Error running instrumentation command:", error);
-                    }
+                var singleInstrumentationPromise = fluid.promise();
+                singleInstrumentationPromise.then(function () {
+                    // Add a "route" so that the instrumented code will seamlessly replace its uninstrumented counterpart.
+                    // Routes must be URL segments, and not paths.
+                    var originalSourcePath = url.resolve("/", lastDirSegment);
+                    var instrumentedSourcePath = url.resolve("instrumented/", lastDirSegment);
+                    that.generatedOptions.routes[originalSourcePath] = instrumentedSourcePath;
                 });
 
-                // Add a "route" so that the instrumented code will seamlessly replace its uninstrumented counterpart.
-                // Routes must be URL segments, and not paths.
-                var originalSourcePath = url.resolve("/", lastDirSegment);
-                var instrumentedSourcePath = url.resolve("instrumented/", lastDirSegment);
-                that.generatedOptions.routes[originalSourcePath] = instrumentedSourcePath;
+                instrumentationPromises.push(singleInstrumentationPromise);
 
-                return targetPath;
+                exec(command, { cwd: that.options.cwd }, function (error, stdout, stderr) {
+                    if (error) {
+                        singleInstrumentationPromise.reject(error);
+                    }
+                    else {
+                        singleInstrumentationPromise.resolve();
+                    }
+                });
             });
         }
         catch (error) {
@@ -111,7 +123,8 @@ gpii.testem.instrumentAsNeeded = function (that, eventCallback) {
         }
     }
 
-    eventCallback();
+    var sequence = fluid.promise.sequence(instrumentationPromises);
+    sequence.then(function () { fluid.log("Finished instrumentation..."); })
 };
 
 /**
@@ -139,32 +152,47 @@ gpii.testem.cleanupTestemContent = function (path) {
     var testemRegexp = /testem-.+/;
     var togo = fluid.promise();
 
+    togo.then(function () { fluid.log("Removed Testem content..."); });
+
     try {
         var resolvedPath = fluid.module.resolvePath(path);
 
-        fs.readdir(resolvedPath, function (error, testemDirs) {
-            if (error) {
-                togo.reject(error);
-            }
-            else {
-                var cleanupPromises = [];
-                fluid.each(testemDirs, function (dirName) {
-                    var testemDirCleanupPromise = fluid.promise();
-                    cleanupPromises.push(testemDirCleanupPromise);
-                    if (dirName.match(testemRegexp)) {
-                        rimraf(dirName, function (error) {
-                            if (error) { testemDirCleanupPromise.reject(error); }
-                            else { testemDirCleanupPromise.resolve(dirName); }
-                        });
-                    }
-                });
-                var cleanupSequence = fluid.promise.sequence(cleanupPromises);
-                cleanupSequence.then(togo.resolve, togo.reject);
-            }
-        });
+        if (fs.existsSync(resolvedPath)) {
+            fs.readdir(resolvedPath, function (testemError, testemDirs) {
+                if (testemError) {
+                    togo.reject(testemError);
+                }
+                else {
+                    var cleanupPromises = [];
+                    fluid.each(testemDirs, function (dirName) {
+                        if (dirName.match(testemRegexp)) {
+                            cleanupPromises.push(function () {
+                                var testemDirCleanupPromise = fluid.promise();
+                                rimraf(dirName, function (rimrafError) {
+                                    if (rimrafError) {
+                                        testemDirCleanupPromise.reject(rimrafError);
+                                    }
+                                    else {
+                                        testemDirCleanupPromise.resolve();
+                                    }
+                                });
+                                return testemDirCleanupPromise;
+                            });
+                        }
+                    });
+                    var cleanupSequence = fluid.promise.sequence(cleanupPromises);
+                    cleanupSequence.then(togo.resolve, togo.reject);
+                }
+            });
+        }
+        else {
+            fluid.log("No testem content found, skipping cleanup...");
+            togo.resolve();
+        }
+
     }
-    catch (error) {
-        togo.reject(error);
+    catch (exception) {
+        togo.reject(exception);
     }
 
     return togo;
@@ -180,37 +208,40 @@ gpii.testem.cleanupTestemContent = function (path) {
  * }
  *
  * @param cleanupDef {Object} - A cleanup definition, see example above.
- * @param promise {Function} - The promise to resolve or reject when our async tasks are complete.
+ * @returns {Function} - A promise-returning function which will be executed when it's our turn in the sequence.
  *
  */
 gpii.testem.cleanupDir = function (cleanupDef) {
-    if (cleanupDef.isTestemContent) {
-        return gpii.testem.cleanupTestemContent(cleanupDef.path);
-    }
-    else {
-        var promise = fluid.promise();
-        try {
-            if (fs.existsSync(cleanupDef.path)) {
-                fluid.log("No content exists for " + cleanupDef.name + ", skipping cleanup...");
-                promise.resolve();
-            }
-            else {
-                rimraf(cleanupDef.path, function (error) {
-                    if (error) {
-                        fluid.log("Error removing ", cleanupDef.name, " content:", error);
-                        promise.reject(error);
-                    }
-                    else {
-                        promise.resolve();
-                        fluid.log("Removed ", cleanupDef.name, " content...");
-                    }
-                });
-            }
+    return function () {
+        if (cleanupDef.isTestemContent) {
+            return gpii.testem.cleanupTestemContent(cleanupDef.path);
         }
-        catch (error) {
-            promise.reject(error);
+        else {
+            var promise = fluid.promise();
+
+            try {
+                if (fs.existsSync(cleanupDef.path)) {
+                    fluid.log("No content exists for " + cleanupDef.name + ", skipping cleanup...");
+                    promise.resolve();
+                }
+                else {
+                    rimraf(cleanupDef.path, function (error) {
+                        if (error) {
+                            fluid.log("Error removing ", cleanupDef.name, " content:", error);
+                            promise.reject(error);
+                        }
+                        else {
+                            promise.resolve();
+                            fluid.log("Removed ", cleanupDef.name, " content...");
+                        }
+                    });
+                }
+            }
+            catch (error) {
+                promise.reject(error);
+            }
+            return promise;
         }
-        return promise;
     }
 };
 
@@ -225,10 +256,12 @@ gpii.testem.cleanupDir = function (cleanupDef) {
  * }
  *
  * @param cleanupDefs  An array of cleanup definitions (see example above).
- * @param eventCallback The event to fire when cleanup is complete.
  *
  */
-gpii.testem.cleanup = function (cleanupDefs, eventCallback) {
+gpii.testem.cleanup = function (cleanupDefs) {
+    var togo = fluid.promise();
+    togo.then(function(){ fluid.log("Cleanup completed successfully...");});
+
     var cleanupPromises = [];
     fluid.each(cleanupDefs, function (singleDirEntry) {
         var cleanupPromise = gpii.testem.cleanupDir(singleDirEntry);
@@ -236,9 +269,9 @@ gpii.testem.cleanup = function (cleanupDefs, eventCallback) {
     });
 
     var sequence = fluid.promise.sequence(cleanupPromises);
+    sequence.then(togo.resolve, togo.reject);
 
-    // Because of the high cost of failing to call Testem callbacks, we choose to continue even if there are errors.
-    sequence.then(eventCallback, eventCallback);
+    return togo;
 };
 
 /**
@@ -266,11 +299,11 @@ gpii.testem.generateUniqueDirName = function (basePath, prefix, suffix) {
  *
  * @param that - The component itself.
  */
-gpii.testem.generateCoverageReportIfNeeded = function (that, eventCallback) {
-    if (that.options.generateCoverageReport) {
-        var promise = fluid.promise();
-        promise.then(eventCallback, eventCallback);
+gpii.testem.generateCoverageReportIfNeeded = function (that) {
+    var promise = fluid.promise();
+    promise.then(function(){ fluid.log("Finished coverage report...");});
 
+    if (that.options.generateCoverageReport) {
         try {
             var commandSegments = ["istanbul report --root", fluid.module.resolvePath(that.options.coverageDir), "--dir", that.options.reportsDir, "text-summary html json-summary"];
             var command = commandSegments.join(" ");
@@ -293,8 +326,9 @@ gpii.testem.generateCoverageReportIfNeeded = function (that, eventCallback) {
         }
     }
     else {
-        eventCallback();
+        promise.resolve();
     }
+    return promise;
 };
 
 fluid.registerNamespace("gpii.testem.dirs");
@@ -379,22 +413,16 @@ fluid.defaults("gpii.testem", {
     sourceDirs: [],
     testPages:   [],
     serveDirs:  [],
+    wrappedEventTimeout: 30000,
     members: {
         generatedOptions: {
             routes: {}
         }
     },
     events: {
-        initialCleanupComplete: null,
         constructFixtures: null,
-        sourceInstrumented: null,
-        safeToConstructFixtures: {
-            events: {
-                initialCleanupComplete: "initialCleanupComplete",
-                constructFixtures:      "constructFixtures",
-                sourceInstrumented:     "sourceInstrumented"
-            }
-        },
+        onTestemStart: null,
+        onTestemExit: null,
         onExpressStarted: null,
         onFixturesConstructed: {
             events: {
@@ -407,16 +435,7 @@ fluid.defaults("gpii.testem", {
             events: {
                 onExpressStopped: "onExpressStopped"
             }
-        },
-        createReports: null,
-        onCoverageReportComplete: null,
-        onReportsComplete: {
-            events: {
-                onCoverageReportComplete: "onCoverageReportComplete"
-            }
-        },
-        finalCleanup: null,
-        finalCleanupComplete: null
+        }
     },
     testemOptions: {
         framework:   "qunit",
@@ -439,12 +458,12 @@ fluid.defaults("gpii.testem", {
     },
     invokers: {
         "handleTestemStart": {
-            funcName: "gpii.testem.init",
-            args:     ["{that}", "{arguments}.0", "{arguments}.1", "{arguments}.2"] // config, data, callback
+            funcName: "gpii.testem.handleTestemLifecycleEvent",
+            args:     ["{that}.events.onTestemStart", "{arguments}.2"] // componentEvent, testemCallback
         },
         "handleTestemExit": {
-            funcName: "gpii.testem.shutdown",
-            args:     ["{that}", "{arguments}.0", "{arguments}.1", "{arguments}.2"] // config, data, callback
+            funcName: "gpii.testem.handleTestemLifecycleEvent",
+            args:     ["{that}.events.onTestemExit", "{arguments}.2"] // componentEvent, testemCallback
         },
         "getTestemOptions": {
             funcName: "gpii.testem.getTestemOptions",
@@ -452,60 +471,50 @@ fluid.defaults("gpii.testem", {
         }
     },
     listeners: {
-        "onCreate.cleanup": {
-            funcName: "gpii.testem.cleanup",
-            args:     ["{that}.options.cleanup.initial", "{that}.events.initialCleanupComplete.fire"] // cleanupDefs, eventCallback
-        },
-        "initialCleanupComplete.log": {
-            priority: "first",
-            funcName: "fluid.log",
-            args:     "Initial cleanup complete..."
-        },
-        "initialCleanupComplete.instrumentSourceIfNeeded": {
-            funcName: "gpii.testem.instrumentAsNeeded",
-            args:     ["{that}", "{that}.events.sourceInstrumented.fire"] // eventCallback
-        },
         // Disable default behavior to avoid double-stop.
         "onDestroy.stopServer": {
             funcName: "fluid.identity"
         },
-        "stopFixtures.stopExpress": {
+        // The unified "testem startup" promise chain.
+        "onTestemStart.cleanup": {
+            priority: "first",
+            funcName: "gpii.testem.cleanup",
+            args:     ["{that}.options.cleanup.initial"]
+        },
+        "onTestemStart.instrument": {
+            priority: "after:cleanup",
+            funcName: "gpii.testem.instrumentAsNeeded",
+            args:     ["{that}", "{that}.events.constructFixtures.fire"] // eventCallback
+        },
+        "onTestemStart.constructFixtures": {
+            priority: "after:instrument",
+            func:     "{that}.events.constructFixtures.fire"
+        },
+        "onTestemStart.waitForFixtures": {
+            priority: "after:constructFixtures",
+            funcName: "gpii.testem.wrapSecondaryEvent",
+            args:     ["{that}", "{that}.events.onFixturesConstructed"] // that, event
+        },
+        // The unified "testem shutdown" promise chain.
+        "onTestemExit.stopExpress": {
+            priority: "first",
             funcName: "gpii.express.stopServer",
             args:     ["{that}.coverageExpressInstance"]
         },
-        "onFixturesConstructed.log": {
-            priority: "first",
-            funcName: "fluid.log",
-            args: ["Fixtures constructed..."]
+        "onTestemExit.waitForFixtures": {
+            priority: "after:stopExpress",
+            funcName: "gpii.testem.wrapSecondaryEvent",
+            args:     ["{that}", "{that}.events.onFixturesStopped"] // that, event
         },
-        "onFixturesStopped.log": {
-            priority: "first",
-            funcName: "fluid.log",
-            args: ["Fixtures stopped..."]
-        },
-        "onFixturesStopped.createReports": {
-            func: "{that}.events.createReports.fire"
-        },
-        "createReports.coverageReport": {
+        "onTestemExit.coverageReport": {
+            priority: "after:waitForFixtures",
             funcName: "gpii.testem.generateCoverageReportIfNeeded",
-            args:     ["{that}", "{that}.events.onCoverageReportComplete.fire"] // eventCallback
+            args:     ["{that}"]
         },
-        "onReportsComplete.log": {
-            priority: "first",
-            funcName: "fluid.log",
-            args: ["Reports complete..."]
-        },
-        "onReportsComplete.finalCleanup": {
-            func: "{that}.events.finalCleanup.fire"
-        },
-        "finalCleanup.cleanup": {
+        "onTestemExit.cleanup": {
+            priority: "last",
             funcName: "gpii.testem.cleanup",
-            args:     ["{that}.options.cleanup.final", "{that}.events.finalCleanupComplete.fire"] // cleanupDefs, eventCallback
-        },
-        "finalCleanupComplete.log": {
-            priority: "first",
-            funcName: "fluid.log",
-            args:     "Final cleanup complete..."
+            args:     ["{that}.options.cleanup.final"] // cleanupDefs
         }
     },
     distributeOptions: {
@@ -515,7 +524,7 @@ fluid.defaults("gpii.testem", {
     components: {
         coverageExpressInstance: {
             type: "gpii.testem.coverage.express",
-            createOnEvent: "safeToConstructFixtures",
+            createOnEvent: "constructFixtures",
             options: {
                 port: "{gpii.testem}.options.coveragePort",
                 listeners: {
