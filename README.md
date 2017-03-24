@@ -10,11 +10,6 @@ and static functions that assist in using [Testem](https://github.com/testem/tes
 3. Provides the ability to safely shut down server-side test fixtures after each test run.
 4. Provides cleanup mechanisms to remove temporary browser content after each test run.
 
-# Requirements
-
-In order to use the code coverage features of this grade, you'll need to have
-[Istanbul](https://github.com/gotwarlost/istanbul) installed and available in your path.
-
 # Usage instructions
 
 To use this grade from Testem, install this package as a development dependency using a command like

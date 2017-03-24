@@ -373,7 +373,7 @@ fluid.defaults("gpii.testem", {
         cleanup: "nomerge"
     },
     cwd: process.cwd(),
-    testemRoot: {
+    packageRoot: {
         expander: {
             funcName: "fluid.module.resolvePath",
             args: "%gpii-testem"
@@ -382,7 +382,7 @@ fluid.defaults("gpii.testem", {
     istanbulCmd: {
         expander: {
             funcName: "fluid.stringTemplate",
-            args: ["node %testemRoot/node_modules/istanbul/lib/cli.js", { testemRoot: "{that}.options.testemRoot" }]
+            args: ["node %packageRoot/node_modules/istanbul/lib/cli.js", { packageRoot: "{that}.options.packageRoot" }]
         }
     },
     cleanup: {

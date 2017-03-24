@@ -15,7 +15,13 @@ see below.
 
 | Option                    | Type        | Description                           |
 | ------------------------- | ----------- | ------------------------------------- |
+| `cwd`                     | `{String}`  | Defaults to `process.cwd()`, i.e. the directory from which the script was called. |
+| `packageRoot`             | `{String}`  | The package root we use to access our own copies of testem and istanbul when running tests. |
+| `istanbulCmd`             | `{String}`  | The istanbul command to use when instrumenting code and generating code coverage reports. |
+| `testemDir`               | `{String}`  | The directory in which testem's browser settings and temporary files should be stored. |
+| `wrappedEventTimeout`     | `{Number}`  | How long to wait (in milliseconds) before triggering a timeout when waiting for key startup/shutdown events. |
 | `coveragePort` (required) | `{Number}`  | The port gpii-express should listen on to record coverage data. Defaults to `7000`.|
+| `coverageUrl`             | `{String}`  | The URL on which the coverage listener should be run.  Set based on `coveragePort` by default. |
 | `coverageDir` (required)  | `{String}`  | The full or package-relative path where coverage data should be saved. By default, a unique subdirectory is created in `os.tmpdir()`. |
 | `reportsDir` (required)   | `{String}`  | The full or package-relative path where coverage reports and test results should be saved. By default, a unique subdirectory is created in `os.tmpdir()`. |
 | `instrumentSource`        | `{Boolean}` | Whether to instrument the source in `options.SourceFiles` (see below).  Defaults to `true`. |
