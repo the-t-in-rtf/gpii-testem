@@ -4,7 +4,7 @@
   "description": "A library to assist in using Testem within the Fluid ecosystem.",
   "main": "index.js",
   "scripts": {
-    "test": "node_modules/.bin/nyc -r text -r lcov node tests/all-tests.js"
+    "test": "node node_modules/nyc/bin/nyc.js -r text -r lcov node tests/all-tests.js"
   },
   "repository": {
     "type": "git",

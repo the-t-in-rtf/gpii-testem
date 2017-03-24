@@ -61,7 +61,8 @@ fluid.defaults("gpii.tests.testem.runner", {
     tests: {
         complete: {
             name: "Running a suite of tests that results in complete coverage...",
-            command: "node ../node_modules/testem/testem.js ci --file testem-fixtures/testem-complete-coverage.js",
+            // TODO: enable IE once https://issues.gpii.net/browse/GPII-2341 is resolved.
+            command: "node ../node_modules/testem/testem.js ci --file testem-fixtures/testem-complete-coverage.js --skip IE",
             hasCoverage: true,
             expectedCoverage: {
                 total: {
@@ -76,7 +77,8 @@ fluid.defaults("gpii.tests.testem.runner", {
         },
         incomplete: {
             name: "Running a suite of tests that results in incomplete coverage...",
-            command: "node ../node_modules/testem/testem.js ci --file testem-fixtures/testem-incomplete-coverage.js",
+            // TODO: enable IE once https://issues.gpii.net/browse/GPII-2341 is resolved.
+            command: "node ../node_modules/testem/testem.js ci --file testem-fixtures/testem-incomplete-coverage.js --skip IE",
             hasCoverage: true,
             expectedCoverage: {
                 total: {
@@ -91,12 +93,14 @@ fluid.defaults("gpii.tests.testem.runner", {
         },
         noCoverage: {
             name:        "Running a suite of tests without test coverage...",
-            command:     "node ../node_modules/testem/testem.js ci --file testem-fixtures/testem-no-coverage.js",
+            // TODO: enable IE once https://issues.gpii.net/browse/GPII-2341 is resolved.
+            command:     "node ../node_modules/testem/testem.js ci --file testem-fixtures/testem-no-coverage.js --skip IE",
             hasCoverage: false
         },
         failure: {
             name:            "Running a suite of tests with gross configuration errors...",
-            command:         "node ../node_modules/testem/testem.js ci --file testem-fixtures/testem-failure-modes.js",
+            // TODO: enable IE once https://issues.gpii.net/browse/GPII-2341 is resolved.
+            command:         "node ../node_modules/testem/testem.js ci --file testem-fixtures/testem-failure-modes.js --skip IE",
             hasCoverage:     false,
             hasTestemErrors: true
         }

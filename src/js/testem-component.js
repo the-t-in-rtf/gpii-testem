@@ -94,7 +94,7 @@ gpii.testem.instrumentAsNeeded = function (that) {
 
                 // Instrument each directory to its own subdirectory using a command like:
                 // istanbul instrument --output /tmp/instrumentSource/src src
-                var commandSegments = ["istanbul instrument --output", targetPath, resolvedSourcePath, "--complete-copy"];
+                var commandSegments = [that.options.istanbulCmd, "instrument --output", targetPath, resolvedSourcePath, "--complete-copy"];
                 var command = commandSegments.join(" ");
 
                 var singleInstrumentationPromise = fluid.promise();
@@ -305,7 +305,7 @@ gpii.testem.generateCoverageReportIfNeeded = function (that) {
 
     if (that.options.generateCoverageReport) {
         try {
-            var commandSegments = ["istanbul report --root", fluid.module.resolvePath(that.options.coverageDir), "--dir", that.options.reportsDir, "text-summary html json-summary"];
+            var commandSegments = [that.options.istanbulCmd, "report --root", fluid.module.resolvePath(that.options.coverageDir), "--dir", that.options.reportsDir, "text-summary html json-summary"];
             var command = commandSegments.join(" ");
 
             exec(command, { cwd: that.options.cwd }, function (error, stdout, stderr) {
@@ -373,6 +373,18 @@ fluid.defaults("gpii.testem", {
         cleanup: "nomerge"
     },
     cwd: process.cwd(),
+    testemRoot: {
+        expander: {
+            funcName: "fluid.module.resolvePath",
+            args: "%gpii-testem"
+        }
+    },
+    istanbulCmd: {
+        expander: {
+            funcName: "fluid.stringTemplate",
+            args: ["node %testemRoot/node_modules/istanbul/lib/cli.js", { testemRoot: "{that}.options.testemRoot" }]
+        }
+    },
     cleanup: {
         initial:  gpii.testem.dirs.everything,
         final:    gpii.testem.dirs.everything

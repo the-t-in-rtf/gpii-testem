@@ -5,7 +5,7 @@ env:
   vms:
     windows10:
       cpu: 2                   # number of cpus
-      memory: 2048             # amount of RAM memory
+      memory: 2048             # amount of RAM memory (in Mb)
       clone: true              # use the linked_clone Vagrant feature
       autostart: true
       box: inclusivedesign/windows10-eval
@@ -22,15 +22,16 @@ setup_job:
     - choco install nodejs.install --version 6.9.1 --forcex86 -y
     - do.ps1 -c "npm install -g istanbul testem nyc rimraf node-inspector"
     - do.ps1 -c "npm config set bin-links false --global"
+    - "net use v: \\\\vboxsrv\\vagrant  /yes"
+    - "do.ps1 -c 'net use v: \\\\VBOXSVR\\vagrant /yes'"
 
 clone_job:
   stage: clone
   script:
-    - "net use v: \\\\vboxsrv\\vagrant"
     - "rimraf c:/users/vagrant/diff"
     - "rimraf c:/users/vagrant/cloned"
     - "v:; git config core.safecrlf false"
-    # TODO: Review with the team.  This works from the shell, but results in an unusable patch when run here.
+    # TODO: Review with the team.  This works from the shell, but results in an unusable patch when run here.  Likely down to the difference between do.ps1 and not.
     - "v:; git diff > c:/users/vagrant/diff"
     - "v:; git clone -q v:/ c:/users/vagrant/cloned"
     - "cd c:/users/vagrant/cloned; git apply ../diff"
@@ -38,10 +39,4 @@ clone_job:
 test_job:
   stage: test          # name of the stage
   script:              # One line per command to execute
-    - "net use v: \\\\vboxsrv\\vagrant"
-    - "v:; npm install"
-    - "v:; npm test"
-    # TODO: Get working with the "clone" approach.
-#    - "cd c:/users/vagrant/cloned; rimraf node_modules/*"
-#    - "cd c:/users/vagrant/cloned; npm install"
-#    - do.ps1 -c "cd c:/users/vagrant/cloned; npm test"
+    - "do.ps1 -c 'v: && npm install && npm test'"
