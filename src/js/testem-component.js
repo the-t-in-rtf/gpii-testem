@@ -47,27 +47,59 @@ gpii.testem.handleTestemLifecycleEvent = function (componentEvent, testemCallbac
  * @returns {Promise} - A promise that will be resolved the next time `event` is fired.
  */
 gpii.testem.wrapSecondaryEvent = function (that, event) {
-    var promise = fluid.promise();
+    var eventPromise = gpii.testem.generateSingleUseEventListener(that, event);
+    gpii.testem.addPromiseTimeout(eventPromise, "Timed out while waiting for event '" + event.name + "' to fire...", that.options.wrappedEventTimeout);
+    return eventPromise;
+};
 
-    // We use a timeout to ensure that the Testem callback will always eventually be given the chance to
+/**
+ *
+ * Listen for an event once, resolve a promise, and then stop listening.  Also stops listening if the returned promise
+ * is resolved/reject externally (for example, by the timeout wrapper.
+ *
+ * Only works with Fluid Promises, see: http://docs.fluidproject.org/infusion/development/PromisesAPI.html
+ *
+ * @param that - The component itself.
+ * @param event - The event to wrap with a promise.
+ * @return {*}
+ */
+gpii.testem.generateSingleUseEventListener = function (that, event) {
+    var eventPromise = fluid.promise();
+
+    // Ensure that the listener is removed whether we resolve the promise, or whether someone else does.
+    var listenerNamespace = "gpii.testem.singleUse." + that.id;
+    var removeListener = function () { event.removeListener(listenerNamespace); };
+    eventPromise.then(removeListener, removeListener);
+    event.addListener(function () {
+        eventPromise.resolve(fluid.makeArray(arguments));
+    }, listenerNamespace);
+
+    return eventPromise;
+};
+
+/**
+ *
+ * Reject a promise after a given amount of milliseconds.  Used in this package to ensure that the overall promise
+ * chain eventually completes, so that Testem's callbacks can be called.
+ *
+ * Only works with Fluid Promises, see: http://docs.fluidproject.org/infusion/development/PromisesAPI.html
+ *
+ * @param originalPromise {Promise} The original promise to wrap in a timeout.
+ * @param rejectionPayload {Object} The payload to use when rejecting the message.
+ * @param timeoutInMillis {Number} The number of milliseconds to wait before timing out.
+ * @returns originalPromise {Promise} The original promise.
+ */
+gpii.testem.addPromiseTimeout = function (originalPromise, rejectionMessage, timeoutInMillis) {
+    // Hold onto a handle so that we can clear the timeout if needed.
     var timeoutID = setTimeout(function () {
-        if (!promise.disposition) {
-            promise.reject("Timed out while waiting for event '" + event.name + "' to fire...");
-        }
-    }, that.options.wrappedEventTimeout);
+        originalPromise.reject(rejectionMessage);
+    }, timeoutInMillis);
 
-    // Clear the timeout if the promise is resolved or rejected externally.
-    promise.then(
-        function(){
-            fluid.log("Resolved promise when '", event.name, "' was fired...");
-            clearTimeout(timeoutID);
-        },
-        function(){ clearTimeout(timeoutID); }
-    );
+    // Clear the timeoutInMillis if the original promise is resolved or rejected externally.
+    var clearPromiseTimeout = function () { clearTimeout(timeoutID); };
+    originalPromise.then(clearPromiseTimeout, clearPromiseTimeout);
 
-    event.addListener(promise.resolve);
-
-    return promise;
+    return originalPromise;
 };
 
 /**

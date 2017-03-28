@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "A library to assist in using Testem within the Fluid ecosystem.",
   "main": "index.js",
+  "nyc": {
+    "exclude": ["node_modules/**", "tests/**"]
+  },
   "scripts": {
     "test": "node node_modules/nyc/bin/nyc.js -r text -r lcov node tests/all-tests.js"
   },
