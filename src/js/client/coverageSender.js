@@ -16,7 +16,8 @@
  */
 (function (fluid, $, Testem, QUnit) {
     "use strict";
-    QUnit.config.autostart = false;
+    // Disabled as complex projects like "universal" managed to run their tests before QUnit was started, which resulted in errors.
+    // QUnit.config.autostart = false;
 
     var gpii = fluid.registerNamespace("gpii");
 
@@ -24,7 +25,8 @@
 
     gpii.testem.coverage.sender.wireTestem = function (that) {
         Testem.afterTests(that.sendCoverageData);
-        QUnit.start();
+        // Disabled, see above.
+        // QUnit.start();
     };
 
     gpii.testem.coverage.sender.sendCoverageData = function (that, config, data, callback) {
