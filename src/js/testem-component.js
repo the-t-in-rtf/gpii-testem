@@ -593,3 +593,53 @@ fluid.defaults("gpii.testem.coverageDataOnly", {
         final:    gpii.testem.dirs.everythingButCoverage
     }
 });
+
+fluid.registerNamespace("gpii.testem.commonTestDefs");
+
+/**
+ *
+ * Load a test definition file.  Test definitions are designed for use with both gpii-testem and qunit-composite, and
+ * look something like:
+ *
+ * testDefs: [
+ *   {
+ *      name: "QUnit module name 1...",
+ *      tests: ["path/to/test1.html", "path/to/test2.html"]
+ *   },
+ *   {
+ *      name: "QUnit module name 2...",
+ *      tests: ["path/to/test3.html", "path/to/test4.html"]
+ *   }
+ * ]
+ *
+ * @param testDefFile {Object} - The path to the test definition file.
+ * @returns extractedTestPages {Array} - An array of relative paths to the test content, for use with Testem's test_pages option.
+ *
+ */
+gpii.testem.commonTestDefs.expandTestDefs = function (testDefFile) {
+    var resolvedPath = fluid.module.resolvePath(testDefFile);
+    if (fs.existsSync(resolvedPath)) {
+        var extractedTestPages = [];
+
+        var testDefs = require(resolvedPath);
+
+        fluid.each (testDefs, function (testDef) {
+            extractedTestPages = extractedTestPages.concat(testDef.tests);
+        });
+        return extractedTestPages;
+    }
+    else {
+        fluid.fail("You must provide the path to a test defintion JSON file.");
+    }
+};
+
+fluid.defaults("gpii.testem.commonTestDefs", {
+    gradeNames:  ["gpii.testem"],
+    testDefFile: "testDefs.json",
+    testPages: {
+        expander: {
+            funcName: "gpii.testem.commonTestDefs.expandTestDefs",
+            args:     ["{that}.options.testDefFile"]
+        }
+    }
+});

@@ -75,6 +75,22 @@ fluid.defaults("gpii.tests.testem.runner", {
                 }
             }
         },
+        testDefs: {
+            name: "Load test pages from a common test definition file...",
+            // TODO: enable IE once https://issues.gpii.net/browse/GPII-2341 is resolved.
+            command: "node ../node_modules/testem/testem.js ci --file testem-fixtures/testem-testDefs.js --skip IE",
+            hasCoverage: true,
+            expectedCoverage: {
+                total: {
+                    branches: {
+                        total: 2,
+                        covered: 2,
+                        skipped: 0,
+                        pct: 100
+                    }
+                }
+            }
+        },
         incomplete: {
             name: "Running a suite of tests that results in incomplete coverage...",
             // TODO: enable IE once https://issues.gpii.net/browse/GPII-2341 is resolved.
