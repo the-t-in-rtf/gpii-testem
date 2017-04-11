@@ -482,6 +482,14 @@ fluid.defaults("gpii.testem", {
         }
     },
     testemOptions: {
+        // The timeout options and Chrome browser args are workaround to minimize "browser disconnect" errors.
+        // https://github.com/testem/testem/issues/777
+        browser_disconnect_timeout: 300, // Five minutes
+        browser_start_timeout:      300,
+        timeout: 300,
+        "browser_args": {
+            "Chrome": ["--memory-pressure-threshholds 1"]
+        },
         framework:   "qunit",
         report_file: {
             expander: {
