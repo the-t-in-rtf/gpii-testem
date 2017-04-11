@@ -1,4 +1,0 @@
-[{
-  "name": "Module name (not used by Testem)",
-  "tests": ["no-coverage.html", "incomplete.html", "complete.html"]
-}]
