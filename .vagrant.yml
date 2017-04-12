@@ -8,7 +8,7 @@ env:
       memory: 2048             # amount of RAM memory (in Mb)
       clone: true              # use the linked_clone Vagrant feature
       autostart: true
-      box: inclusivedesign/windows10-eval
+      box: inclusivedesign/windows10-eval-x64-Apps
 
 stages:                # Stages to perform when 'ci test' command is invoked
   - setup              # Install our system-level dependencies, etc.
