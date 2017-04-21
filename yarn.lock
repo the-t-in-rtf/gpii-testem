@@ -1220,9 +1220,9 @@ globby@^5.0.0:
     pify "^2.0.0"
     pinkie-promise "^2.0.0"
 
-gpii-express@1.0.7-dev.20170419T084255Z.1cfe9d8:
-  version "1.0.7-dev.20170419T084255Z.1cfe9d8"
-  resolved "https://registry.yarnpkg.com/gpii-express/-/gpii-express-1.0.7-dev.20170419T084255Z.1cfe9d8.tgz#eff4853fff23fe5485ad898c5b9243eb87548b26"
+gpii-express@1.0.7:
+  version "1.0.7"
+  resolved "https://registry.yarnpkg.com/gpii-express/-/gpii-express-1.0.7.tgz#5a8fddb22285a086be9f5f12a866b378d1bc090e"
   dependencies:
     body-parser "1.17.1"
     cookie-parser "1.4.3"
