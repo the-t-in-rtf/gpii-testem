@@ -172,6 +172,21 @@ gpii.testem.getTestemOptions = function (that) {
     return fluid.extend(that.options.testemOptions, that.generatedOptions);
 };
 
+gpii.testem.generateRimrafWrapper = function (path) {
+    return function () {
+        var rimrafPromise = fluid.promise();
+        rimraf(path, function (rimrafError) {
+            if (rimrafError) {
+                rimrafPromise.reject(rimrafError);
+            }
+            else {
+                rimrafPromise.resolve();
+            }
+        });
+        return rimrafPromise;
+    };
+};
+
 /**
  *
  * Remove all Testem browser data from this run.
@@ -198,20 +213,13 @@ gpii.testem.cleanupTestemContent = function (path) {
                     var cleanupPromises = [];
                     fluid.each(testemDirs, function (dirName) {
                         if (dirName.match(testemRegexp)) {
-                            cleanupPromises.push(function () {
-                                var testemDirCleanupPromise = fluid.promise();
-                                rimraf(dirName, function (rimrafError) {
-                                    if (rimrafError) {
-                                        testemDirCleanupPromise.reject(rimrafError);
-                                    }
-                                    else {
-                                        testemDirCleanupPromise.resolve();
-                                    }
-                                });
-                                return testemDirCleanupPromise;
-                            });
+                            cleanupPromises.push(gpii.testem.generateRimrafWrapper(dirName));
                         }
                     });
+
+                    // Remove the enclosing directory as well...
+                    cleanupPromises.push(gpii.testem.generateRimrafWrapper(resolvedPath));
+
                     var cleanupSequence = fluid.promise.sequence(cleanupPromises);
                     cleanupSequence.then(togo.resolve, togo.reject);
                 }
