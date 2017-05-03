@@ -8,6 +8,7 @@ var jqUnit = require("node-jqunit");
 var exec   = require("child_process").exec;
 var path   = require("path");
 var fs     = require("fs");
+var rimraf = require("rimraf");
 
 fluid.registerNamespace("gpii.tests.testem.runner");
 
@@ -24,8 +25,9 @@ gpii.tests.testem.runner.runSingleTest = function (testDef) {
             if (testDef.hasTestemErrors) {
                 jqUnit.assertNotUndefined("There should be an error running testem...", error);
             }
-            else {
-                jqUnit.assertFalse("There should be no errors running testem...", error);
+            else if (error) {
+                fluid.log("TESTEM ERROR:", error);
+                jqUnit.fail("There should be no errors running testem...");
             }
 
             var matches = stdout.match(/= START TESTEM COMPONENT OPTIONS =\n([^]+)= END TESTEM COMPONENT OPTIONS =\n/);
@@ -51,6 +53,37 @@ gpii.tests.testem.runner.runSingleTest = function (testDef) {
                     jqUnit.assertFalse("There should not be an HTML coverage report...", fs.existsSync(htmlCoveragePath));
                     jqUnit.assertFalse("There should not be a JSON coverage summary...", fs.existsSync(coverageSummaryPath));
                 }
+
+                // Now that we have inspected the output, clean it up.
+                jqUnit.stop();
+
+                var cleanupPromises = [];
+
+                fluid.each([testemOptions.reportsDir, testemOptions.coverageDir], function (dirToRemove) {
+                    cleanupPromises.push(function () {
+                        var promise = fluid.promise();
+                        fluid.log("Removing dir '", dirToRemove, "'...");
+                        rimraf(dirToRemove, function (error) {
+                            error ? promise.reject(error) : promise.resolve();
+                        });
+                        return promise;
+                    });
+                });
+
+                var sequence = fluid.promise.sequence(cleanupPromises);
+                sequence.then(
+                    function () {
+                        fluid.log("Removed reports and coverage from this test run...");
+                        jqUnit.start();
+                    },
+                    function (error) {
+                        fluid.log("Unable to remove reports and/or coverage from this test run:", error);
+                        jqUnit.start();
+                    }
+                );
+            }
+            else {
+                jqUnit.fail("There should have been testem options in the console logs...");
             }
         });
     });

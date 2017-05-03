@@ -341,9 +341,9 @@ gpii.testem.generateUniqueDirName = function (basePath, prefix, suffix) {
  */
 gpii.testem.generateCoverageReportIfNeeded = function (that) {
     var promise = fluid.promise();
-    promise.then(function(){ fluid.log("Finished coverage report...");});
 
     if (that.options.generateCoverageReport) {
+        promise.then(function(){ fluid.log("Finished coverage report...");});
         try {
             var commandSegments = [that.options.istanbulCmd, "report --root", fluid.module.resolvePath(that.options.coverageDir), "--dir", that.options.reportsDir, "text-summary html json-summary"];
             var command = commandSegments.join(" ");
@@ -366,6 +366,7 @@ gpii.testem.generateCoverageReportIfNeeded = function (that) {
         }
     }
     else {
+        fluid.log("Skipping coverage report...");
         promise.resolve();
     }
     return promise;
@@ -496,7 +497,12 @@ fluid.defaults("gpii.testem", {
         browser_start_timeout:      300,
         timeout: 300,
         "browser_args": {
-            "Chrome": ["--memory-pressure-threshholds 1"]
+            "Chrome": [
+                "--disable-extensions",
+                "--memory-pressure-threshholds=1",
+                "--disk-cache-size=0",
+                "--disable-new-zip-unpacker"
+            ]
         },
         framework:   "qunit",
         report_file: {

@@ -48,7 +48,8 @@ fluid.defaults("gpii.tests.testem.harness", {
         }
     },
     listeners: {
-        "onCreate.logTestemOptions": {
+        "onTestemStart.logTestemOptions": {
+            priority: "before:cleanup",
             funcName: "gpii.tests.testem.harness.outputOptions",
             args:     ["{that}"]
         }

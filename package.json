@@ -30,7 +30,7 @@
     "node-jqunit": "1.1.4",
     "qunitjs": "2.1.1",
     "rimraf": "2.6.1",
-    "testem": "1.13.0"
+    "testem": "git://github.com/the-t-in-rtf/testem.git#60684dcdeb8fe6d12f2e13e4738404eb6e046c48"
   },
   "devDependencies": {
     "eslint": "3.19.0",

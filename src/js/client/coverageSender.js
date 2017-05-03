@@ -87,7 +87,7 @@
         invokers: {
             "sendCoverageData": {
                 funcName: "gpii.testem.coverage.sender.sendCoverageData",
-                args: ["{that}", "{arguments}.0", "{arguments}.1", "{arguments}.2"] // config, data, callbackn
+                args: ["{that}", "{arguments}.0", "{arguments}.1", "{arguments}.2"] // config, data, callback
             },
             "handleSuccess": {
                 funcName: "gpii.testem.coverage.sender.handleSuccess",
