@@ -2632,9 +2632,9 @@ test-exclude@^4.0.0:
     read-pkg-up "^1.0.1"
     require-main-filename "^1.0.1"
 
-"testem@git://github.com/the-t-in-rtf/testem.git#60684dcdeb8fe6d12f2e13e4738404eb6e046c48":
-  version "1.16.0"
-  resolved "git://github.com/the-t-in-rtf/testem.git#60684dcdeb8fe6d12f2e13e4738404eb6e046c48"
+testem@1.16.1:
+  version "1.16.1"
+  resolved "https://registry.yarnpkg.com/testem/-/testem-1.16.1.tgz#ef8b2c793a47082ca1791e2a49d3f22bf1d4ca28"
   dependencies:
     backbone "^1.1.2"
     bluebird "^3.4.6"
