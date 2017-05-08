@@ -12,7 +12,6 @@ env:
 
 stages:                # Stages to perform when 'ci test' command is invoked
   - setup              # Install our system-level dependencies, etc.
-#  - clone              # Clone our working repo to a local filesystem.
   - test               # Run the actual tests
 
 setup_job:
@@ -23,17 +22,6 @@ setup_job:
     - do.ps1 -c "npm config set bin-links false --global"
     - "net use v: \\\\vboxsrv\\vagrant  /yes"
     - "do.ps1 -c 'net use v: \\\\VBOXSVR\\vagrant /yes'"
-
-clone_job:
-  stage: clone
-  script:
-    - "rimraf c:/users/vagrant/diff"
-    - "rimraf c:/users/vagrant/cloned"
-    - "v:; git config core.safecrlf false"
-    # TODO: Review with the team.  This works from the shell, but results in an unusable patch when run here.  Likely down to the difference between do.ps1 and not.
-    - "v:; git diff > c:/users/vagrant/diff"
-    - "v:; git clone -q v:/ c:/users/vagrant/cloned"
-    - "cd c:/users/vagrant/cloned; git apply ../diff"
 
 test_job:
   stage: test          # name of the stage
