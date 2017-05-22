@@ -70,8 +70,11 @@ temporary content.  For details on how this works, see ["The Testem Event Lifecy
 
 ## `{gpii.testem}.getTestemOptions()`
 
-An invoker which exposes the final Testem options in a way that Testem can read from a configuration file.  See
-[the README file](../README.md) for a usage example.
+An invoker which retrieves the Testem options, including all "generated" options, such as routes to replace the original 
+source with instrumented source.  This invoker is intended to be used with `module.exports` to expose the component
+options in the way the Testem expects when working with [javascript Testem configuration files](https://github.com/testem/testem/blob/master/docs/config_file.md#an-example).
+
+See [the README file](../README.md) for an example of using this invoker.
 
 ## Paths
 
