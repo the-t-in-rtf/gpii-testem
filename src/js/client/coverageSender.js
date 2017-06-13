@@ -14,7 +14,8 @@
     care of that yourself.
 
  */
-(function (fluid, $, Testem, QUnit) {
+/* globals Testem */
+(function (fluid, $, Testem) {
     "use strict";
     // Disabled as complex projects like "universal" managed to run their tests before QUnit was started, which resulted in errors.
     // QUnit.config.autostart = false;
@@ -99,4 +100,4 @@
             }
         }
     });
-})(fluid, jQuery, Testem, QUnit);
+})(fluid, jQuery, Testem);

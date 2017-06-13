@@ -3,7 +3,7 @@ module.exports = function (grunt) {
     "use strict";
     grunt.initConfig({
         eslint: {
-            src: ["./src/**/*.js", "./tests/**/*.js", "./*.js"]
+            src: ["./src/**/*.js", "./tests/**/*.js", "./*.js", "!./tests/testem-fixtures/instrumented/**/*.js"]
         },
         jsonlint: {
             src: ["src/**/*.json", "tests/**/*.json", "./*.json"]
@@ -11,7 +11,7 @@ module.exports = function (grunt) {
     });
 
     grunt.loadNpmTasks("fluid-grunt-eslint");
-    grunt.loadNpmTasks("grunt-jsonlint");
+    grunt.loadNpmTasks("grunt-jsonlint")
 
     grunt.registerTask("lint", "Apply jshint and jsonlint", ["eslint", "jsonlint"]);
 };

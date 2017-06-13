@@ -3,6 +3,7 @@
     Unit tests for the timeout and event<->promise functions used in this package.
 
  */
+/* eslint-env node */
 "use strict";
 var fluid  = require("infusion");
 var gpii   = fluid.registerNamespace("gpii");
@@ -84,7 +85,7 @@ jqUnit.test("A promise should reject with a timeout if it is not rejected/resolv
     timeoutPromise.then(
         function () {
             jqUnit.start();
-            fluid.fail("The wrapped promise should not have been resolved.")
+            fluid.fail("The wrapped promise should not have been resolved.");
         },
         function (error) {
             jqUnit.start();
@@ -105,7 +106,7 @@ jqUnit.test("The timeout should be cleared if the promise is resolved externally
             jqUnit.start();
             jqUnit.assert("The promise should have been resolved...");
         },
-        function (error) {
+        function () {
             jqUnit.start();
             fluid.fail("The promise should not be rejected.");
         }

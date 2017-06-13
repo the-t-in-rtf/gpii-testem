@@ -42,7 +42,7 @@ gpii.testem.coverage.receiver.middlewareImpl = function (that, request, response
     var browser      = gpii.testem.coverage.receiver.uaMatch(fluid.get(body, "navigator.userAgent"));
 
     var testPath     = fluid.get(body.document, "URL");
-    var testFilename = testPath ? testPath.split("/").pop(): "unknown";
+    var testFilename = testPath ? testPath.split("/").pop() : "unknown";
 
     var coverageFilename    = ["coverage", "-", browser.name, "-", browser.version, "-", testFilename, "-", that.id, "-", Math.round(Math.random() * 10000), ".json"].join("");
     var coverageOutputPath  = path.join(resolvedCoverageDir, coverageFilename);

@@ -35,7 +35,7 @@ fluid.registerNamespace("gpii.testem");
  */
 gpii.testem.handleTestemLifecycleEvent = function (componentEvent, testemCallback) {
     var startupTransformChain = fluid.promise.fireTransformEvent(componentEvent);
-    startupTransformChain.then(function() { testemCallback();} , testemCallback);
+    startupTransformChain.then(function () { testemCallback();} , testemCallback);
 };
 
 /**
@@ -87,12 +87,12 @@ gpii.testem.generateSingleUseEventListener = function (that, event) {
  * @param originalPromise {Promise} The original promise to wrap in a timeout.
  * @param rejectionPayload {Object} The payload to use when rejecting the message.
  * @param timeoutInMillis {Number} The number of milliseconds to wait before timing out.
- * @returns originalPromise {Promise} The original promise.
+ * @returns originalPromise {Object} The original promise.
  */
-gpii.testem.addPromiseTimeout = function (originalPromise, rejectionMessage, timeoutInMillis) {
+gpii.testem.addPromiseTimeout = function (originalPromise, rejectionPayload, timeoutInMillis) {
     // Hold onto a handle so that we can clear the timeout if needed.
     var timeoutID = setTimeout(function () {
-        originalPromise.reject(rejectionMessage);
+        originalPromise.reject(rejectionPayload);
     }, timeoutInMillis);
 
     // Clear the timeoutInMillis if the original promise is resolved or rejected externally.
@@ -140,7 +140,7 @@ gpii.testem.instrumentAsNeeded = function (that) {
 
                 instrumentationPromises.push(singleInstrumentationPromise);
 
-                exec(command, { cwd: that.options.cwd }, function (error, stdout, stderr) {
+                exec(command, { cwd: that.options.cwd }, function (error) {
                     if (error) {
                         singleInstrumentationPromise.reject(error);
                     }
@@ -156,7 +156,7 @@ gpii.testem.instrumentAsNeeded = function (that) {
     }
 
     var sequence = fluid.promise.sequence(instrumentationPromises);
-    sequence.then(function () { fluid.log("Finished instrumentation..."); })
+    sequence.then(function () { fluid.log("Finished instrumentation..."); });
 };
 
 /**
@@ -282,7 +282,7 @@ gpii.testem.cleanupDir = function (cleanupDef) {
             }
             return promise;
         }
-    }
+    };
 };
 
 /**
@@ -300,7 +300,7 @@ gpii.testem.cleanupDir = function (cleanupDef) {
  */
 gpii.testem.cleanup = function (cleanupDefs) {
     var togo = fluid.promise();
-    togo.then(function(){ fluid.log("Cleanup completed successfully...");});
+    togo.then(function () { fluid.log("Cleanup completed successfully...");});
 
     var cleanupPromises = [];
     fluid.each(cleanupDefs, function (singleDirEntry) {
@@ -343,7 +343,7 @@ gpii.testem.generateCoverageReportIfNeeded = function (that) {
     var promise = fluid.promise();
 
     if (that.options.generateCoverageReport) {
-        promise.then(function(){ fluid.log("Finished coverage report...");});
+        promise.then(function () { fluid.log("Finished coverage report...");});
         try {
             var commandSegments = [that.options.istanbulCmd, "report --root", fluid.module.resolvePath(that.options.coverageDir), "--dir", that.options.reportsDir, "text-summary html json-summary"];
             var command = commandSegments.join(" ");
