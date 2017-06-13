@@ -20,15 +20,12 @@ coverage sender using markup like the following:
 ```
 <script type="text/javascript" src="../../../lib/qunit/js/qunit.js"></script>
 <script type="text/javascript" src="../../../test-core/jqUnit/js/jqUnit.js"></script>
-<script type="text/javascript" src="/testem.js"></script>
 
 <!-- These are required for the coverage client -->
 <script type="text/javascript" src="../../../../src/lib/jquery/core/js/jquery.js"></script>
 <script type="text/javascript" src="../../../../src/framework/core/js/Fluid.js"></script>
-<script type="text/javascript" src="../../../../src/framework/core/js/DataBinding.js"></script>
-<script type="text/javascript" src="../../../../src/framework/core/js/FluidDocument.js"></script>
-<script type="text/javascript" src="../../../../src/framework/core/js/FluidIoC.js"></script>
 
+<script type="text/javascript" src="/testem.js"></script>
 <script type="text/javascript" src="/coverage/client/coverageSender.js"></script>
 
 <script type="text/javascript" src="path/to/myTests.js"></script>
