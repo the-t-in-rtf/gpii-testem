@@ -1,6 +1,6 @@
 {
   "name": "gpii-testem",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A library to assist in using Testem within the Fluid ecosystem.",
   "main": "index.js",
   "nyc": {
