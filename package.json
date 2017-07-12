@@ -14,14 +14,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/the-t-in-rtf/gpii-testem.git"
+    "url": "git+https://github.com/GPII/gpii-testem.git"
   },
   "author": "Tony Atkins <tony@raisingthefloor.org>",
   "license": "BSD-3-Clause",
   "bugs": {
-    "url": "https://github.com/the-t-in-rtf/gpii-testem/issues"
+    "url": "https://issues.gpii.net/"
   },
-  "homepage": "https://github.com/the-t-in-rtf/gpii-testem#readme",
+  "homepage": "https://github.com/GPII/gpii-testem/",
   "dependencies": {
     "gpii-express": "1.0.7",
     "infusion": "3.0.0-dev.20170322T234120Z.278de35",
