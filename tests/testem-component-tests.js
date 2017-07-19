@@ -42,6 +42,7 @@ gpii.tests.testem.runner.runSingleTest = function (testDef) {
                 var coverageSummaryPath = path.resolve(testemOptions.reportsDir, "coverage-summary.json");
 
                 if (testDef.hasCoverage) {
+                    jqUnit.assertEquals("There should be a route to the instrumented code...", "instrumented/src", testemOptions.testemOptions.routes["/src"]);
                     jqUnit.assertTrue("There should be an HTML coverage report...", fs.existsSync(htmlCoveragePath));
                     jqUnit.assertTrue("There should be a JSON coverage summary...", fs.existsSync(coverageSummaryPath));
 
@@ -126,6 +127,21 @@ fluid.defaults("gpii.tests.testem.runner", {
             name:        "Running a suite of tests without test coverage...",
             command:     "node ../node_modules/testem/testem.js ci --file testem-fixtures/testem-no-coverage.js",
             hasCoverage: false
+        },
+        instrumentationTiming: {
+            name: "Confirm that long-running instrumentation does not interfere with coverage collection...",
+            command: "node ../node_modules/testem/testem.js ci --file testem-fixtures/testem-instrumentation-timing.js",
+            hasCoverage: true,
+            expectedCoverage: {
+                total: {
+                    branches: {
+                        total: 2,
+                        covered: 2,
+                        skipped: 0,
+                        pct: 100
+                    }
+                }
+            }
         },
         failure: {
             name:            "Running a suite of tests with gross configuration errors...",

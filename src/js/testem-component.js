@@ -130,14 +130,6 @@ gpii.testem.instrumentAsNeeded = function (that) {
                 var command = commandSegments.join(" ");
 
                 var singleInstrumentationPromise = fluid.promise();
-                singleInstrumentationPromise.then(function () {
-                    // Add a "route" so that the instrumented code will seamlessly replace its uninstrumented counterpart.
-                    // Routes must be URL segments, and not paths.
-                    var originalSourcePath = url.resolve("/", lastDirSegment);
-                    var instrumentedSourcePath = url.resolve("instrumented/", lastDirSegment);
-                    that.generatedOptions.routes[originalSourcePath] = instrumentedSourcePath;
-                });
-
                 instrumentationPromises.push(singleInstrumentationPromise);
 
                 exec(command, { cwd: that.options.cwd }, function (error) {
@@ -157,6 +149,24 @@ gpii.testem.instrumentAsNeeded = function (that) {
 
     var sequence = fluid.promise.sequence(instrumentationPromises);
     sequence.then(function () { fluid.log("Finished instrumentation..."); });
+};
+
+gpii.testem.generateInstrumentationRoutes = function (that) {
+    var routes = {};
+    if (that.options.instrumentSource) {
+        fluid.each(fluid.makeArray(that.options.sourceDirs), function (sourcePath) {
+            var resolvedSourcePath = path.resolve(that.options.testemOptions.cwd, sourcePath);
+            var parsedPath = path.parse(resolvedSourcePath);
+
+            var pathStats = fs.statSync(resolvedSourcePath);
+            var lastDirSegment = pathStats.isDirectory() ? parsedPath.base : path.baseName(parsedPath.dir);
+
+            var originalSourcePath = url.resolve("/", lastDirSegment);
+            var instrumentedSourcePath = url.resolve("instrumented/", lastDirSegment);
+            routes[originalSourcePath] = instrumentedSourcePath;
+        });
+    }
+    return routes;
 };
 
 /**
@@ -469,7 +479,7 @@ fluid.defaults("gpii.testem", {
     wrappedEventTimeout: 30000,
     members: {
         generatedOptions: {
-            routes: {}
+            routes: "@expand:gpii.testem.generateInstrumentationRoutes({that})"
         }
     },
     events: {
