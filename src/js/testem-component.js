@@ -34,8 +34,8 @@ fluid.registerNamespace("gpii.testem");
  *
  */
 gpii.testem.handleTestemLifecycleEvent = function (componentEvent, testemCallback) {
-    var startupTransformChain = fluid.promise.fireTransformEvent(componentEvent);
-    startupTransformChain.then(function () { testemCallback();} , testemCallback);
+    var eventTransformChain = fluid.promise.fireTransformEvent(componentEvent);
+    eventTransformChain.then(function () { testemCallback();} , testemCallback);
 };
 
 /**
@@ -148,7 +148,13 @@ gpii.testem.instrumentAsNeeded = function (that) {
     }
 
     var sequence = fluid.promise.sequence(instrumentationPromises);
-    sequence.then(function () { fluid.log("Finished instrumentation..."); });
+    sequence.then(
+        function () { fluid.log("Finished instrumentation..."); },
+        function (error) {
+            fluid.log("Error instrumenting source code:", error);
+        });
+
+    return sequence;
 };
 
 gpii.testem.generateInstrumentationRoutes = function (that) {
