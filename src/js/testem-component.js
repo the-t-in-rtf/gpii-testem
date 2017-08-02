@@ -430,10 +430,12 @@ fluid.defaults("gpii.testem", {
         cleanup: "nomerge"
     },
     cwd: process.cwd(),
+    // TODO: Discuss strategies for improving this pattern.
+    packageName: "%gpii-testem",
     packageRoot: {
         expander: {
             funcName: "fluid.module.resolvePath",
-            args: "%gpii-testem"
+            args: ["{that}.options.packageName"]
         }
     },
     istanbulCmd: {

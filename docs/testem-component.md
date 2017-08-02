@@ -16,7 +16,8 @@ see below.
 | Option                    | Type        | Description                           |
 | ------------------------- | ----------- | ------------------------------------- |
 | `cwd`                     | `{String}`  | Defaults to `process.cwd()`, i.e. the directory from which the script was called. |
-| `packageRoot`             | `{String}`  | The package root we use to access our own copies of testem and istanbul when running tests. |
+| `packageName`             | `{String}`  | The package name we use to access testem and istanbul when running tests. **Note: If you have either istanbul or testem as a local dependency, you should set this to your local package name.** |
+| `packageRoot`             | `{String}`  | The working directory in which Testem and Istanbul can be found. Set to the resolved location of `packageName` by default|
 | `istanbulCmd`             | `{String}`  | The istanbul command to use when instrumenting code and generating code coverage reports. |
 | `testemDir`               | `{String}`  | The directory in which testem's browser settings and temporary files should be stored. |
 | `wrappedEventTimeout`     | `{Number}`  | How long to wait (in milliseconds) before triggering a timeout when waiting for key startup/shutdown events. |
