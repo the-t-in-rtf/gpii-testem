@@ -12,7 +12,6 @@ var gpii  = fluid.registerNamespace("gpii");
 
 fluid.require("%gpii-express");
 
-var exec    = require("child_process").exec;
 var fs      = require("fs");
 var mkdirp  = require("mkdirp");
 var os      = require("os");
@@ -20,6 +19,7 @@ var path    = require("path");
 var process = require("process");
 var rimraf  = require("rimraf");
 var url     = require("url");
+var cli     = require("istanbul/lib/cli.js");
 
 require("./coverageServer");
 
@@ -110,7 +110,6 @@ gpii.testem.addPromiseTimeout = function (originalPromise, rejectionPayload, tim
  * @returns {Promise} - A promise that will be resolved or rejected when the instrumentation pass finishes.
  */
 gpii.testem.instrumentAsNeeded = function (that) {
-    var instrumentationPromises = [];
     if (that.options.instrumentSource) {
         try {
             // Create our instrumentation directory if it doesn't already exist.
@@ -124,37 +123,15 @@ gpii.testem.instrumentAsNeeded = function (that) {
 
                 var targetPath = path.resolve(that.options.instrumentedSourceDir, lastDirSegment);
 
-                // Instrument each directory to its own subdirectory using a command like:
-                // istanbul instrument --output /tmp/instrumentSource/src src
-                var commandSegments = [that.options.istanbulCmd, "instrument --output", targetPath, resolvedSourcePath, "--complete-copy"];
-                var command = commandSegments.join(" ");
-
-                var singleInstrumentationPromise = fluid.promise();
-                instrumentationPromises.push(singleInstrumentationPromise);
-
-                exec(command, { cwd: that.options.cwd }, function (error) {
-                    if (error) {
-                        singleInstrumentationPromise.reject(error);
-                    }
-                    else {
-                        singleInstrumentationPromise.resolve();
-                    }
-                });
+                var commandSegments = ["instrument", "--output", targetPath, resolvedSourcePath, "--complete-copy"];
+                cli.runToCompletion(commandSegments);
             });
+            fluid.log("Finished instrumentation...");
         }
         catch (error) {
             console.error("Error instrumenting code:", error);
         }
     }
-
-    var sequence = fluid.promise.sequence(instrumentationPromises);
-    sequence.then(
-        function () { fluid.log("Finished instrumentation..."); },
-        function (error) {
-            fluid.log("Error instrumenting source code:", error);
-        });
-
-    return sequence;
 };
 
 gpii.testem.generateInstrumentationRoutes = function (that) {
@@ -356,36 +333,19 @@ gpii.testem.generateUniqueDirName = function (basePath, prefix, suffix) {
  * @param that - The component itself.
  */
 gpii.testem.generateCoverageReportIfNeeded = function (that) {
-    var promise = fluid.promise();
-
     if (that.options.generateCoverageReport) {
-        promise.then(function () { fluid.log("Finished coverage report...");});
         try {
-            var commandSegments = [that.options.istanbulCmd, "report --root", fluid.module.resolvePath(that.options.coverageDir), "--dir", that.options.reportsDir, "text-summary html json-summary"];
-            var command = commandSegments.join(" ");
-
-            exec(command, { cwd: that.options.cwd }, function (error, stdout, stderr) {
-                fluid.log(stdout);
-                fluid.log(stderr);
-                if (error) {
-                    fluid.log("Error generating coverage report:", error);
-                    promise.reject(error);
-                }
-                else {
-                    fluid.log("Created coverage report in '", that.options.reportsDir, "'...");
-                    promise.resolve();
-                }
-            });
+            var commandSegments = ["report", "--root", fluid.module.resolvePath(that.options.coverageDir), "--dir", that.options.reportsDir, "text-summary",  "html", "json-summary"];
+            cli.runToCompletion(commandSegments);
+            fluid.log("Created coverage report in '", that.options.reportsDir, "'...");
         }
         catch (error) {
-            promise.reject(error);
+            fluid.fail(error);
         }
     }
     else {
         fluid.log("Skipping coverage report...");
-        promise.resolve();
     }
-    return promise;
 };
 
 fluid.registerNamespace("gpii.testem.dirs");
@@ -430,20 +390,6 @@ fluid.defaults("gpii.testem", {
         cleanup: "nomerge"
     },
     cwd: process.cwd(),
-    // TODO: Discuss strategies for improving this pattern.
-    packageName: "%gpii-testem",
-    packageRoot: {
-        expander: {
-            funcName: "fluid.module.resolvePath",
-            args: ["{that}.options.packageName"]
-        }
-    },
-    istanbulCmd: {
-        expander: {
-            funcName: "fluid.stringTemplate",
-            args: ["node %packageRoot/node_modules/istanbul/lib/cli.js", { packageRoot: "{that}.options.packageRoot" }]
-        }
-    },
     cleanup: {
         initial:  gpii.testem.dirs.everything,
         final:    gpii.testem.dirs.everything
