@@ -470,6 +470,12 @@ fluid.defaults("gpii.testem", {
                 "--headless",
                 "--remote-debugging-port=9222"
             ]
+            // "Chrome": [
+            //     "--disable-extensions",
+            //     "--memory-pressure-threshholds=1",
+            //     "--disk-cache-size=0",
+            //     "--disable-new-zip-unpacker"
+            // ]
         },
         framework:   "qunit",
         report_file: {
