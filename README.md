@@ -38,13 +38,33 @@ module.exports = my.testem.grade().getTestemOptions();
 To make use of the code coverage support provided by gpii.testem, you must load the "coverage sender" in your HTML
 fixtures.  See [the coverage docs](docs/coverage.md) for details.
 
-Once you have created your configuration javascript file, you can launch Testem with your configuration using a command
-like the following:
+Once you have created your configuration javascript file, you can launch Testem with your configuration.
+ 
+## Browser Coverage Only
 
-`node node_modules/testem/testem.js --file path/to/your-testem-config.js`
+If you only want to check the coverage of browser code, you can run your tests using a command like the following:
+
+`node node_modules/testem/testem.js ci --file path/to/your-testem-config.js`
 
 If you save your configuration to the file name `testem.js` in your package root, you can launch Testem using a command
 like `node node_modules/testem/testem.js` or `node node_modules/testem/testem.js ci`.
+
+## Browser and Node Coverage
+
+If you are testing browser code in combination with node fixtures, and wish to collect coverage data for your node
+fixtures, you will need to run Testem using [nyc](https://github.com/istanbuljs/nyc), the next-generation command-line
+interface for [Istanbul](https://github.com/gotwarlost/istanbul).  Here is a sample command:
+
+    node_modules/.bin/nyc --temp-directory==./coverage -r none node_modules/testem/testem.js ci --file tests/testem.js
+
+This assumes that you are saving the browser coverage data to `./coverage`.  The `temp-directory` option saves the node
+fixture coverage data collected by nyc to a JSON file in `./coverage` as well.  The `-r none` option in the previous
+command prevents nyc from outputting a report about just the node fixtures, as we want a combined report for both the
+node fixtures and browser code under test.  To create a combined report and output a text summary, you can use a command
+like the following:
+
+    node node_modules/nyc/bin/nyc.js report --reports_dir coverage/report -r lcov -r text-summary
+
 
 # More Information
 
