@@ -13,9 +13,9 @@ and static functions that assist in using [Testem](https://github.com/testem/tes
 # Usage instructions
 
 To use this grade from Testem, install this package as a development dependency using a command like
-`npm install --save-dev gpii-testem` or `yarn add --dev gpii-testem`.  Note:  There is currently
+`npm install --save-dev gpii-testem`.  Note:  There is currently
 [a bug in newer versions of Testem](https://github.com/testem/testem/issues/1075), if you use anything higher than
-version 1.13.0, you may experience hangs when attempting to quit testem from the console.
+version 1.13.0, you may experience hangs when attempting to quit Testem from the console.
 
 Once you have Testem installed, you will need to create a javascript configuration file, which will allow you to make use of the
 [dynamic configuration options available via the `testem.js` file](https://github.com/testem/testem/blob/master/examples/dynamic_config/testem.js).
@@ -76,5 +76,5 @@ For more information, check out the documentation links below:
 
 # Running the Tests in this Package
 
-You can run the tests using a command like `npm test` or `yarn test`.  You are not required to have Testem installed
+You can run the tests using the command `npm test`.  You are not required to have Testem installed
 globally to run the tests.
