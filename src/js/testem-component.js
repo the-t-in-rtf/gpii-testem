@@ -461,21 +461,16 @@ fluid.defaults("gpii.testem", {
         browser_start_timeout:      300,
         timeout: 300,
         "browser_args": {
-            "Firefox": [
-                "--headless"
-            ],
+            // TODO: enable once a new enough version of Firefox is available in CI.
+            // "Firefox": [
+            //     "--headless"
+            // ],
             // See this ticket for details on the minimum options required to get "headless" Chrome working: https://github.com/testem/testem/issues/1106#issuecomment-298841383
             "Chrome": [
                 "--disable-gpu",
                 "--headless",
                 "--remote-debugging-port=9222"
             ]
-            // "Chrome": [
-            //     "--disable-extensions",
-            //     "--memory-pressure-threshholds=1",
-            //     "--disk-cache-size=0",
-            //     "--disable-new-zip-unpacker"
-            // ]
         },
         framework:   "qunit",
         report_file: {
