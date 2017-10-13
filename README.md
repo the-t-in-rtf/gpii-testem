@@ -84,3 +84,8 @@ globally to run the tests.
 There is currently [a bug in Testem](https://github.com/testem/testem/issues/1184) that results in IE11 windows opened
 by Testem not being closed when the tests finish.  Until that bug is resolved, if you are running tests from Windows, 
 you will need to close any open IE11 windows before launching the tests.
+
+# Running (Chrome) in "Headless" Mode
+
+If your system has [a new enough version of Chrome](https://developers.google.com/web/updates/2017/04/headless-chrome),
+you can optionally run the tests in "headless" mode by setting the `HEADLESS` environment variable to a non-empty value.

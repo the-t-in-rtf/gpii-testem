@@ -396,6 +396,16 @@ gpii.testem.stopServer = function (that) {
     }
 };
 
+// An expander to allow us to toggle "HEADLESS" mode with an environment variable.
+gpii.testem.constructBrowserArgs = function (browserArgs, headlessBrowserArgs) {
+    if (process.env.HEADLESS) {
+        return headlessBrowserArgs;
+    }
+    else {
+        return browserArgs;
+    }
+};
+
 fluid.defaults("gpii.testem", {
     gradeNames:  ["fluid.component"],
     coveragePort: 7000,
@@ -467,24 +477,33 @@ fluid.defaults("gpii.testem", {
             }
         }
     },
+    "browserArgs": {
+        "Chrome": [
+            "--disable-extensions",
+            "--memory-pressure-threshholds=1",
+            "--disk-cache-size=0",
+            "--disable-new-zip-unpacker"
+        ]
+    },
+    "headlessBrowserArgs": {
+        // TODO: enable once a new enough version of Firefox is available in CI.
+        // "Firefox": [
+        //     "--headless"
+        // ],
+        // See this ticket for details on the minimum options required to get "headless" Chrome working: https://github.com/testem/testem/issues/1106#issuecomment-298841383
+        "Chrome": [
+            "--disable-gpu",
+            "--headless",
+            "--remote-debugging-port=9222"
+        ]
+    },
     testemOptions: {
         // The timeout options and Chrome browser args are workaround to minimize "browser disconnect" errors.
         // https://github.com/testem/testem/issues/777
         browser_disconnect_timeout: 300, // Five minutes
         browser_start_timeout:      300,
         timeout: 300,
-        "browser_args": {
-            // TODO: enable once a new enough version of Firefox is available in CI.
-            // "Firefox": [
-            //     "--headless"
-            // ],
-            // See this ticket for details on the minimum options required to get "headless" Chrome working: https://github.com/testem/testem/issues/1106#issuecomment-298841383
-            "Chrome": [
-                "--disable-gpu",
-                "--headless",
-                "--remote-debugging-port=9222"
-            ]
-        },
+        browser_args: "@expand:gpii.testem.constructBrowserArgs({that}.options.browserArgs, {that}.options.headlessBrowserArgs)",
         framework:   "qunit",
         report_file: {
             expander: {
