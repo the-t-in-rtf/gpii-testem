@@ -92,6 +92,7 @@ gpii.testem.generateSingleUseEventListener = function (that, event) {
 gpii.testem.addPromiseTimeout = function (originalPromise, rejectionPayload, timeoutInMillis) {
     // Hold onto a handle so that we can clear the timeout if needed.
     var timeoutID = setTimeout(function () {
+        fluid.log(rejectionPayload);
         originalPromise.resolve();
     }, timeoutInMillis);
 
