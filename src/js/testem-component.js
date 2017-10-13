@@ -79,7 +79,7 @@ gpii.testem.generateSingleUseEventListener = function (that, event) {
 
 /**
  *
- * Reject a promise after a given amount of milliseconds.  Used in this package to ensure that the overall promise
+ * Resolve a promise after a given amount of milliseconds.  Used in this package to ensure that the overall promise
  * chain eventually completes, so that Testem's callbacks can be called.
  *
  * Only works with Fluid Promises, see: http://docs.fluidproject.org/infusion/development/PromisesAPI.html
@@ -92,10 +92,10 @@ gpii.testem.generateSingleUseEventListener = function (that, event) {
 gpii.testem.addPromiseTimeout = function (originalPromise, rejectionPayload, timeoutInMillis) {
     // Hold onto a handle so that we can clear the timeout if needed.
     var timeoutID = setTimeout(function () {
-        originalPromise.reject(rejectionPayload);
+        originalPromise.resolve();
     }, timeoutInMillis);
 
-    // Clear the timeoutInMillis if the original promise is resolved or rejected externally.
+    // Clear the timeout if the original promise is resolved or rejected externally.
     var clearPromiseTimeout = function () { clearTimeout(timeoutID); };
     originalPromise.then(clearPromiseTimeout, clearPromiseTimeout);
 
@@ -190,45 +190,48 @@ gpii.testem.generateRimrafWrapper = function (path) {
  */
 gpii.testem.cleanupTestemContent = function (path) {
     var testemRegexp = /testem-.+/;
-    var togo = fluid.promise();
 
-    togo.then(function () { fluid.log("Removed Testem content..."); });
+    if (path) {
 
-    try {
-        var resolvedPath = fluid.module.resolvePath(path);
+        var togo = fluid.promise();
 
-        if (fs.existsSync(resolvedPath)) {
-            fs.readdir(resolvedPath, function (testemError, testemDirs) {
-                if (testemError) {
-                    togo.reject(testemError);
-                }
-                else {
-                    var cleanupPromises = [];
-                    fluid.each(testemDirs, function (dirName) {
-                        if (dirName.match(testemRegexp)) {
-                            cleanupPromises.push(gpii.testem.generateRimrafWrapper(dirName));
-                        }
-                    });
+        togo.then(function () { fluid.log("Removed Testem content..."); });
+        try {
+            var resolvedPath = fluid.module.resolvePath(path);
 
-                    // Remove the enclosing directory as well...
-                    cleanupPromises.push(gpii.testem.generateRimrafWrapper(resolvedPath));
+            if (fs.existsSync(resolvedPath)) {
+                fs.readdir(resolvedPath, function (testemError, testemDirs) {
+                    if (testemError) {
+                        togo.reject(testemError);
+                    }
+                    else {
+                        var cleanupPromises = [];
+                        fluid.each(testemDirs, function (dirName) {
+                            if (dirName.match(testemRegexp)) {
+                                cleanupPromises.push(gpii.testem.generateRimrafWrapper(dirName));
+                            }
+                        });
 
-                    var cleanupSequence = fluid.promise.sequence(cleanupPromises);
-                    cleanupSequence.then(togo.resolve, togo.reject);
-                }
-            });
+                        // Remove the enclosing directory as well...
+                        cleanupPromises.push(gpii.testem.generateRimrafWrapper(resolvedPath));
+
+                        var cleanupSequence = fluid.promise.sequence(cleanupPromises);
+                        cleanupSequence.then(togo.resolve, togo.reject);
+                    }
+                });
+            }
+            else {
+                fluid.log("No testem content found, skipping cleanup...");
+                togo.resolve();
+            }
+
         }
-        else {
-            fluid.log("No testem content found, skipping cleanup...");
-            togo.resolve();
+        catch (exception) {
+            togo.reject(exception);
         }
 
+        return togo;
     }
-    catch (exception) {
-        togo.reject(exception);
-    }
-
-    return togo;
 };
 
 /**
@@ -261,17 +264,17 @@ gpii.testem.cleanupDir = function (cleanupDef) {
                     rimraf(cleanupDef.path, function (error) {
                         if (error) {
                             fluid.log("Error removing ", cleanupDef.name, " content:", error);
-                            promise.reject(error);
                         }
                         else {
-                            promise.resolve();
                             fluid.log("Removed ", cleanupDef.name, " content...");
                         }
+                        promise.resolve();
                     });
                 }
             }
             catch (error) {
-                promise.reject(error);
+                console.error(error);
+                promise.resolve();
             }
             return promise;
         }
@@ -340,7 +343,7 @@ gpii.testem.generateCoverageReportIfNeeded = function (that) {
             fluid.log("Created coverage report in '", that.options.reportsDir, "'...");
         }
         catch (error) {
-            fluid.fail(error);
+            console.error(error);
         }
     }
     else {
@@ -376,10 +379,19 @@ gpii.testem.dirs.everything = gpii.testem.dirs.everythingButCoverage.concat([
 // convenience function.  It's important to trap errors which might prevent Testem callbacks from being triggered.
 gpii.testem.resolveSafely = function (pathToResolve, filename) {
     try {
-        return path.resolve(pathToResolve, filename);
+        var resolvedPath = path.resolve(pathToResolve, filename);
+        return resolvedPath;
     }
     catch (error) {
         console.error(error);
+    }
+};
+
+// Stop our express instance if it has been created and hasn't already been destroyed.
+gpii.testem.stopServer = function (that) {
+    if (that.coverageExpressInstance && !fluid.isDestroyed(that.coverageExpressInstance)) {
+        fluid.log("Stopping express...");
+        gpii.express.stopServer(that.coverageExpressInstance);
     }
 };
 
@@ -518,7 +530,7 @@ fluid.defaults("gpii.testem", {
         "onTestemStart.instrument": {
             priority: "after:cleanup",
             funcName: "gpii.testem.instrumentAsNeeded",
-            args:     ["{that}", "{that}.events.constructFixtures.fire"] // eventCallback
+            args:     ["{that}"]
         },
         "onTestemStart.constructFixtures": {
             priority: "after:instrument",
@@ -532,8 +544,8 @@ fluid.defaults("gpii.testem", {
         // The unified "testem shutdown" promise chain.
         "onTestemExit.stopExpress": {
             priority: "first",
-            funcName: "gpii.express.stopServer",
-            args:     ["{that}.coverageExpressInstance"]
+            funcName: "gpii.testem.stopServer",
+            args:     ["{that}"]
         },
         "onTestemExit.waitForFixtures": {
             priority: "after:stopExpress",

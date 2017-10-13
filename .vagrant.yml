@@ -9,7 +9,7 @@ env:
       clone: true              # use the linked_clone Vagrant feature
       autostart: true
       # Swap these lines to test with the (very old) Windows 7 VM
-      #box: 	 inclusivedesign/windows7-eval-x64-Apps
+#      box: 	 inclusivedesign/windows7-eval-x64-Apps
       box: inclusivedesign/windows10-eval-x64-Apps
 
 stages:                # Stages to perform when 'ci test' command is invoked
@@ -23,8 +23,8 @@ setup_job:
     - do.ps1 -c "npm install -g rimraf node-inspector"
     - do.ps1 -c "npm config set bin-links false --global"
     # required for Windows 7 VM
-    # - "net use v: \\\\vboxsrv\\vagrant  /yes"
-    # - "do.ps1 -c 'net use v: \\\\VBOXSVR\\vagrant /yes'"
+#    - "net use v: \\\\vboxsrv\\vagrant  /yes"
+#    - "do.ps1 -c 'net use v: \\\\VBOXSVR\\vagrant /yes'"
 
 test_job:
   stage: test          # name of the stage

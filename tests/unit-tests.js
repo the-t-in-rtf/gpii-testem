@@ -76,7 +76,7 @@ jqUnit.test("The event listener should not throw an error if the promise is reje
 
 jqUnit.module("Testing promise timeout wrapper...");
 
-jqUnit.test("A promise should reject with a timeout if it is not rejected/resolve externally...", function () {
+jqUnit.test("A promise should resolve after the a timeout if it is not rejected/resolve externally...", function () {
     jqUnit.expect(1);
 
     jqUnit.stop();
@@ -85,11 +85,11 @@ jqUnit.test("A promise should reject with a timeout if it is not rejected/resolv
     timeoutPromise.then(
         function () {
             jqUnit.start();
-            fluid.fail("The wrapped promise should not have been resolved.");
+            jqUnit.assert("The wrapped promise should be resolved after the timeout...");
         },
-        function (error) {
+        function () {
             jqUnit.start();
-            jqUnit.assertEquals("The wrapped promise should be rejected with the timeout error message...", "Timed out as expected...", error);
+            fluid.fail("The wrapped promise should not have been rejected...");
         }
     );
 });

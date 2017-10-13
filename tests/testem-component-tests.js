@@ -14,16 +14,21 @@ fluid.registerNamespace("gpii.tests.testem.runner");
 
 gpii.tests.testem.runner.runAllTests = function (that) {
     jqUnit.module("Testing coverage detection and reporting...");
-    fluid.each(that.options.tests, gpii.tests.testem.runner.runSingleTest);
+    fluid.each(that.options.tests, function (testDef) {
+        gpii.tests.testem.runner.runSingleTest(that, testDef);
+    });
 };
 
-gpii.tests.testem.runner.runSingleTest = function (testDef) {
+gpii.tests.testem.runner.runSingleTest = function (that, testDef) {
     jqUnit.test(testDef.name, function () {
         jqUnit.stop();
-        exec(testDef.command, {cwd: __dirname }, function (error, stdout) {
+        var command = fluid.stringTemplate(that.options.commandTemplate, testDef);
+        exec(command, {cwd: __dirname }, function (error, stdout) {
             jqUnit.start();
-            if (testDef.hasTestemErrors) {
-                jqUnit.assertNotUndefined("There should be an error running testem...", error);
+            if (testDef.expectedErrors) {
+                fluid.each(fluid.makeArray(testDef.expectedErrors), function (expectedError) {
+                    jqUnit.assertTrue("The console should contain the error '" + expectedError + "'...", error.message.indexOf(expectedError) !== -1);
+                });
             }
             else if (error) {
                 fluid.log("TESTEM ERROR:", error);
@@ -35,24 +40,26 @@ gpii.tests.testem.runner.runSingleTest = function (testDef) {
             if (matches) {
                 var testemOptions = JSON.parse(matches[1]);
 
-                var tapReportPath = path.resolve(testemOptions.reportsDir, "report.tap");
-                jqUnit.assertTrue("There should be a TAP report...", fs.existsSync(tapReportPath));
+                if (!testDef.expectedErrors) {
+                    var tapReportPath = path.resolve(testemOptions.reportsDir, "report.tap");
+                    jqUnit.assertTrue("There should be a TAP report...", fs.existsSync(tapReportPath));
 
-                var htmlCoveragePath = path.resolve(testemOptions.reportsDir, "index.html");
-                var coverageSummaryPath = path.resolve(testemOptions.reportsDir, "coverage-summary.json");
+                    var htmlCoveragePath = path.resolve(testemOptions.reportsDir, "index.html");
+                    var coverageSummaryPath = path.resolve(testemOptions.reportsDir, "coverage-summary.json");
 
-                if (testDef.hasCoverage) {
-                    jqUnit.assertEquals("There should be a route to the instrumented code...", "instrumented/src", testemOptions.testemOptions.routes["/src"]);
-                    jqUnit.assertTrue("There should be an HTML coverage report...", fs.existsSync(htmlCoveragePath));
-                    jqUnit.assertTrue("There should be a JSON coverage summary...", fs.existsSync(coverageSummaryPath));
+                    if (testDef.hasCoverage) {
+                        jqUnit.assertEquals("There should be a route to the instrumented code...", "instrumented/src", testemOptions.testemOptions.routes["/src"]);
+                        jqUnit.assertTrue("There should be an HTML coverage report...", fs.existsSync(htmlCoveragePath));
+                        jqUnit.assertTrue("There should be a JSON coverage summary...", fs.existsSync(coverageSummaryPath));
 
-                    var coverageSummary = require(coverageSummaryPath);
-                    // We have to force the deep comparison to be limited to one branch of the overall tree.
-                    jqUnit.assertLeftHand("The coverage should be as expected...", testDef.expectedCoverage.total, coverageSummary.total);
-                }
-                else {
-                    jqUnit.assertFalse("There should not be an HTML coverage report...", fs.existsSync(htmlCoveragePath));
-                    jqUnit.assertFalse("There should not be a JSON coverage summary...", fs.existsSync(coverageSummaryPath));
+                        var coverageSummary = require(coverageSummaryPath);
+                        // We have to force the deep comparison to be limited to one branch of the overall tree.
+                        jqUnit.assertLeftHand("The coverage should be as expected...", testDef.expectedCoverage.total, coverageSummary.total);
+                    }
+                    else {
+                        jqUnit.assertFalse("There should not be an HTML coverage report...", fs.existsSync(htmlCoveragePath));
+                        jqUnit.assertFalse("There should not be a JSON coverage summary...", fs.existsSync(coverageSummaryPath));
+                    }
                 }
 
                 // Now that we have inspected the output, clean it up.
@@ -61,14 +68,17 @@ gpii.tests.testem.runner.runSingleTest = function (testDef) {
                 var cleanupPromises = [];
 
                 fluid.each([testemOptions.reportsDir, testemOptions.coverageDir], function (dirToRemove) {
-                    cleanupPromises.push(function () {
-                        var promise = fluid.promise();
-                        fluid.log("Removing dir '", dirToRemove, "'...");
-                        rimraf(dirToRemove, function (error) {
-                            error ? promise.reject(error) : promise.resolve();
+                    // Needed to avoid problems with "failure" tests.
+                    if (dirToRemove) {
+                        cleanupPromises.push(function () {
+                            var promise = fluid.promise();
+                            fluid.log("Removing dir '", dirToRemove, "'...");
+                            rimraf(dirToRemove, function (error) {
+                                error ? promise.reject(error) : promise.resolve();
+                            });
+                            return promise;
                         });
-                        return promise;
-                    });
+                    }
                 });
 
                 var sequence = fluid.promise.sequence(cleanupPromises);
@@ -92,10 +102,11 @@ gpii.tests.testem.runner.runSingleTest = function (testDef) {
 
 fluid.defaults("gpii.tests.testem.runner", {
     gradeNames: ["fluid.component"],
+    commandTemplate: "node ../node_modules/testem/testem.js ci --file %configFile --skip Safari",
     tests: {
         complete: {
             name: "Running a suite of tests that results in complete coverage...",
-            command: "node ../node_modules/testem/testem.js ci --file testem-fixtures/testem-complete-coverage.js",
+            configFile: "testem-fixtures/testem-complete-coverage.js",
             hasCoverage: true,
             expectedCoverage: {
                 total: {
@@ -110,7 +121,7 @@ fluid.defaults("gpii.tests.testem.runner", {
         },
         incomplete: {
             name: "Running a suite of tests that results in incomplete coverage...",
-            command: "node ../node_modules/testem/testem.js ci --file testem-fixtures/testem-incomplete-coverage.js",
+            configFile: "testem-fixtures/testem-incomplete-coverage.js",
             hasCoverage: true,
             expectedCoverage: {
                 total: {
@@ -125,12 +136,12 @@ fluid.defaults("gpii.tests.testem.runner", {
         },
         noCoverage: {
             name:        "Running a suite of tests without test coverage...",
-            command:     "node ../node_modules/testem/testem.js ci --file testem-fixtures/testem-no-coverage.js",
+            configFile:  "testem-fixtures/testem-no-coverage.js",
             hasCoverage: false
         },
         instrumentationTiming: {
-            name: "Confirm that long-running instrumentation does not interfere with coverage collection...",
-            command: "node ../node_modules/testem/testem.js ci --file testem-fixtures/testem-instrumentation-timing.js",
+            name:       "Confirm that long-running instrumentation does not interfere with coverage collection...",
+            configFile: "testem-fixtures/testem-instrumentation-timing.js",
             hasCoverage: true,
             expectedCoverage: {
                 total: {
@@ -144,10 +155,14 @@ fluid.defaults("gpii.tests.testem.runner", {
             }
         },
         failure: {
-            name:            "Running a suite of tests with gross configuration errors...",
-            command:         "node ../node_modules/testem/testem.js ci --file testem-fixtures/testem-failure-modes.js",
-            hasCoverage:     false,
-            hasTestemErrors: true
+            name:          "Running a suite of tests with gross configuration errors...",
+            configFile:    "testem-fixtures/testem-failure-modes.js",
+            hasCoverage:   false,
+            expectedErrors: [
+                "TypeError: Path must be a string. Received null",
+                "Cannot read property 'replace' of null",
+                "rimraf: missing path"
+            ]
         }
     },
     listeners: {
