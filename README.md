@@ -78,3 +78,9 @@ For more information, check out the documentation links below:
 
 You can run the tests using the command `npm test`.  You are not required to have Testem installed
 globally to run the tests.
+
+# A Warning about Internet Explorer 11
+
+There is currently [a bug in Testem](https://github.com/testem/testem/issues/1184) that results in IE11 windows opened
+by Testem not being closed when the tests finish.  Until that bug is resolved, if you are running tests from Windows, 
+you will need to close any open IE11 windows before launching the tests.
