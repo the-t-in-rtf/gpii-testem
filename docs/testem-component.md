@@ -30,7 +30,7 @@ see below.
 | `serveDirs`               | `{Array}`   | One or more directories to host within the Testem environment. |
 | `testemOptions`           | `{Object}`  | The raw configuration options to pass to Testem.  See [the Testem docs](https://github.com/testem/testem/blob/master/docs/config_file.md) for supported options. |
 | `browserArgs`             | `{Object}`  | The [browser arguments](https://github.com/testem/testem/blob/master/docs/browser_args.md) that will be passed to Testem by default. |
-| `headlessBrowserArgs`     | `{Object}`  | The [browser arguments](https://github.com/testem/testem/blob/master/docs/browser_args.md) that will be passed to Testem if the `HEADLESS` environment variable is set to a non-empty value. |
+| `headlessBrowserArgs`     | `{Object}`  | The [browser arguments](https://github.com/testem/testem/blob/master/docs/browser_args.md) that will be passed to Testem if the `HEADLESS` environment variable is set to a non-empty value. If there is no "headless" option for a given browser, the options from `browserArgs` will be used. |
 | `cleanup.initial`         | `{Array}`   | An array of cleanup definitions (see below) to be cleaned up before the tests are run. |
 | `cleanup.final`           | `{Array}`   | An array of cleanup definitions (see below) to be cleaned up after the tests are run and all reporting is complete. |
 
