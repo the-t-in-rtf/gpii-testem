@@ -398,12 +398,7 @@ gpii.testem.stopServer = function (that) {
 
 // An expander to allow us to toggle "HEADLESS" mode with an environment variable.
 gpii.testem.constructBrowserArgs = function (browserArgs, headlessBrowserArgs) {
-    if (process.env.HEADLESS) {
-        return headlessBrowserArgs;
-    }
-    else {
-        return browserArgs;
-    }
+    return (process.env.HEADLESS && headlessBrowserArgs) || browserArgs;
 };
 
 fluid.defaults("gpii.testem", {
