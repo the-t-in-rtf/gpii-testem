@@ -12,7 +12,6 @@ var gpii  = fluid.registerNamespace("gpii");
 
 fluid.require("%gpii-express");
 
-var exec    = require("child_process").exec;
 var fs      = require("fs");
 var mkdirp  = require("mkdirp");
 var os      = require("os");
@@ -20,6 +19,7 @@ var path    = require("path");
 var process = require("process");
 var rimraf  = require("rimraf");
 var url     = require("url");
+var cli     = require("istanbul/lib/cli.js");
 
 require("./coverageServer");
 
@@ -34,8 +34,8 @@ fluid.registerNamespace("gpii.testem");
  *
  */
 gpii.testem.handleTestemLifecycleEvent = function (componentEvent, testemCallback) {
-    var startupTransformChain = fluid.promise.fireTransformEvent(componentEvent);
-    startupTransformChain.then(function () { testemCallback();} , testemCallback);
+    var eventTransformChain = fluid.promise.fireTransformEvent(componentEvent);
+    eventTransformChain.then(function () { testemCallback();} , testemCallback);
 };
 
 /**
@@ -79,7 +79,7 @@ gpii.testem.generateSingleUseEventListener = function (that, event) {
 
 /**
  *
- * Reject a promise after a given amount of milliseconds.  Used in this package to ensure that the overall promise
+ * Resolve a promise after a given amount of milliseconds.  Used in this package to ensure that the overall promise
  * chain eventually completes, so that Testem's callbacks can be called.
  *
  * Only works with Fluid Promises, see: http://docs.fluidproject.org/infusion/development/PromisesAPI.html
@@ -92,10 +92,11 @@ gpii.testem.generateSingleUseEventListener = function (that, event) {
 gpii.testem.addPromiseTimeout = function (originalPromise, rejectionPayload, timeoutInMillis) {
     // Hold onto a handle so that we can clear the timeout if needed.
     var timeoutID = setTimeout(function () {
-        originalPromise.reject(rejectionPayload);
+        fluid.log(rejectionPayload);
+        originalPromise.resolve();
     }, timeoutInMillis);
 
-    // Clear the timeoutInMillis if the original promise is resolved or rejected externally.
+    // Clear the timeout if the original promise is resolved or rejected externally.
     var clearPromiseTimeout = function () { clearTimeout(timeoutID); };
     originalPromise.then(clearPromiseTimeout, clearPromiseTimeout);
 
@@ -110,7 +111,6 @@ gpii.testem.addPromiseTimeout = function (originalPromise, rejectionPayload, tim
  * @returns {Promise} - A promise that will be resolved or rejected when the instrumentation pass finishes.
  */
 gpii.testem.instrumentAsNeeded = function (that) {
-    var instrumentationPromises = [];
     if (that.options.instrumentSource) {
         try {
             // Create our instrumentation directory if it doesn't already exist.
@@ -124,39 +124,33 @@ gpii.testem.instrumentAsNeeded = function (that) {
 
                 var targetPath = path.resolve(that.options.instrumentedSourceDir, lastDirSegment);
 
-                // Instrument each directory to its own subdirectory using a command like:
-                // istanbul instrument --output /tmp/instrumentSource/src src
-                var commandSegments = [that.options.istanbulCmd, "instrument --output", targetPath, resolvedSourcePath, "--complete-copy"];
-                var command = commandSegments.join(" ");
-
-                var singleInstrumentationPromise = fluid.promise();
-                singleInstrumentationPromise.then(function () {
-                    // Add a "route" so that the instrumented code will seamlessly replace its uninstrumented counterpart.
-                    // Routes must be URL segments, and not paths.
-                    var originalSourcePath = url.resolve("/", lastDirSegment);
-                    var instrumentedSourcePath = url.resolve("instrumented/", lastDirSegment);
-                    that.generatedOptions.routes[originalSourcePath] = instrumentedSourcePath;
-                });
-
-                instrumentationPromises.push(singleInstrumentationPromise);
-
-                exec(command, { cwd: that.options.cwd }, function (error) {
-                    if (error) {
-                        singleInstrumentationPromise.reject(error);
-                    }
-                    else {
-                        singleInstrumentationPromise.resolve();
-                    }
-                });
+                var commandSegments = ["instrument", "--output", targetPath, resolvedSourcePath, "--complete-copy"];
+                cli.runToCompletion(commandSegments);
             });
+            fluid.log("Finished instrumentation...");
         }
         catch (error) {
             console.error("Error instrumenting code:", error);
         }
     }
+};
 
-    var sequence = fluid.promise.sequence(instrumentationPromises);
-    sequence.then(function () { fluid.log("Finished instrumentation..."); });
+gpii.testem.generateInstrumentationRoutes = function (that) {
+    var routes = {};
+    if (that.options.instrumentSource) {
+        fluid.each(fluid.makeArray(that.options.sourceDirs), function (sourcePath) {
+            var resolvedSourcePath = path.resolve(that.options.testemOptions.cwd, sourcePath);
+            var parsedPath = path.parse(resolvedSourcePath);
+
+            var pathStats = fs.statSync(resolvedSourcePath);
+            var lastDirSegment = pathStats.isDirectory() ? parsedPath.base : path.baseName(parsedPath.dir);
+
+            var originalSourcePath = url.resolve("/", lastDirSegment);
+            var instrumentedSourcePath = url.resolve("instrumented/", lastDirSegment);
+            routes[originalSourcePath] = instrumentedSourcePath;
+        });
+    }
+    return routes;
 };
 
 /**
@@ -197,45 +191,48 @@ gpii.testem.generateRimrafWrapper = function (path) {
  */
 gpii.testem.cleanupTestemContent = function (path) {
     var testemRegexp = /testem-.+/;
-    var togo = fluid.promise();
 
-    togo.then(function () { fluid.log("Removed Testem content..."); });
+    if (path) {
 
-    try {
-        var resolvedPath = fluid.module.resolvePath(path);
+        var togo = fluid.promise();
 
-        if (fs.existsSync(resolvedPath)) {
-            fs.readdir(resolvedPath, function (testemError, testemDirs) {
-                if (testemError) {
-                    togo.reject(testemError);
-                }
-                else {
-                    var cleanupPromises = [];
-                    fluid.each(testemDirs, function (dirName) {
-                        if (dirName.match(testemRegexp)) {
-                            cleanupPromises.push(gpii.testem.generateRimrafWrapper(dirName));
-                        }
-                    });
+        togo.then(function () { fluid.log("Removed Testem content..."); });
+        try {
+            var resolvedPath = fluid.module.resolvePath(path);
 
-                    // Remove the enclosing directory as well...
-                    cleanupPromises.push(gpii.testem.generateRimrafWrapper(resolvedPath));
+            if (fs.existsSync(resolvedPath)) {
+                fs.readdir(resolvedPath, function (testemError, testemDirs) {
+                    if (testemError) {
+                        togo.reject(testemError);
+                    }
+                    else {
+                        var cleanupPromises = [];
+                        fluid.each(testemDirs, function (dirName) {
+                            if (dirName.match(testemRegexp)) {
+                                cleanupPromises.push(gpii.testem.generateRimrafWrapper(dirName));
+                            }
+                        });
 
-                    var cleanupSequence = fluid.promise.sequence(cleanupPromises);
-                    cleanupSequence.then(togo.resolve, togo.reject);
-                }
-            });
+                        // Remove the enclosing directory as well...
+                        cleanupPromises.push(gpii.testem.generateRimrafWrapper(resolvedPath));
+
+                        var cleanupSequence = fluid.promise.sequence(cleanupPromises);
+                        cleanupSequence.then(togo.resolve, togo.reject);
+                    }
+                });
+            }
+            else {
+                fluid.log("No testem content found, skipping cleanup...");
+                togo.resolve();
+            }
+
         }
-        else {
-            fluid.log("No testem content found, skipping cleanup...");
-            togo.resolve();
+        catch (exception) {
+            togo.reject(exception);
         }
 
+        return togo;
     }
-    catch (exception) {
-        togo.reject(exception);
-    }
-
-    return togo;
 };
 
 /**
@@ -268,17 +265,17 @@ gpii.testem.cleanupDir = function (cleanupDef) {
                     rimraf(cleanupDef.path, function (error) {
                         if (error) {
                             fluid.log("Error removing ", cleanupDef.name, " content:", error);
-                            promise.reject(error);
                         }
                         else {
-                            promise.resolve();
                             fluid.log("Removed ", cleanupDef.name, " content...");
                         }
+                        promise.resolve();
                     });
                 }
             }
             catch (error) {
-                promise.reject(error);
+                console.error(error);
+                promise.resolve();
             }
             return promise;
         }
@@ -340,36 +337,19 @@ gpii.testem.generateUniqueDirName = function (basePath, prefix, suffix) {
  * @param that - The component itself.
  */
 gpii.testem.generateCoverageReportIfNeeded = function (that) {
-    var promise = fluid.promise();
-
     if (that.options.generateCoverageReport) {
-        promise.then(function () { fluid.log("Finished coverage report...");});
         try {
-            var commandSegments = [that.options.istanbulCmd, "report --root", fluid.module.resolvePath(that.options.coverageDir), "--dir", that.options.reportsDir, "text-summary html json-summary"];
-            var command = commandSegments.join(" ");
-
-            exec(command, { cwd: that.options.cwd }, function (error, stdout, stderr) {
-                fluid.log(stdout);
-                fluid.log(stderr);
-                if (error) {
-                    fluid.log("Error generating coverage report:", error);
-                    promise.reject(error);
-                }
-                else {
-                    fluid.log("Created coverage report in '", that.options.reportsDir, "'...");
-                    promise.resolve();
-                }
-            });
+            var commandSegments = ["report", "--root", fluid.module.resolvePath(that.options.coverageDir), "--dir", that.options.reportsDir, "text-summary",  "html", "json-summary"];
+            cli.runToCompletion(commandSegments);
+            fluid.log("Created coverage report in '", that.options.reportsDir, "'...");
         }
         catch (error) {
-            promise.reject(error);
+            console.error(error);
         }
     }
     else {
         fluid.log("Skipping coverage report...");
-        promise.resolve();
     }
-    return promise;
 };
 
 fluid.registerNamespace("gpii.testem.dirs");
@@ -400,11 +380,25 @@ gpii.testem.dirs.everything = gpii.testem.dirs.everythingButCoverage.concat([
 // convenience function.  It's important to trap errors which might prevent Testem callbacks from being triggered.
 gpii.testem.resolveSafely = function (pathToResolve, filename) {
     try {
-        return path.resolve(pathToResolve, filename);
+        var resolvedPath = path.resolve(pathToResolve, filename);
+        return resolvedPath;
     }
     catch (error) {
         console.error(error);
     }
+};
+
+// Stop our express instance if it has been created and hasn't already been destroyed.
+gpii.testem.stopServer = function (that) {
+    if (that.coverageExpressInstance && !fluid.isDestroyed(that.coverageExpressInstance)) {
+        fluid.log("Stopping express...");
+        gpii.express.stopServer(that.coverageExpressInstance);
+    }
+};
+
+// An expander to allow us to toggle "HEADLESS" mode with an environment variable.
+gpii.testem.constructBrowserArgs = function (browserArgs, headlessBrowserArgs) {
+    return (process.env.HEADLESS && headlessBrowserArgs) || browserArgs;
 };
 
 fluid.defaults("gpii.testem", {
@@ -414,18 +408,6 @@ fluid.defaults("gpii.testem", {
         cleanup: "nomerge"
     },
     cwd: process.cwd(),
-    packageRoot: {
-        expander: {
-            funcName: "fluid.module.resolvePath",
-            args: "%gpii-testem"
-        }
-    },
-    istanbulCmd: {
-        expander: {
-            funcName: "fluid.stringTemplate",
-            args: ["node %packageRoot/node_modules/istanbul/lib/cli.js", { packageRoot: "{that}.options.packageRoot" }]
-        }
-    },
     cleanup: {
         initial:  gpii.testem.dirs.everything,
         final:    gpii.testem.dirs.everything
@@ -469,7 +451,7 @@ fluid.defaults("gpii.testem", {
     wrappedEventTimeout: 30000,
     members: {
         generatedOptions: {
-            routes: {}
+            routes: "@expand:gpii.testem.generateInstrumentationRoutes({that})"
         }
     },
     events: {
@@ -490,20 +472,33 @@ fluid.defaults("gpii.testem", {
             }
         }
     },
+    "browserArgs": {
+        "Chrome": [
+            "--disable-extensions",
+            "--memory-pressure-threshholds=1",
+            "--disk-cache-size=0",
+            "--disable-new-zip-unpacker"
+        ]
+    },
+    "headlessBrowserArgs": {
+        // TODO: enable once a new enough version of Firefox is available in CI.
+        // "Firefox": [
+        //     "--headless"
+        // ],
+        // See this ticket for details on the minimum options required to get "headless" Chrome working: https://github.com/testem/testem/issues/1106#issuecomment-298841383
+        "Chrome": [
+            "--disable-gpu",
+            "--headless",
+            "--remote-debugging-port=9222"
+        ]
+    },
     testemOptions: {
         // The timeout options and Chrome browser args are workaround to minimize "browser disconnect" errors.
         // https://github.com/testem/testem/issues/777
         browser_disconnect_timeout: 300, // Five minutes
         browser_start_timeout:      300,
         timeout: 300,
-        "browser_args": {
-            "Chrome": [
-                "--disable-extensions",
-                "--memory-pressure-threshholds=1",
-                "--disk-cache-size=0",
-                "--disable-new-zip-unpacker"
-            ]
-        },
+        browser_args: "@expand:gpii.testem.constructBrowserArgs({that}.options.browserArgs, {that}.options.headlessBrowserArgs)",
         framework:   "qunit",
         report_file: {
             expander: {
@@ -550,7 +545,7 @@ fluid.defaults("gpii.testem", {
         "onTestemStart.instrument": {
             priority: "after:cleanup",
             funcName: "gpii.testem.instrumentAsNeeded",
-            args:     ["{that}", "{that}.events.constructFixtures.fire"] // eventCallback
+            args:     ["{that}"]
         },
         "onTestemStart.constructFixtures": {
             priority: "after:instrument",
@@ -564,8 +559,8 @@ fluid.defaults("gpii.testem", {
         // The unified "testem shutdown" promise chain.
         "onTestemExit.stopExpress": {
             priority: "first",
-            funcName: "gpii.express.stopServer",
-            args:     ["{that}.coverageExpressInstance"]
+            funcName: "gpii.testem.stopServer",
+            args:     ["{that}"]
         },
         "onTestemExit.waitForFixtures": {
             priority: "after:stopExpress",

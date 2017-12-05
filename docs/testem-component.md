@@ -16,8 +16,6 @@ see below.
 | Option                    | Type        | Description                           |
 | ------------------------- | ----------- | ------------------------------------- |
 | `cwd`                     | `{String}`  | Defaults to `process.cwd()`, i.e. the directory from which the script was called. |
-| `packageRoot`             | `{String}`  | The package root we use to access our own copies of testem and istanbul when running tests. |
-| `istanbulCmd`             | `{String}`  | The istanbul command to use when instrumenting code and generating code coverage reports. |
 | `testemDir`               | `{String}`  | The directory in which testem's browser settings and temporary files should be stored. |
 | `wrappedEventTimeout`     | `{Number}`  | How long to wait (in milliseconds) before triggering a timeout when waiting for key startup/shutdown events. |
 | `coveragePort` (required) | `{Number}`  | The port gpii-express should listen on to record coverage data. Defaults to `7000`.|
@@ -31,6 +29,8 @@ see below.
 | `testPages`               | `{Array}`   | One or more test pages to load in the browser, relative to the directory in which your configuration file is stored (see "paths" below). |
 | `serveDirs`               | `{Array}`   | One or more directories to host within the Testem environment. |
 | `testemOptions`           | `{Object}`  | The raw configuration options to pass to Testem.  See [the Testem docs](https://github.com/testem/testem/blob/master/docs/config_file.md) for supported options. |
+| `browserArgs`             | `{Object}`  | The [browser arguments](https://github.com/testem/testem/blob/master/docs/browser_args.md) that will be passed to Testem by default. |
+| `headlessBrowserArgs`     | `{Object}`  | The [browser arguments](https://github.com/testem/testem/blob/master/docs/browser_args.md) that will be passed to Testem if the `HEADLESS` environment variable is set to a non-empty value. If there is no "headless" option for a given browser, the options from `browserArgs` will be used. |
 | `cleanup.initial`         | `{Array}`   | An array of cleanup definitions (see below) to be cleaned up before the tests are run. |
 | `cleanup.final`           | `{Array}`   | An array of cleanup definitions (see below) to be cleaned up after the tests are run and all reporting is complete. |
 

@@ -52,6 +52,38 @@ fluid.defaults("gpii.tests.testem.harness", {
             priority: "before:cleanup",
             funcName: "gpii.tests.testem.harness.outputOptions",
             args:     ["{that}"]
+        },
+        "constructFixtures.log": {
+            funcName: "fluid.log",
+            args:     ["Constructing fixtures..."]
+        },
+        "onTestemStart.log": {
+            funcName: "fluid.log",
+            args:     ["Starting Testem..."]
+        },
+        "onTestemExit.log": {
+            funcName: "fluid.log",
+            args:     ["Exiting Testem..."]
+        },
+        "onExpressStarted.log": {
+            funcName: "fluid.log",
+            args:     ["Starting Express..."]
+        },
+        "onFixturesConstructed.log": {
+            funcName: "fluid.log",
+            args:     ["Fixtures constructed..."]
+        },
+        "stopFixtures.log": {
+            funcName: "fluid.log",
+            args:     ["Stopping fixtures..."]
+        },
+        "onExpressStopped.log": {
+            funcName: "fluid.log",
+            args:     ["Express stopped..."]
+        },
+        "onFixturesStopped.log": {
+            funcName: "fluid.log",
+            args:     ["Fixtures stopped..."]
         }
     }
 });
