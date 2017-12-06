@@ -1,7 +1,8 @@
 # `gpii.testem`
 
-This library provides a [Fluid component](http://docs.fluidproject.org/infusion/development/UnderstandingInfusionComponents.html)
-and static functions that assist in using [Testem](https://github.com/testem/testem).
+This library provides a [Fluid
+component](http://docs.fluidproject.org/infusion/development/UnderstandingInfusionComponents.html) and static functions
+that assist in using [Testem](https://github.com/testem/testem).
 
 # Key Features
 
@@ -17,8 +18,9 @@ To use this grade from Testem, install this package as a development dependency 
 [a bug in newer versions of Testem](https://github.com/testem/testem/issues/1075), if you use anything higher than
 version 1.13.0, you may experience hangs when attempting to quit Testem from the console.
 
-Once you have Testem installed, you will need to create a javascript configuration file, which will allow you to make use of the
-[dynamic configuration options available via the `testem.js` file](https://github.com/testem/testem/blob/master/examples/dynamic_config/testem.js).
+Once you have Testem installed, you will need to create a javascript configuration file, which will allow you to make
+use of the [dynamic configuration options available via the `testem.js`
+file](https://github.com/testem/testem/blob/master/examples/dynamic_config/testem.js).
 
 The most basic example of a file might look something like:
 
@@ -51,20 +53,7 @@ like `node node_modules/testem/testem.js` or `node node_modules/testem/testem.js
 
 ## Browser and Node Coverage
 
-If you are testing browser code in combination with node fixtures, and wish to collect coverage data for your node
-fixtures, you will need to run Testem using [nyc](https://github.com/istanbuljs/nyc), the next-generation command-line
-interface for [Istanbul](https://github.com/gotwarlost/istanbul).  Here is a sample command:
-
-    node_modules/.bin/nyc --temp-directory==./coverage -r none node_modules/testem/testem.js ci --file tests/testem.js
-
-This assumes that you are saving the browser coverage data to `./coverage`.  The `temp-directory` option saves the node
-fixture coverage data collected by nyc to a JSON file in `./coverage` as well.  The `-r none` option in the previous
-command prevents nyc from outputting a report about just the node fixtures, as we want a combined report for both the
-node fixtures and browser code under test.  To create a combined report and output a text summary, you can use a command
-like the following:
-
-    node node_modules/nyc/bin/nyc.js report --reports_dir coverage/report -r lcov -r text-summary
-
+If you are testing browser code in combination with node code, please see our ["Advanced Use Cases"](docs/advanced.md).
 
 # More Information
 
@@ -76,8 +65,8 @@ For more information, check out the documentation links below:
 
 # Running the Tests in this Package
 
-You can run the tests using the command `npm test`.  You are not required to have Testem installed
-globally to run the tests.
+You can run the tests using the command `npm test`.  You are not required to have Testem installed globally to run the
+tests.
 
 # A Warning about Internet Explorer 11
 
