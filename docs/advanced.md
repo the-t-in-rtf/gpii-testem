@@ -1,6 +1,6 @@
 # Advanced Use Cases
 
-## Combining `gpii-testem` with non-Testem Tests.
+## Combining `gpii-testem` with Non-Testem Tests.
 
 The general process for preparing code coverage reports is as follows:
 
