@@ -136,8 +136,8 @@ gpii.testem.instrumentAsNeeded = function (that) {
 };
 
 gpii.testem.generateInstrumentationRoutes = function (that) {
-    var routes = {};
     if (that.options.instrumentSource) {
+        var routes = {};
         fluid.each(fluid.makeArray(that.options.sourceDirs), function (sourcePath) {
             var resolvedSourcePath = path.resolve(that.options.testemOptions.cwd, sourcePath);
             var parsedPath = path.parse(resolvedSourcePath);
@@ -149,8 +149,8 @@ gpii.testem.generateInstrumentationRoutes = function (that) {
             var instrumentedSourcePath = url.resolve("instrumented/", lastDirSegment);
             routes[originalSourcePath] = instrumentedSourcePath;
         });
+        return routes;
     }
-    return routes;
 };
 
 /**

@@ -25,7 +25,6 @@ coverage sender using markup like the following:
 <script type="text/javascript" src="../../../../src/lib/jquery/core/js/jquery.js"></script>
 <script type="text/javascript" src="../../../../src/framework/core/js/Fluid.js"></script>
 
-<script type="text/javascript" src="/testem.js"></script>
 <script type="text/javascript" src="/coverage/client/coverageSender.js"></script>
 
 <script type="text/javascript" src="path/to/myTests.js"></script>
@@ -33,8 +32,8 @@ coverage sender using markup like the following:
 
 Please note, as shown in the above example:
 
-1. Testem itself must be loaded, and must be loaded after QUnit.
-2. The "coverage sender" needs to be loaded after jQuery, its Fluid dependencies, and Testem.
+1. The "coverage sender" must be loaded after QUnit.
+2. The "coverage sender" needs to be loaded after jQuery, and its Fluid dependencies.
 3. The "coverage sender" needs to be loaded before your tests.
 
 The last step (preparing coverage reports) is optional, but enabled by default.  Read on for details.
