@@ -1,4 +1,8 @@
 /* eslint-env node */
 "use strict";
-require("./unit-tests");
-require("./testem-component-tests");
+
+require("./js/allowedByTwoWayFilter-tests");
+require("./js/instrumenter-tests");
+require("./js/instrumenter-launcher-tests");
+require("./js/testem-component-unit-tests");
+require("./js/testem-component-functional-tests");

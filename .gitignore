@@ -1,5 +1,2 @@
 node_modules
-coverage
-.nyc_output
 .vagrant
-tests/testem-fixtures/instrumented

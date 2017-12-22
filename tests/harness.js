@@ -3,7 +3,6 @@
 var fluid = require("infusion");
 var gpii  = fluid.registerNamespace("gpii");
 
-// fluid.require("%gpii-testem");
 require("../");
 
 fluid.registerNamespace("gpii.tests.testem.harness");
@@ -26,6 +25,7 @@ gpii.tests.testem.harness.outputOptions = function (that) {
 fluid.defaults("gpii.tests.testem.harness", {
     gradeNames: ["gpii.testem"],
     testemOptions: {
+        skip: "Safari,PhantomJS",
         proxies: {
             "/node_modules": {
                 "target": "{that}.options.coverageUrl"

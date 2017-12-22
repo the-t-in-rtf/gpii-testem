@@ -13,15 +13,16 @@ var gpii  = fluid.registerNamespace("gpii");
 fluid.require("%gpii-express");
 
 var fs      = require("fs");
-var mkdirp  = require("mkdirp");
 var os      = require("os");
 var path    = require("path");
 var process = require("process");
 var rimraf  = require("rimraf");
 var url     = require("url");
-var cli     = require("istanbul/lib/cli.js");
 
 require("./coverageServer");
+require("./instrumenter");
+require("./reporter");
+require("./lib/resolveSafely");
 
 fluid.registerNamespace("gpii.testem");
 
@@ -111,28 +112,26 @@ gpii.testem.addPromiseTimeout = function (originalPromise, rejectionPayload, tim
  * @returns {Promise} - A promise that will be resolved or rejected when the instrumentation pass finishes.
  */
 gpii.testem.instrumentAsNeeded = function (that) {
+    var promises = [];
     if (that.options.instrumentSource) {
-        try {
-            // Create our instrumentation directory if it doesn't already exist.
-            mkdirp.sync(that.options.instrumentedSourceDir);
-            fluid.each(fluid.makeArray(that.options.sourceDirs), function (sourcePath) {
-                var resolvedSourcePath = path.resolve(that.options.testemOptions.cwd, sourcePath);
-                var parsedPath = path.parse(resolvedSourcePath);
-
-                var pathStats = fs.statSync(resolvedSourcePath);
-                var lastDirSegment = pathStats.isDirectory() ? parsedPath.base : path.baseName(parsedPath.dir);
-
-                var targetPath = path.resolve(that.options.instrumentedSourceDir, lastDirSegment);
-
-                var commandSegments = ["instrument", "--output", targetPath, resolvedSourcePath, "--complete-copy"];
-                cli.runToCompletion(commandSegments);
+        fluid.each(fluid.makeArray(that.options.sourceDirs), function (sourcePath) {
+            var resolvedSourcePath = path.resolve(that.options.testemOptions.cwd, sourcePath);
+            promises.push(function () {
+                return gpii.testem.instrumenter.instrument(resolvedSourcePath, that.options.instrumentedSourceDir, that.options);
             });
-            fluid.log("Finished instrumentation...");
-        }
-        catch (error) {
-            console.error("Error instrumenting code:", error);
-        }
+        });
     }
+    var sequence = fluid.promise.sequence(promises);
+    sequence.then(
+        function () {
+            fluid.log("Finished instrumentation...");
+        },
+        function (error) {
+            console.error(error);
+            fluid.fail(error);
+        }
+    );
+    return sequence;
 };
 
 gpii.testem.generateInstrumentationRoutes = function (that) {
@@ -198,7 +197,7 @@ gpii.testem.cleanupTestemContent = function (path) {
 
         togo.then(function () { fluid.log("Removed Testem content..."); });
         try {
-            var resolvedPath = fluid.module.resolvePath(path);
+            var resolvedPath = gpii.testem.resolveFluidModulePathSafely(path);
 
             if (fs.existsSync(resolvedPath)) {
                 fs.readdir(resolvedPath, function (testemError, testemDirs) {
@@ -264,7 +263,7 @@ gpii.testem.cleanupDir = function (cleanupDef) {
                 else {
                     rimraf(cleanupDef.path, function (error) {
                         if (error) {
-                            fluid.log("Error removing ", cleanupDef.name, " content:", error);
+                            fluid.log(fluid.LogLevel.ERROR, "Error removing ", cleanupDef.name, " content:", error);
                         }
                         else {
                             fluid.log("Removed ", cleanupDef.name, " content...");
@@ -322,7 +321,7 @@ gpii.testem.cleanup = function (cleanupDefs) {
  */
 gpii.testem.generateUniqueDirName = function (basePath, prefix, suffix) {
     try {
-        var resolvedBasePath = fluid.module.resolvePath(basePath);
+        var resolvedBasePath = gpii.testem.resolveFluidModulePathSafely(basePath);
         return path.resolve(resolvedBasePath, prefix + "-" + suffix);
     }
     catch (error) {
@@ -338,14 +337,7 @@ gpii.testem.generateUniqueDirName = function (basePath, prefix, suffix) {
  */
 gpii.testem.generateCoverageReportIfNeeded = function (that) {
     if (that.options.generateCoverageReport) {
-        try {
-            var commandSegments = ["report", "--root", fluid.module.resolvePath(that.options.coverageDir), "--dir", that.options.reportsDir, "text-summary",  "html", "json-summary"];
-            cli.runToCompletion(commandSegments);
-            fluid.log("Created coverage report in '", that.options.reportsDir, "'...");
-        }
-        catch (error) {
-            console.error(error);
-        }
+        that.reporter.report();
     }
     else {
         fluid.log("Skipping coverage report...");
@@ -376,18 +368,6 @@ gpii.testem.dirs.everything = gpii.testem.dirs.everythingButCoverage.concat([
     }
 ]);
 
-// If we call path.resolve directly from an expansion definition, we can't cleanly handle errors.  So, we use this
-// convenience function.  It's important to trap errors which might prevent Testem callbacks from being triggered.
-gpii.testem.resolveSafely = function (pathToResolve, filename) {
-    try {
-        var resolvedPath = path.resolve(pathToResolve, filename);
-        return resolvedPath;
-    }
-    catch (error) {
-        console.error(error);
-    }
-};
-
 // Stop our express instance if it has been created and hasn't already been destroyed.
 gpii.testem.stopServer = function (that) {
     if (that.coverageExpressInstance && !fluid.isDestroyed(that.coverageExpressInstance)) {
@@ -412,6 +392,7 @@ fluid.defaults("gpii.testem", {
         initial:  gpii.testem.dirs.everything,
         final:    gpii.testem.dirs.everything
     },
+    reports: ["text-summary", "html", "json-summary"],
     coverageUrl: {
         expander: {
             funcName: "fluid.stringTemplate",
@@ -440,13 +421,13 @@ fluid.defaults("gpii.testem", {
     // Code to be served must live under the cwd in order to work with Testem.
     instrumentedSourceDir: {
         expander: {
-            funcName: "gpii.testem.resolveSafely",
+            funcName: "gpii.testem.resolvePathSafely",
             args:     ["{that}.options.testemOptions.cwd", "instrumented"]
         }
     },
     generateCoverageReport: true,
     sourceDirs: [],
-    testPages:   [],
+    testPages:  [],
     serveDirs:  [],
     wrappedEventTimeout: 30000,
     members: {
@@ -500,9 +481,10 @@ fluid.defaults("gpii.testem", {
         timeout: 300,
         browser_args: "@expand:gpii.testem.constructBrowserArgs({that}.options.browserArgs, {that}.options.headlessBrowserArgs)",
         framework:   "qunit",
+        tap_quiet_logs: true,
         report_file: {
             expander: {
-                funcName: "gpii.testem.resolveSafely",
+                funcName: "gpii.testem.resolvePathSafely",
                 args:     ["{that}.options.reportsDir", "report.tap"]
             }
         },
@@ -598,9 +580,22 @@ fluid.defaults("gpii.testem", {
                 }
 
             }
+        },
+        reporter: {
+            type: "gpii.testem.reporter",
+            options: {
+                coverageDir: "{gpii.testem}.options.coverageDir",
+                cwd:         "{gpii.testem}.options.cwd",
+                reportsDir:  "{gpii.testem}.options.reportsDir",
+                reports:     "{gpii.testem}.options.reports"
+            }
         }
     }
 });
+
+// TODO: Refactor so that the base grade does not instrument or report code coverage.
+// gpii.testem should still do both, but should be done by mixing in separate instrumentation and reporting grades
+
 
 fluid.defaults("gpii.testem.coverageDataOnly", {
     gradeNames: ["gpii.testem"],
