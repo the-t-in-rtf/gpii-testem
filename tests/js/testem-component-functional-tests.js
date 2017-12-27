@@ -106,7 +106,7 @@ fluid.defaults("gpii.tests.testem.runner", {
     tests: {
         complete: {
             name: "Running a suite of tests that results in complete coverage...",
-            configFile: "../testem-fixtures/coverage/testem-complete-coverage.js",
+            configFile: "../testem-fixtures/coverage-fixtures/testem-complete-coverage.js",
             hasCoverage: true,
             expectedCoverage: {
                 total: {
@@ -121,7 +121,7 @@ fluid.defaults("gpii.tests.testem.runner", {
         },
         incomplete: {
             name: "Running a suite of tests that results in incomplete coverage...",
-            configFile: "../testem-fixtures/coverage/testem-incomplete-coverage.js",
+            configFile: "../testem-fixtures/coverage-fixtures/testem-incomplete-coverage.js",
             hasCoverage: true,
             expectedCoverage: {
                 total: {
@@ -136,12 +136,12 @@ fluid.defaults("gpii.tests.testem.runner", {
         },
         noCoverage: {
             name:        "Running a suite of tests without test coverage...",
-            configFile:  "../testem-fixtures/coverage/testem-no-coverage.js",
+            configFile:  "../testem-fixtures/coverage-fixtures/testem-no-coverage.js",
             hasCoverage: false
         },
         instrumentationTiming: {
             name:       "Confirm that long-running instrumentation does not interfere with coverage collection...",
-            configFile: "../testem-fixtures/coverage/testem-instrumentation-timing.js",
+            configFile: "../testem-fixtures/coverage-fixtures/testem-instrumentation-timing.js",
             hasCoverage: true,
             expectedCoverage: {
                 total: {
