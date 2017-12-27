@@ -117,7 +117,8 @@ gpii.testem.instrumentAsNeeded = function (that) {
         fluid.each(fluid.makeArray(that.options.sourceDirs), function (sourcePath) {
             var resolvedSourcePath = path.resolve(that.options.testemOptions.cwd, sourcePath);
             promises.push(function () {
-                return gpii.testem.instrumenter.instrument(resolvedSourcePath, that.options.instrumentedSourceDir, that.options);
+                var instrumentedPath = path.resolve(that.options.instrumentedSourceDir, sourcePath);
+                return gpii.testem.instrumenter.instrument(resolvedSourcePath, instrumentedPath, that.options);
             });
         });
     }
