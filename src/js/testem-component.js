@@ -31,12 +31,21 @@ fluid.registerNamespace("gpii.testem");
  * Fire a pseudo-event, ensuring that a Testem callback is always called regardless of the result.
  *
  * @param componentEvent - The component event to be fired using `fluid.promise.fireTransformEvent`.
- * @param testemCallback - A function that will be called when we are ready for Testem to run the tests.
+ * @param testemCallback - A function that will be called, for example, when we are ready for Testem to run the tests.
  *
  */
 gpii.testem.handleTestemLifecycleEvent = function (componentEvent, testemCallback) {
     var eventTransformChain = fluid.promise.fireTransformEvent(componentEvent);
-    eventTransformChain.then(function () { testemCallback();} , testemCallback);
+    eventTransformChain.then(
+        function () {
+            fluid.log("Successfully reached the end of promise chain. Firing testem callback.");
+            testemCallback();
+        },
+        function () {
+            fluid.log("Promise chain terminated by promise rejection. Firing testem callback.");
+            testemCallback();
+        }
+    );
 };
 
 /**
@@ -382,7 +391,7 @@ gpii.testem.constructBrowserArgs = function (browserArgs, headlessBrowserArgs) {
     return (process.env.HEADLESS && headlessBrowserArgs) || browserArgs;
 };
 
-fluid.defaults("gpii.testem", {
+fluid.defaults("gpii.testem.base", {
     gradeNames:  ["fluid.component"],
     coveragePort: 7000,
     mergePolicy: {
@@ -392,19 +401,6 @@ fluid.defaults("gpii.testem", {
     cleanup: {
         initial:  gpii.testem.dirs.everything,
         final:    gpii.testem.dirs.everything
-    },
-    reports: ["text-summary", "html", "json-summary"],
-    coverageUrl: {
-        expander: {
-            funcName: "fluid.stringTemplate",
-            args:     ["http://localhost:%port", { port: "{that}.options.coveragePort" }]
-        }
-    },
-    coverageDir: {
-        expander: {
-            funcName: "gpii.testem.generateUniqueDirName",
-            args:     [os.tmpdir(), "coverage", "{that}.id"] // basePath, prefix, suffix
-        }
     },
     reportsDir: {
         expander: {
@@ -493,12 +489,7 @@ fluid.defaults("gpii.testem", {
         user_data_dir: "{that}.options.testemDir",
         on_start: "{that}.handleTestemStart",
         on_exit:  "{that}.handleTestemExit",
-        test_page: "{that}.options.testPages",
-        proxies: {
-            "/coverage": {
-                "target": "{that}.options.coverageUrl"
-            }
-        }
+        test_page: "{that}.options.testPages"
     },
     invokers: {
         "handleTestemStart": {
@@ -525,13 +516,8 @@ fluid.defaults("gpii.testem", {
             funcName: "gpii.testem.cleanup",
             args:     ["{that}.options.cleanup.initial"]
         },
-        "onTestemStart.instrument": {
-            priority: "after:cleanup",
-            funcName: "gpii.testem.instrumentAsNeeded",
-            args:     ["{that}"]
-        },
         "onTestemStart.constructFixtures": {
-            priority: "after:instrument",
+            priority: "after:cleanup",
             func:     "{that}.events.constructFixtures.fire"
         },
         "onTestemStart.waitForFixtures": {
@@ -550,15 +536,62 @@ fluid.defaults("gpii.testem", {
             funcName: "gpii.testem.wrapSecondaryEvent",
             args:     ["{that}", "{that}.events.onFixturesStopped"] // that, event
         },
-        "onTestemExit.coverageReport": {
-            priority: "after:waitForFixtures",
-            funcName: "gpii.testem.generateCoverageReportIfNeeded",
-            args:     ["{that}"]
-        },
         "onTestemExit.cleanup": {
             priority: "last",
             funcName: "gpii.testem.cleanup",
             args:     ["{that}.options.cleanup.final"] // cleanupDefs
+        }
+    }
+});
+
+fluid.defaults("gpii.testem", {
+    gradeNames:  ["gpii.testem.base"],
+    reports: ["text-summary", "html", "json-summary"],
+    coverageUrl: {
+        expander: {
+            funcName: "fluid.stringTemplate",
+            args:     ["http://localhost:%port", { port: "{that}.options.coveragePort" }]
+        }
+    },
+    coverageDir: {
+        expander: {
+            funcName: "gpii.testem.generateUniqueDirName",
+            args:     [os.tmpdir(), "coverage", "{that}.id"] // basePath, prefix, suffix
+        }
+    },
+    // Code to be served must live under the cwd in order to work with Testem.
+    instrumentedSourceDir: {
+        expander: {
+            funcName: "gpii.testem.resolvePathSafely",
+            args:     ["{that}.options.testemOptions.cwd", "instrumented"]
+        }
+    },
+    members: {
+        generatedOptions: {
+            routes: "@expand:gpii.testem.generateInstrumentationRoutes({that})"
+        }
+    },
+    testemOptions: {
+        proxies: {
+            "/coverage": {
+                "target": "{that}.options.coverageUrl"
+            }
+        }
+    },
+    listeners: {
+        "onTestemStart.instrument": {
+            priority: "after:cleanup",
+            funcName: "gpii.testem.instrumentAsNeeded",
+            args:     ["{that}"]
+        },
+        "onTestemStart.constructFixtures": {
+            priority: "after:instrument",
+            func:     "{that}.events.constructFixtures.fire"
+        },
+        "onTestemExit.coverageReport": {
+            priority: "after:waitForFixtures",
+            funcName: "gpii.testem.generateCoverageReportIfNeeded",
+            args:     ["{that}"]
         }
     },
     distributeOptions: {
