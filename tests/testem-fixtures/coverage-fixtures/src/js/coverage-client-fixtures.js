@@ -4,7 +4,7 @@
     fluid.defaults("gpii.tests.testem.coverage.caseHolder.incomplete", {
         gradeNames: ["fluid.test.testCaseHolder"],
         modules: [{
-            name: "Testing complete test coverage.",
+            name: "Testing incomplete test coverage.",
             tests: [
                 {
                     name: "Take one path...",

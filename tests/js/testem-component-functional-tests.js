@@ -48,7 +48,6 @@ gpii.tests.testem.runner.runSingleTest = function (that, testDef) {
                     var coverageSummaryPath = path.resolve(testemOptions.reportsDir, "coverage-summary.json");
 
                     if (testDef.hasCoverage) {
-                        jqUnit.assertEquals("There should be a route to the instrumented code...", "instrumented/src", testemOptions.testemOptions.routes["/src"]);
                         jqUnit.assertTrue("There should be an HTML coverage report...", fs.existsSync(htmlCoveragePath));
                         jqUnit.assertTrue("There should be a JSON coverage summary...", fs.existsSync(coverageSummaryPath));
 
@@ -160,8 +159,7 @@ fluid.defaults("gpii.tests.testem.runner", {
             hasCoverage:   false,
             expectedErrors: [
                 "TypeError: Path must be a string. Received null",
-                "Cannot read property 'replace' of null",
-                "rimraf: missing path"
+                "Cannot read property 'replace' of null"
             ]
         }
     },

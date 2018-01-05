@@ -16,13 +16,17 @@ require("./lib/resolveSafely");
 fluid.registerNamespace("gpii.testem.reporter");
 
 gpii.testem.reporter.report = function (that) {
+    fluid.log("Generating coverage report.");
+    var promise = fluid.promise();
     var nyc = new NYC(that.options.nycOptions);
     try {
         nyc.report();
+        promise.resolve();
     }
     catch (error) {
-        console.log(error);
+        promise.reject(error.stack || error.message || error);
     }
+    return promise;
 };
 
 fluid.defaults("gpii.testem.reporter", {

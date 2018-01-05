@@ -8,8 +8,8 @@ require("../../harness");
 
 var testemComponent = gpii.tests.testem.harness({
     wrappedEventTimeout: 1000,
-    sourceDirs:  [],
-    serveDirs:   [],
+    sourceDirs:  {},
+    contentDirs: {},
     testPages:   [],
     coverageDir: null,
     reportsDir: null,

@@ -10,7 +10,6 @@ var fluid     = require("infusion");
 fluid.setLogging(true);
 var gpii      = fluid.registerNamespace("gpii");
 var fs        = require("fs");
-var path      = require("path");
 var mkdirp    = require("mkdirp");
 var minimatch = require("minimatch");
 
@@ -149,26 +148,25 @@ gpii.testem.instrumenter.allowedByTwoWayFilter = function (baseInputPath, filePa
  *
  */
 gpii.testem.instrumenter.processSingleDirectory = function (baseInputPath, levelInputPath, levelOutputPath, instrumenter, instrumentationOptions) {
+    mkdirp.sync(levelOutputPath);
     var promises = [];
     var filesInPath = fs.readdirSync(levelInputPath);
     fluid.each(filesInPath, function (filename) {
-        var fileInputPath = gpii.testem.resolvePathSafely(levelInputPath, filename);
-        var fileOutputPath = gpii.testem.resolvePathSafely(levelOutputPath, filename);
-        var fileStats = fs.statSync(fileInputPath);
-        if (fileStats.isDirectory()) {
-            promises.push(gpii.testem.instrumenter.processSingleDirectory(baseInputPath, fileInputPath, fileOutputPath, instrumenter, instrumentationOptions));
+        var levelEntryInputPath = gpii.testem.resolvePathSafely(levelInputPath, filename);
+        var levelEntryOutputPath = gpii.testem.resolvePathSafely(levelOutputPath, filename);
+        var levelEntryFileStats = fs.statSync(levelEntryInputPath);
+        if (levelEntryFileStats.isDirectory()) {
+            promises.push(function () { return gpii.testem.instrumenter.processSingleDirectory(baseInputPath, levelEntryInputPath, levelEntryOutputPath, instrumenter, instrumentationOptions); });
         }
         else {
-            if (gpii.testem.instrumenter.allowedByTwoWayFilter(gpii.testem.resolveFluidModulePathSafely(baseInputPath), fileInputPath, instrumentationOptions.includes, instrumentationOptions.excludes)) {
-                // Create any enclosing directories for this file if needed.
-                mkdirp.sync(path.dirname(fileOutputPath));
+            if (gpii.testem.instrumenter.allowedByTwoWayFilter(gpii.testem.resolveFluidModulePathSafely(baseInputPath), levelEntryInputPath, instrumentationOptions.includes, instrumentationOptions.excludes)) {
                 // Instrument the file.
-                if (gpii.testem.instrumenter.allowedByTwoWayFilter(baseInputPath, fileInputPath, instrumentationOptions.sources, instrumentationOptions.nonSources) ) {
-                    var source = fs.readFileSync(fileInputPath, "utf8");
-                    var instrumentedSource = instrumenter.instrumentSync(source, fileInputPath);
+                if (gpii.testem.instrumenter.allowedByTwoWayFilter(baseInputPath, levelEntryInputPath, instrumentationOptions.sources, instrumentationOptions.nonSources) ) {
+                    var source = fs.readFileSync(levelEntryInputPath, "utf8");
+                    var instrumentedSource = instrumenter.instrumentSync(source, levelEntryInputPath);
                     var fileWritePromise = fluid.promise();
                     promises.push(fileWritePromise);
-                    fs.writeFile(fileOutputPath, instrumentedSource, function (error) {
+                    fs.writeFile(levelEntryOutputPath, instrumentedSource, function (error) {
                         if (error) {
                             fileWritePromise.reject(error);
                         }
@@ -182,8 +180,8 @@ gpii.testem.instrumenter.processSingleDirectory = function (baseInputPath, level
                     var fileCopyPromise = fluid.promise();
                     promises.push(fileCopyPromise);
                     try {
-                        var readStream = fs.createReadStream(fileInputPath);
-                        var writeStream = fs.createWriteStream(fileOutputPath);
+                        var readStream = fs.createReadStream(levelEntryInputPath);
+                        var writeStream = fs.createWriteStream(levelEntryOutputPath);
                         writeStream.on("finish", function () {
                             fileCopyPromise.resolve();
                         });
@@ -197,5 +195,9 @@ gpii.testem.instrumenter.processSingleDirectory = function (baseInputPath, level
         }
     });
 
-    return fluid.promise.sequence(promises);
+    var levelPromise = fluid.promise.sequence(promises);
+    levelPromise.then(function () {
+        fluid.log("Finished processing '", levelInputPath, "'.");
+    });
+    return levelPromise;
 };
