@@ -16,13 +16,13 @@ all available in the instrumented output.
 
 ## `instrumentationOptions`
 
-| Option       | Type       | Description                           |
-| ------------ | ---------- | ------------------------------------- |
-| `excludes`   | `{Array}`  | An array of [minimatch](https://github.com/isaacs/minimatch) patterns representing files and directories to exclude from the output.  All paths are relative to `inputPath`. Defaults to `["./node_modules/**]`. |
-| `includes`   | `{Array}`  | An array of [minimatch](https://github.com/isaacs/minimatch) patterns representing files and directories to include in the output.  Relative to `inputPath`. Defaults to `["src/**/*.js"]`.|
-| `nonSources` | `{Array}`  | An array of [minimatch](https://github.com/isaacs/minimatch) patterns representing files that should not be instrumented.  Defaults to `["!./**/*.js"]` (all non-javascript files). |
-| `sources`    | `{Array}`  | An array of [minimatch](https://github.com/isaacs/minimatch) patterns representing files that should be instrumented.  Defaults to `["./**/*.js"]` (all javascript files). |
-| `istanbulOptions`        | `{Object}` | Configuration options to pass to [istanbul-lib-instrument](https://github.com/istanbuljs/istanbuljs/tree/master/packages/istanbul-lib-instrument), the library we use to instrument all code. |
+| Option            | Type       | Description                           |
+| ----------------- | ---------- | ------------------------------------- |
+| `excludes`        | `{Array}`  | An array of [minimatch](https://github.com/isaacs/minimatch) patterns representing files and directories to exclude from the output.  All paths are relative to `inputPath`. Defaults to `["./node_modules/**]`. |
+| `includes`        | `{Array}`  | An array of [minimatch](https://github.com/isaacs/minimatch) patterns representing files and directories to include in the output.  Relative to `inputPath`. Defaults to `["src/**/*.js"]`.|
+| `nonSources`      | `{Array}`  | An array of [minimatch](https://github.com/isaacs/minimatch) patterns representing files that should not be instrumented.  Defaults to `["!./**/*.js"]` (all non-javascript files). |
+| `sources`         | `{Array}`  | An array of [minimatch](https://github.com/isaacs/minimatch) patterns representing files that should be instrumented.  Defaults to `["./**/*.js"]` (all javascript files). |
+| `istanbulOptions` | `{Object}` | Configuration options to pass to [istanbul-lib-instrument](https://github.com/istanbuljs/istanbuljs/tree/master/packages/istanbul-lib-instrument), the library we use to instrument all code. |
 
 ## Examples
 

@@ -2,11 +2,11 @@
 
 The `gpii.testem` component is designed to:
 
-1. Instrument the code under test
-2. start test fixtures
-3. Run Testem tests
-4. Prepare a coverage report
-5. Clean up temporary files (instrumented source, browser data, coverage data)
+1. Instrument the code under test.
+2. Start test fixtures.
+3. Run Testem tests.
+4. Prepare a coverage report.
+5. Clean up temporary files (instrumented source, browser data, coverage data).
 
 For basic usage instructions and requirements, see the [README file](../README.md).  For detailed configuration options,
 see below.
@@ -22,12 +22,10 @@ see below.
 | `coverageUrl`             | `{String}`  | The URL on which the coverage listener should be run.  Set based on `coveragePort` by default. |
 | `coverageDir` (required)  | `{String}`  | The full or package-relative path where coverage data should be saved. By default, a unique subdirectory is created in `os.tmpdir()`. |
 | `reportsDir` (required)   | `{String}`  | The full or package-relative path where coverage reports and test results should be saved. By default, a unique subdirectory is created in `os.tmpdir()`. |
-| `instrumentSource`        | `{Boolean}` | Whether to instrument the source in `options.SourceFiles` (see below).  Defaults to `true`. |
 | `instrumentedSourceDir`   | `{String}`  | The location in which to store instrumented code.  Defaults to the "instrumented" subdirectory in the directory from which the script is run.|
-| `generateCoverageReport`  | `{Boolean}` | Whether to generate coverage reports at the end of the test suite run.  Defaults to `true`. |
-| `sourceDirs`              | `{Array}`   | One or more source directories to load, relative to the directory in which your configuration file is stored (see "paths" below).  Note that although Testem itself supports globbing and file patterns, you are expected to supply only directory paths here. |
+| `sourceDirs`              | `{Array}`   | One or more source directories to load, relative to the directory in which your configuration file is stored (see "Content and Source Directories" below).  Note that although Testem itself supports globbing and file patterns, you are expected to supply only directory paths here. |
 | `testPages`               | `{Array}`   | One or more test pages to load in the browser, relative to the directory in which your configuration file is stored (see "paths" below). |
-| `serveDirs`               | `{Array}`   | One or more directories to host within the Testem environment. |
+| `contentDirs`             | `{Array}`   | One or more directories to host and make available in tests. See "Content and Source Directories" below for the supported format. |
 | `testemOptions`           | `{Object}`  | The raw configuration options to pass to Testem.  See [the Testem docs](https://github.com/testem/testem/blob/master/docs/config_file.md) for supported options. |
 | `browserArgs`             | `{Object}`  | The [browser arguments](https://github.com/testem/testem/blob/master/docs/browser_args.md) that will be passed to Testem by default. |
 | `headlessBrowserArgs`     | `{Object}`  | The [browser arguments](https://github.com/testem/testem/blob/master/docs/browser_args.md) that will be passed to Testem if the `HEADLESS` environment variable is set to a non-empty value. If there is no "headless" option for a given browser, the options from `browserArgs` will be used. |
@@ -76,24 +74,148 @@ options in the way the Testem expects when working with [javascript Testem confi
 
 See [the README file](../README.md) for an example of using this invoker.
 
-## Paths
+## Content and Source Directories
 
-By default, Testem resolves paths to source code, files to be served, and test pages relative to the directory from
-which you run the command.  To avoid problems, it's best to store your testem configuration javascript file in a
-directory higher up than all of the code and test pages you need, and to use relative paths for `sourceDirs`,
-`testPages`, and `serveDirs`.  For, example, a `testem.js` file in the root of your repository will be able to reference
-all of your tests and code using relative paths.
+Both "source" and "content" (non-source) directories can be referred to using a "short" or "long" notation.  Here is an
+example of hosting our source and node_modules directories using "short" notation:
+
+```snippet
+sourceDirs: {
+  src: "src"
+},
+contentDirs: {
+  nm: "node_modules"
+}
+```
+
+Here's the same in "long" format.
+
+```snippet
+sourceDirs: {
+  src: {
+   filePath: "src"
+  }
+},
+contentDirs: {
+  nm: {
+    filePath: "node_modules"
+  }
+}
+```
+The following sub-options are supported:
+
+| Option      | Type       | Description                           |
+| ----------- | ---------- | ------------------------------------- |
+| `filePath`  | `{String}` | A full path, relative path, or package-relative path to the content to be hosted. |
+| `routePath` | `{String}` | The path at which this content should be mounted within our express instance. Defaults to the last segment of `filePath`. |
+| `proxyPath` | `{String}` | The path associated with this content that should be redirected from Testem to our express instance. Defaults to the last segment of `filePath`. |
 
 ## Cleanup
 
 By default, Testem generates browser content in the directory [`os.tmpdir()`](https://nodejs.org/api/os.html#os_os_tmpdir),
 which it does not clean up when the test run is complete.  The `gpii.testem` component automatically cleans this up by
-default.  It also cleans up instrumented code and raw coverage data.
+default.  The component also cleans up instrumented code and raw coverage data.
 
-# `gpii.testem.coverageDataOnly`
+## Collecting Browser Coverage Data
+
+See [the README](../README.md) for an example of using the components in this package to collect only browser coverage
+data.
+
+## Combining Browser Coverage with non-Browser coverage
 
 If your work involves a mixture of node and browser tests, you may want to collect coverage data across a range of test
-runs and then collate it yourself.   The `gpii.testem.coverageDataOnly` is provided for this purpose.  This grade
-disables coverage reporting and the cleanup of the raw coverage data.  It does so by overriding
-`options.dirsToCleanOnShutdown` and  `options.generateCoverageReport` (see above).
+runs and then collate it yourself.  This package makes use of the same libraries as [Istanbul](https://istanbul.js.org),
+so that combined reports can be prepared.
 
+### Components
+
+#### `gpii.testem.coverage`
+
+This grade instruments source and collects coverage data, but does not prepare a report at the end or remove the
+coverage data during its cleanup phase.
+
+#### `gpii.testem.base`
+
+If you want to instrument the code yourself, the `gpii.testem.base` grade does not
+instrument code, and can be used to collect coverage data.
+
+### Example: Combining Node Coverage with Browser Coverage.
+
+The key to preparing a combined report is to ensure that:
+
+1. Each stage saves its coverage data to the same location.
+2. Each stage avoids creating a misleading interim report.
+3. Each stage avoid removing its coverage data at the end of its run.
+
+#### Registering Your Package
+
+In your package's main (node) entry point, you will need code like the following:
+
+```javascript
+var fluid = require("infusion");
+fluid.module.register("my-package", __dirname, require);
+```
+
+#### Setting up your Testem Component
+
+```javascript
+var fluid = require("infusion");
+fluid.require("%my-package");
+var my = registerNamespace("my");
+fluid.defaults("my.testem.grade", {
+    gradeNames: ["gpii.testem.coverage"],
+    reportsDir: "%my-package/reports",
+    coverageDir: "%my-package/coverage",
+    sourceDirs: {
+        src: "%my-package/src"
+    },
+    contentDirs: {
+        nm: "%my-package/node_modules"
+    }
+});
+
+module.exports = my.testem.grade.getTestemOptions();
+
+```
+
+Save this to `tests/testem.js`.
+
+#### Setting up your `package.json` file.
+
+For this example, you need to install a few modules, using a command like:
+
+`npm install --save-dev nyc rimraf gpii-testem`
+
+Once you've done this, you'll need to update the `scripts` section of your `package.json`:
+
+```snippet
+  "scripts": {
+    "pretest": "node node_modules/.bin/rimraf reports/* coverage/*",
+    "test": "npm run test:node && npm run test:browser",
+    "test:browser": "node node_modules/.bin/testem ci --file tests/testem.js",
+    "test:node": "node node_modules/.bin/nyc --temp-directory coverage --reporter none tests/node-tests.js",
+    "posttest": "node node_modules/.bin/nyc report --temp-directory coverage --reporter text-summary --reporter html"
+  }
+```
+#### Running the Tests and Combined Report
+
+To use this configuration, you would simply call `npm test` from the root of your repository.  Let's go through what
+happens step by step.
+
+1. The `pretest` step cleans out any previous coverage data and reports.
+2. The `test` step calls the browser and node tests in sequence.
+3. The `test:browser` step uses a Testem Component to instrument our source and save coverage data to `./coverage`.
+4. The `test:node` step uses `nyc` to instrument our code and save coverage data to the same `./coverage` subdirectory.
+5. The `posttest` step uses `nyc` to create a combined report based on all of the coverage data found in `./coverage`.
+   A text summary is also displayed.
+
+In this example, I'm assuming that we are only exercising browser-side code in our browser tests.  If you are also
+exercising server-side fixtures (for example, by making AJAX requests), you would change `test:browser` to something
+like:
+
+```snippet
+    "test:browser": "node node_modules/.bin/nyc --temp-directory coverage node_modules/testem/testem.js ci --file tests/testem.js",
+```
+
+In this scenario, our Testem component collect coverage data from browsers, and `nyc` itself collects coverage data from
+any server-side fixtures used in our tests.

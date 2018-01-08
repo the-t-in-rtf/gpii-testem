@@ -37,16 +37,6 @@ Please note, as shown in the above example:
 2. The "coverage sender" needs to be loaded after jQuery, and its Fluid dependencies.
 3. The "coverage sender" needs to be loaded before your tests.
 
-The last step (preparing coverage reports) is optional, but enabled by default.  Read on for details.
-
-# Configuring Instrumentation and Code Coverage Reporting
-
-By default, `gpii.testem` will instrument source code, collect code coverage data, prepare a coverage report, and remove
-the remove the raw coverage data once it has finished its run.  If you are running multiple test suites (for example,
-one for code that runs in node, one for code that runs in a browser), you can use the `gpii.testem.coverageDataOnly`
-grade ([see the docs](./testem-component.md#gpiitestemcoverageDataOnly)), which does not generate a coverage report, and
-which leaves the raw coverage data so that you can collate it using an Istanbul command.
-
-If you need more control, you can toggle the instrumentation and cleanup behavior using individual options.  See
-[the component docs](testem-component.md) and ["Advanced Use Cases"](advanced.md) for details.
+The middleware that receives the coverage data is built into Testem component grades found in this package.  See
+[the Testem component docs](./testem-component.md) for more details.
 

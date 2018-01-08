@@ -53,7 +53,8 @@ like `node node_modules/testem/testem.js` or `node node_modules/testem/testem.js
 
 ## Browser and Node Coverage
 
-If you are testing browser code in combination with node code, please see our ["Advanced Use Cases"](docs/advanced.md).
+If you are testing browser code in combination with node code, please see the example in the
+[Testem component docs](docs/testem-component.md).
 
 # More Information
 
