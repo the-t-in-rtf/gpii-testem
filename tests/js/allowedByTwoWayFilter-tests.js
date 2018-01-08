@@ -100,7 +100,7 @@ fluid.defaults("gpii.tests.testem.allowedByTwoWayFilter.testRunner", {
             name:          "A negated negative pattern should work as expected.",
             baseInputPath: "/",
             filePath:      "/bar.js",
-            positive:       ["**"],
+            positive:      ["**"],
             negative:      ["!*.js"],
             expected:      true
         }

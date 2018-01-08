@@ -22,9 +22,9 @@ fluid.registerNamespace("gpii.testem.instrumenter");
 // The default options.  See the instrumenter docs for details.
 gpii.testem.instrumenter.defaultOptions = {
     includes:        ["./**"],
-    excludes:        ["./node_modules/**/*"],
+    excludes:        ["./node_modules/**/*", "./.git/**/*", "./reports/**/*", "./coverage/**/*", "./.idea/**/*", "./.vagrant/**/*", "tests/**/*", "./instrumented/**/*"],
     sources:         ["./*.js", "./**/*.js"],
-    nonSources:      ["!./**/*.js"],
+    nonSources:      ["!./**/*.js", "./Gruntfile.js"],
     istanbulOptions: {}
 };
 
@@ -102,31 +102,31 @@ gpii.testem.instrumenter.combinePositivePatterns = function (patterns, inversePa
  *
  * @param `baseInputPath` {String} - The full path to the base "input" directory that `filePath` is relative to.
  * @param `filePath` {String} - The full path to the file we are evaluating for inclusion/exclusion.
- * @param `positiveRules` {Array} - A list of minimatch patterns to instrument, relative to `baseInputPath`.
- * @param `negativeRules` {Array} - A list of minimatch patterns to avoid instrumenting, relative to `baseInputPath`.
- * @returns `{Boolean}` - `true` if the file should be instrumented, `false` otherwise.
+ * @param `positiveRules` {Array} - A list of minimatch patterns to include, relative to `baseInputPath`.
+ * @param `negativeRules` {Array} - A list of minimatch patterns to exclude, relative to `baseInputPath`.
+ * @returns `{Boolean}` - `true` if the file matches, `false` otherwise.
  *
  */
 gpii.testem.instrumenter.allowedByTwoWayFilter = function (baseInputPath, filePath, positiveRules, negativeRules) {
-    var positiveSourcePatterns = gpii.testem.instrumenter.combinePositivePatterns(positiveRules, negativeRules);
-    var positiveNonSourcePatterns = gpii.testem.instrumenter.combinePositivePatterns(negativeRules, positiveRules);
+    var positivePatterns = gpii.testem.instrumenter.combinePositivePatterns(positiveRules, negativeRules);
+    var negativePatterns = gpii.testem.instrumenter.combinePositivePatterns(negativeRules, positiveRules);
 
-    var matchesSourcePattern = fluid.find(positiveSourcePatterns, function (sourcePattern) {
-        if (minimatch(filePath, sourcePattern)) { return sourcePattern; }
+    var matchesPositive = fluid.find(positivePatterns, function (filePattern) {
+        if (minimatch(filePath, filePattern)) { return filePattern; }
         else {
-            var baseDirRelativePattern = gpii.testem.instrumenter.resolveRelativePattern(baseInputPath, sourcePattern);
+            var baseDirRelativePattern = gpii.testem.instrumenter.resolveRelativePattern(baseInputPath, filePattern);
             if (minimatch(filePath, baseDirRelativePattern)) { return baseDirRelativePattern; }
         }
     });
-    if (matchesSourcePattern) {
-        var matchesNonSourcePattern = fluid.find(positiveNonSourcePatterns, function (nonSourcePattern) {
-            if (minimatch(filePath, nonSourcePattern)) { return nonSourcePattern; }
+    if (matchesPositive) {
+        var matchesNegative = fluid.find(negativePatterns, function (filePattern) {
+            if (minimatch(filePath, filePattern)) { return filePattern; }
             else {
-                var baseDirRelativeNonSourcePattern = gpii.testem.instrumenter.resolveRelativePattern(baseInputPath, nonSourcePattern);
-                if (minimatch(filePath, baseDirRelativeNonSourcePattern)) { return baseDirRelativeNonSourcePattern; }
+                var baseDirRelativeNegativePattern = gpii.testem.instrumenter.resolveRelativePattern(baseInputPath, filePattern);
+                if (minimatch(filePath, baseDirRelativeNegativePattern)) { return baseDirRelativeNegativePattern; }
             }
         });
-        return matchesNonSourcePattern ? false : true;
+        return matchesNegative === undefined;
     }
     else {
         return false;
@@ -148,7 +148,6 @@ gpii.testem.instrumenter.allowedByTwoWayFilter = function (baseInputPath, filePa
  *
  */
 gpii.testem.instrumenter.processSingleDirectory = function (baseInputPath, levelInputPath, levelOutputPath, instrumenter, instrumentationOptions) {
-    mkdirp.sync(levelOutputPath);
     var promises = [];
     var filesInPath = fs.readdirSync(levelInputPath);
     fluid.each(filesInPath, function (filename) {
@@ -159,7 +158,8 @@ gpii.testem.instrumenter.processSingleDirectory = function (baseInputPath, level
             promises.push(function () { return gpii.testem.instrumenter.processSingleDirectory(baseInputPath, levelEntryInputPath, levelEntryOutputPath, instrumenter, instrumentationOptions); });
         }
         else {
-            if (gpii.testem.instrumenter.allowedByTwoWayFilter(gpii.testem.resolveFluidModulePathSafely(baseInputPath), levelEntryInputPath, instrumentationOptions.includes, instrumentationOptions.excludes)) {
+            if (gpii.testem.instrumenter.allowedByTwoWayFilter(baseInputPath, levelEntryInputPath, instrumentationOptions.includes, instrumentationOptions.excludes)) {
+                mkdirp.sync(levelOutputPath);
                 // Instrument the file.
                 if (gpii.testem.instrumenter.allowedByTwoWayFilter(baseInputPath, levelEntryInputPath, instrumentationOptions.sources, instrumentationOptions.nonSources) ) {
                     var source = fs.readFileSync(levelEntryInputPath, "utf8");
@@ -196,8 +196,5 @@ gpii.testem.instrumenter.processSingleDirectory = function (baseInputPath, level
     });
 
     var levelPromise = fluid.promise.sequence(promises);
-    levelPromise.then(function () {
-        fluid.log("Finished processing '", levelInputPath, "'.");
-    });
     return levelPromise;
 };

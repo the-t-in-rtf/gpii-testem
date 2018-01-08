@@ -68,5 +68,23 @@ gpii.tests.testem.instrumenter.testDefs = {
         shouldNotExist:          ["src/json/sample.json", "src/text/sample.txt"],
         shouldBeInstrumented:    ["src/js/index.js"],
         shouldNotBeInstrumented: []
+    },
+    excludeFile: {
+        name:      "Test exclusion of a specific file.",
+        inputPath: "%gpii-testem/tests/instrumentation-fixtures/with-non-js",
+        instrumentationOptions: {
+            includes: ["./src/**/*"],
+            excludes: ["./src/text/sample.txt"]
+        },
+        outputPath: {
+            expander: {
+                funcName: "path.resolve",
+                args:     ["{that}.options.baseOutputDir", "exclude-file"]
+            }
+        },
+        shouldExist:             ["src/json/sample.json", "src/js/index.js"],
+        shouldNotExist:          ["src/text/sample.txt"],
+        shouldBeInstrumented:    ["src/js/index.js"],
+        shouldNotBeInstrumented: []
     }
 };
