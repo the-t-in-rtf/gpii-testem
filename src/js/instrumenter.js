@@ -25,7 +25,9 @@ gpii.testem.instrumenter.defaultOptions = {
     excludes:        ["./node_modules/**/*", "./.git/**/*", "./reports/**/*", "./coverage/**/*", "./.idea/**/*", "./.vagrant/**/*", "tests/**/*", "./instrumented/**/*"],
     sources:         ["./*.js", "./**/*.js"],
     nonSources:      ["!./**/*.js", "./Gruntfile.js"],
-    istanbulOptions: {}
+    istanbulOptions: {
+        produceSourceMap: true
+    }
 };
 
 /**
@@ -164,16 +166,31 @@ gpii.testem.instrumenter.processSingleDirectory = function (baseInputPath, level
                 if (gpii.testem.instrumenter.allowedByTwoWayFilter(baseInputPath, levelEntryInputPath, instrumentationOptions.sources, instrumentationOptions.nonSources) ) {
                     var source = fs.readFileSync(levelEntryInputPath, "utf8");
                     var instrumentedSource = instrumenter.instrumentSync(source, levelEntryInputPath);
-                    var fileWritePromise = fluid.promise();
-                    promises.push(fileWritePromise);
+                    var instrumentedFileWritePromise = fluid.promise();
+                    promises.push(instrumentedFileWritePromise);
                     fs.writeFile(levelEntryOutputPath, instrumentedSource, function (error) {
                         if (error) {
-                            fileWritePromise.reject(error);
+                            instrumentedFileWritePromise.reject(error);
                         }
                         else {
-                            fileWritePromise.resolve();
+                            instrumentedFileWritePromise.resolve();
                         }
                     });
+
+                    if (instrumentationOptions.istanbulOptions.produceSourceMap) {
+                        var sourceMap = instrumenter.lastSourceMap();
+                        var sourceMapPath = levelEntryOutputPath + ".map";
+                        var sourceMapWritePromise = fluid.promise();
+                        promises.push(sourceMapWritePromise);
+                        fs.writeFile(sourceMapPath, JSON.stringify(sourceMap, null, 2), function (error) {
+                            if (error) {
+                                sourceMapWritePromise.reject(error);
+                            }
+                            else {
+                                sourceMapWritePromise.resolve();
+                            }
+                        });
+                    }
                 }
                 // Copy the file.
                 else {
