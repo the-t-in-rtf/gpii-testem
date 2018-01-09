@@ -164,32 +164,38 @@ gpii.testem.instrumenter.processSingleDirectory = function (baseInputPath, level
                 mkdirp.sync(levelOutputPath);
                 // Instrument the file.
                 if (gpii.testem.instrumenter.allowedByTwoWayFilter(baseInputPath, levelEntryInputPath, instrumentationOptions.sources, instrumentationOptions.nonSources) ) {
-                    var source = fs.readFileSync(levelEntryInputPath, "utf8");
-                    var instrumentedSource = instrumenter.instrumentSync(source, levelEntryInputPath);
-                    var instrumentedFileWritePromise = fluid.promise();
-                    promises.push(instrumentedFileWritePromise);
-                    fs.writeFile(levelEntryOutputPath, instrumentedSource, function (error) {
-                        if (error) {
-                            instrumentedFileWritePromise.reject(error);
-                        }
-                        else {
-                            instrumentedFileWritePromise.resolve();
-                        }
-                    });
-
-                    if (instrumentationOptions.istanbulOptions.produceSourceMap) {
-                        var sourceMap = instrumenter.lastSourceMap();
-                        var sourceMapPath = levelEntryOutputPath + ".map";
-                        var sourceMapWritePromise = fluid.promise();
-                        promises.push(sourceMapWritePromise);
-                        fs.writeFile(sourceMapPath, JSON.stringify(sourceMap, null, 2), function (error) {
+                    try {
+                        var source = fs.readFileSync(levelEntryInputPath, "utf8");
+                        var instrumentedSource = instrumenter.instrumentSync(source, levelEntryInputPath);
+                        var instrumentedFileWritePromise = fluid.promise();
+                        promises.push(instrumentedFileWritePromise);
+                        fs.writeFile(levelEntryOutputPath, instrumentedSource, function (error) {
                             if (error) {
-                                sourceMapWritePromise.reject(error);
+                                instrumentedFileWritePromise.reject(error);
                             }
                             else {
-                                sourceMapWritePromise.resolve();
+                                instrumentedFileWritePromise.resolve();
                             }
                         });
+
+                        if (instrumentationOptions.istanbulOptions.produceSourceMap) {
+                            var sourceMap = instrumenter.lastSourceMap();
+                            var sourceMapPath = levelEntryOutputPath + ".map";
+                            var sourceMapWritePromise = fluid.promise();
+                            promises.push(sourceMapWritePromise);
+                            fs.writeFile(sourceMapPath, JSON.stringify(sourceMap, null, 2), function (error) {
+                                if (error) {
+                                    sourceMapWritePromise.reject(error);
+                                }
+                                else {
+                                    sourceMapWritePromise.resolve();
+                                }
+                            });
+                        }
+                    }
+                    catch (error) {
+                        fluid.log("Error instrumenting file '", levelEntryInputPath, "'.");
+                        fluid.fail(error);
                     }
                 }
                 // Copy the file.
