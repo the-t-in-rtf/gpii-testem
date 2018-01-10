@@ -301,7 +301,6 @@ gpii.testem.dirs.onlyTestemContent = [
         path:            "{that}.options.testemDir",
         isTestemContent: true
     }
-
 ];
 
 // A convenience variable to assist in cleaning up everything but the coverage data.
@@ -592,13 +591,9 @@ gpii.testem.coverage.expandInstrumentedSourceDirs = function (cwd, instrumentedS
 };
 
 
-// A grade that adds instrumentation and coverage data collection to the base, but which does not generate reports.
+// A grade that adds the proxy configuration required to collect coverage data, but which does not itself instrument anything.
 fluid.defaults("gpii.testem.coverage", {
     gradeNames: ["gpii.testem.base"],
-    cleanup: {
-        initial:  gpii.testem.dirs.everythingButCoverage,
-        final:    gpii.testem.dirs.everythingButCoverage
-    },
     // The path where coverage data will be stored as it is collected.
     coverageDir: {
         expander: {
@@ -619,17 +614,6 @@ fluid.defaults("gpii.testem.coverage", {
     additionalProxies: {
         coverage: "/coverage"
     },
-    listeners: {
-        "onTestemStart.instrument": {
-            priority: "after:cleanup",
-            funcName: "gpii.testem.coverage.instrumentSource",
-            args:     ["{that}"]
-        },
-        "onTestemStart.constructFixtures": {
-            priority: "after:instrument",
-            func:     "{that}.events.constructFixtures.fire"
-        }
-    },
     distributeOptions: {
         source: "{that}.options.coverageDir",
         target: "{that gpii.testem.coverage.receiver.middleware}.options.coverageDir"
@@ -646,9 +630,36 @@ fluid.defaults("gpii.testem.coverage", {
     }
 });
 
+// A grade that adds instrumentation of code, but which does not generate reports.
+fluid.defaults("gpii.testem.instrumentation", {
+    gradeNames: ["gpii.testem.coverage"],
+    cleanup: {
+        initial:  gpii.testem.dirs.everythingButCoverage,
+        final:    gpii.testem.dirs.everythingButCoverage
+    },
+    // The path where all instrumented source will be stored.
+    instrumentedSourceDir: {
+        expander: {
+            funcName: "gpii.testem.generateUniqueDirName",
+            args:     [os.tmpdir(), "instrumented", "{that}.id"] // basePath, prefix, suffix
+        }
+    },
+    listeners: {
+        "onTestemStart.instrument": {
+            priority: "after:cleanup",
+            funcName: "gpii.testem.coverage.instrumentSource",
+            args:     ["{that}"]
+        },
+        "onTestemStart.constructFixtures": {
+            priority: "after:instrument",
+            func:     "{that}.events.constructFixtures.fire"
+        }
+    }
+});
+
 // The default grade, which instruments source, collects coverage data, and generates reports.
 fluid.defaults("gpii.testem", {
-    gradeNames:  ["gpii.testem.coverage"],
+    gradeNames:  ["gpii.testem.instrumentation"],
     reports: ["text-summary", "html", "json-summary"],
     cleanup: {
         initial:  gpii.testem.dirs.everything,

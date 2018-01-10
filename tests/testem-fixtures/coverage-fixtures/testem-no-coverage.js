@@ -24,6 +24,9 @@ var testemComponent = gpii.testem.base({
             funcName: "gpii.tests.testem.harness.outputOptions",
             args:     ["{that}"]
         }
+    },
+    testemOptions: {
+        skip: "Safari,PhantomJS"
     }
 });
 
