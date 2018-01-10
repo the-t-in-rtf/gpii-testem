@@ -86,5 +86,22 @@ gpii.tests.testem.instrumenter.testDefs = {
         shouldNotExist:          ["src/text/sample.txt"],
         shouldBeInstrumented:    ["src/js/index.js"],
         shouldNotBeInstrumented: []
+    },
+    returnOutsideOfFunction: {
+        name:      "Test instrumentation of (node) code with a return outside of a function.",
+        inputPath: "%gpii-testem/tests/instrumentation-fixtures/with-return-outside-of-function",
+        instrumentationOptions: {
+            includes: ["./src/**/*"]
+        },
+        outputPath: {
+            expander: {
+                funcName: "path.resolve",
+                args:     ["{that}.options.baseOutputDir", "with-return-outside-of-function"]
+            }
+        },
+        shouldExist:             ["src/js/index.js"],
+        shouldNotExist:          [],
+        shouldBeInstrumented:    ["src/js/index.js"],
+        shouldNotBeInstrumented: []
     }
 };

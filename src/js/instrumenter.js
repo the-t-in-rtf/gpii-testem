@@ -26,7 +26,8 @@ gpii.testem.instrumenter.defaultOptions = {
     sources:         ["./*.js", "./**/*.js"],
     nonSources:      ["!./**/*.js", "./Gruntfile.js"],
     istanbulOptions: {
-        produceSourceMap: true
+        produceSourceMap: true,
+        autoWrap: true
     }
 };
 
