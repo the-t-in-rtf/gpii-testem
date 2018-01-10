@@ -555,7 +555,7 @@ gpii.testem.coverage.instrumentSource = function (that) {
         promises.push(function () {
             var lastDirSegment = gpii.testem.extractLastContentSegment(sourcePathDef, "");
             var instrumentedPath = gpii.testem.resolvePackageOrCwdRelativePath(that.options.instrumentedSourceDir, lastDirSegment);
-            return gpii.testem.instrumenter.instrument(resolvedSourcePath, instrumentedPath, that.options);
+            return gpii.testem.instrumenter.instrument(resolvedSourcePath, instrumentedPath, that.options.instrumentationOptions);
         });
     });
     var sequence = fluid.promise.sequence(promises);
@@ -637,6 +637,7 @@ fluid.defaults("gpii.testem.instrumentation", {
         initial:  gpii.testem.dirs.everythingButCoverage,
         final:    gpii.testem.dirs.everythingButCoverage
     },
+    instrumentationOptions: {},
     // The path where all instrumented source will be stored.
     instrumentedSourceDir: {
         expander: {

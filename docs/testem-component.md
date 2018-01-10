@@ -22,6 +22,7 @@ see below.
 | `coverageUrl`             | `{String}`  | The URL on which the coverage listener should be run.  Set based on `coveragePort` by default. |
 | `coverageDir` (required)  | `{String}`  | The full or package-relative path where coverage data should be saved. By default, a unique subdirectory is created in `os.tmpdir()`. |
 | `reportsDir` (required)   | `{String}`  | The full or package-relative path where coverage reports and test results should be saved. By default, a unique subdirectory is created in `os.tmpdir()`. |
+| `instrumentationOptions`  | `{Object}`  | The options to use when instrumenting source.  See the [instrumenter docs](instrumenter.md) for details. |
 | `instrumentedSourceDir`   | `{String}`  | The location in which to store instrumented code.  By default, a unique subdirectory is created in `os.tmpdir()`.|
 | `sourceDirs`              | `{Array}`   | One or more source directories to load, relative to the directory in which your configuration file is stored (see "Content and Source Directories" below).  Note that although Testem itself supports globbing and file patterns, you are expected to supply only directory paths here. |
 | `testPages`               | `{Array}`   | One or more test pages to load in the browser, relative to the directory in which your configuration file is stored (see "paths" below). |
