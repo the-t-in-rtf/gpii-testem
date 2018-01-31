@@ -12,8 +12,8 @@ fluid.registerNamespace("gpii.test.testem");
  * Examine a file to confirm if it's instrumented. Checks for the existence of the standard coverage variable inserted
  * by Istanbul.
  *
- * @param `fullPath` `{String}` - The full path to the file to be evaluated.
- * @returns `{boolean}` - Returns `true` if the file is instrumented, and `false` otherwise.
+ * @param fullPath {String} - The full path to the file to be evaluated.
+ * @return {Boolean} - Returns `true` if the file is instrumented, and `false` otherwise.
  *
  */
 gpii.test.testem.isInstrumented = function (fullPath) {

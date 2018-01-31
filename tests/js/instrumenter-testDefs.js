@@ -56,7 +56,8 @@ gpii.tests.testem.instrumenter.testDefs = {
         name:      "Test exclusion of non javascript content.",
         inputPath: "%gpii-testem/tests/instrumentation-fixtures/with-non-js",
         instrumentationOptions: {
-            includes: ["./src/**/*.js"]
+            includes: ["./src/**/*.js"],
+            nonSources: []
         },
         outputPath: {
             expander: {
@@ -73,7 +74,7 @@ gpii.tests.testem.instrumenter.testDefs = {
         name:      "Test exclusion of a specific file.",
         inputPath: "%gpii-testem/tests/instrumentation-fixtures/with-non-js",
         instrumentationOptions: {
-            includes: ["./src/**/*"],
+            sources:  ["./src/**/*"],
             excludes: ["./src/text/sample.txt"]
         },
         outputPath: {

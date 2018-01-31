@@ -26,12 +26,12 @@
     },
     "homepage": "https://github.com/GPII/gpii-testem/",
     "dependencies": {
+        "glob": "7.1.2",
         "gpii-express": "1.0.12",
         "gpii-launcher": "1.0.0-dev.20171221T122035Z.edade23",
         "infusion": "3.0.0-dev.20170724T165035Z.eee50c1",
         "istanbul": "0.4.5",
         "istanbul-lib-instrument": "1.9.1",
-        "minimatch": "3.0.4",
         "mkdirp": "0.5.1",
         "node-jqunit": "1.1.8",
         "nyc": "11.3.0",

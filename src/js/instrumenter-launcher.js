@@ -6,29 +6,6 @@ var gpii  = fluid.registerNamespace("gpii");
 fluid.require("%gpii-launcher");
 fluid.require("%gpii-testem");
 
-fluid.registerNamespace("gpii.testem.instrumenter.runner");
-
-gpii.testem.instrumenter.runner.instrumentThenExit = function (that) {
-    var instrumentationPromise = gpii.testem.instrumenter.instrument(that.options.inputPath, that.options.outputPath, that.options);
-    instrumentationPromise.then(
-        function () {
-            fluid.log(fluid.logLevel.IMPORTANT, "Finished instrumentation.");
-            that.destroy();
-        },
-        fluid.fail
-    );
-};
-
-fluid.defaults("gpii.testem.instrumenter.runner", {
-    gradeNames: ["fluid.component"],
-    listeners: {
-        "onCreate.instrument": {
-            funcName: "gpii.testem.instrumenter.runner.instrumentThenExit",
-            args:     ["{that}"]
-        }
-    }
-});
-
 fluid.defaults("gpii.testem.instrumenter.launcher", {
     gradeNames: ["gpii.launcher"],
     optionsFile: "%gpii-testem/configs/instrumenter.json",

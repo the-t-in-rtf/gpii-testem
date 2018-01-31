@@ -87,9 +87,9 @@ fluid.registerNamespace("gpii.testem.coverage.express");
  * Generate a definition that can be used to instantiate a piece of middleware to host each source and content
  * directory.
  *
- * @param `sourceDirs` `{Object}` - A map of source directories to host.
- * @param `contentDirs` `{Object}` - A map of content directories to host.
- * @returns `{Array}` - A copy of `contentDirs`, ordered by namespaced priorities.
+ * @param sourceDirs {Object} - A map of source directories to host.
+ * @param contentDirs {Object} - A map of content directories to host.
+ * @return {Array} - A copy of `contentDirs`, ordered by namespaced priorities.
  *
  */
 gpii.testem.coverage.express.generateRouterSources = function (sourceDirs, contentDirs) {

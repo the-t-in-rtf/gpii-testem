@@ -24,7 +24,7 @@ gpii.testem.resolvePathSafely = function (pathToResolve, filename) {
  * Another wrapper to ensure that invalid or missing paths do not break the overall lifecycle of a testem component.
  *
  * @param path
- * @returns {*}
+ * @return {*}
  */
 gpii.testem.resolveFluidModulePathSafely = function (path) {
     try {

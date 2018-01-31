@@ -54,7 +54,7 @@ gpii.testem.handleTestemLifecycleEvent = function (componentEvent, testemCallbac
  *
  * @param that - The component itself.
  * @param event - The event to listen to.
- * @returns {Promise} - A promise that will be resolved the next time `event` is fired.
+ * @return {Promise} - A promise that will be resolved the next time `event` is fired.
  */
 gpii.testem.wrapSecondaryEvent = function (that, event) {
     var eventPromise = gpii.testem.generateSingleUseEventListener(that, event);
@@ -97,7 +97,7 @@ gpii.testem.generateSingleUseEventListener = function (that, event) {
  * @param originalPromise {Promise} The original promise to wrap in a timeout.
  * @param rejectionPayload {Object} The payload to use when rejecting the message.
  * @param timeoutInMillis {Number} The number of milliseconds to wait before timing out.
- * @returns originalPromise {Object} The original promise.
+ * @return originalPromise {Object} The original promise.
  */
 gpii.testem.addPromiseTimeout = function (originalPromise, rejectionPayload, timeoutInMillis) {
     // Hold onto a handle so that we can clear the timeout if needed.
@@ -119,7 +119,7 @@ gpii.testem.addPromiseTimeout = function (originalPromise, rejectionPayload, tim
  * been completely assembled.
  *
  * @param that - The component itself.
- * @returns {Object} - The Testem options to use for this run.
+ * @return {Object} - The Testem options to use for this run.
  *
  */
 gpii.testem.getTestemOptions = function (that) {
@@ -146,7 +146,7 @@ gpii.testem.generateRimrafWrapper = function (path) {
  * Remove all Testem browser data from this run.
  *
  * @param path {String} - The path to the directory which contains Testem's browser data from this run.
- * @returns {Promise} - A promise that will be resolved when cleanup is complete, or rejected if there is an error.
+ * @return {Promise} - A promise that will be resolved when cleanup is complete, or rejected if there is an error.
  *
  */
 gpii.testem.cleanupTestemContent = function (path) {
@@ -205,7 +205,7 @@ gpii.testem.cleanupTestemContent = function (path) {
  * }
  *
  * @param cleanupDef {Object} - A cleanup definition, see example above.
- * @returns {Function} - A promise-returning function which will be executed when it's our turn in the sequence.
+ * @return {Function} - A promise-returning function which will be executed when it's our turn in the sequence.
  *
  */
 gpii.testem.cleanupDir = function (cleanupDef) {
@@ -253,8 +253,8 @@ gpii.testem.cleanupDir = function (cleanupDef) {
  *  isTestemContent: true
  * }
  *
- * @param `key` `{String}` -  A string describing which cleanup phase this is (typically "initial" or "final").
- * @param `cleanupDefs` `{Object}` - An array of cleanup definitions (see example above).
+ * @param key {String} -  A string describing which cleanup phase this is (typically "initial" or "final").
+ * @param cleanupDefs {Object} - An array of cleanup definitions (see example above).
  *
  */
 gpii.testem.cleanup = function (stage, cleanupDefs) {
@@ -280,7 +280,7 @@ gpii.testem.cleanup = function (stage, cleanupDefs) {
  * @param basePath {String} - A full or package-relative path to the subdirectory in which the new directory will live.
  * @param prefix {String} - A "prefix" that will be prepended to the filename.
  * @param suffix {String} - A "suffix" that will be appended to the end of the filename.
- * @returns {String} - The full path to the unique subdirectory.
+ * @return {String} - The full path to the unique subdirectory.
  */
 gpii.testem.generateUniqueDirName = function (basePath, prefix, suffix) {
     try {
@@ -336,11 +336,11 @@ gpii.testem.constructBrowserArgs = function (browserArgs, headlessBrowserArgs) {
  *
  * Construct a full set of Testem proxy configuration options based on component options.
  *
- * @param `sourceDirs` `{Object}` - An object whose top-level values each refer to a source directory definition.
- * @param `contentDirs` `{Object}` - An object whose top-level values each refer to a content directory definition.
- * @param `additionalProxies` `{Object}` - An array of additional proxy paths that should be directed to `coverageUrl`.
- * @param `coverageUrl` `{String}` - The URL where the gpii-express instance that collects coverage data (and hosts our content) is located.
- * @returns `{Object}` - An object representing Testem proxy configuration options.
+ * @param sourceDirs {Object} - An object whose top-level values each refer to a source directory definition.
+ * @param contentDirs {Object} - An object whose top-level values each refer to a content directory definition.
+ * @param additionalProxies {Object} - An array of additional proxy paths that should be directed to `coverageUrl`.
+ * @param coverageUrl {String} - The URL where the gpii-express instance that collects coverage data (and hosts our content) is located.
+ * @return {Object} - An object representing Testem proxy configuration options.
  *
  */
 gpii.testem.constructProxies = function (sourceDirs, contentDirs, additionalProxies, coverageUrl) {
@@ -543,7 +543,7 @@ fluid.defaults("gpii.testem.base", {
  * Optionally instrument the source code under test.
  *
  * @param that - The component itself.
- * @returns {Promise} - A promise that will be resolved or rejected when the instrumentation pass finishes.
+ * @return {Promise} - A promise that will be resolved or rejected when the instrumentation pass finishes.
  */
 gpii.testem.coverage.instrumentSource = function (that) {
     fluid.log("Instrumenting source.");
@@ -575,9 +575,9 @@ gpii.testem.coverage.instrumentSource = function (that) {
  *
  * Produce a list of paths where our instrumented source will eventually be housed.
  *
- * @param `cwd` `{String}` - The full path to the current working directory.  Will be used to resolve relative paths.
- * @param `instrumentedSourceDir` `{String}` - The full path to the location where the instrumented source should be saved.
- * @param `sourceDirs` `{Object}` - A map of named source dirs that will instrumented and hosted.
+ * @param cwd {String} - The full path to the current working directory.  Will be used to resolve relative paths.
+ * @param instrumentedSourceDir {String} - The full path to the location where the instrumented source should be saved.
+ * @param sourceDirs {Object} - A map of named source dirs that will instrumented and hosted.
  *
  */
 gpii.testem.coverage.expandInstrumentedSourceDirs = function (cwd, instrumentedSourceDir, sourceDirs) {

@@ -33,9 +33,16 @@ gpii.tests.testem.instrumenterLauncher.generateArgs = function (testDef) {
 
     // This will only work for array values like "includes", "excludes", "sources", and "nonSources", but that's all we have at.
     fluid.each(testDef.instrumentationOptions, function (value, propertyKey) {
-        fluid.each(fluid.makeArray(value), function (singleArrayItem) {
-            argSegments.push("--" + propertyKey +  " '" + singleArrayItem + "'");
-        });
+        var arrayValues = fluid.makeArray(value);
+        if (arrayValues.length) {
+            fluid.each(arrayValues, function (singleArrayItem) {
+                // These MUST be double quotes: https://github.com/yargs/yargs/issues/743
+                argSegments.push("--" + propertyKey +  " \"" + singleArrayItem + "\"");
+            });
+        }
+        else {
+            argSegments.push("--" + propertyKey +  " \"[]\"");
+        }
     });
 
     return argSegments.join(" ");
@@ -43,7 +50,11 @@ gpii.tests.testem.instrumenterLauncher.generateArgs = function (testDef) {
 
 gpii.tests.testem.instrumenterLauncher.runAllTests = function (that) {
     jqUnit.module(that.options.moduleName);
-    fluid.each(that.options.testDefs, function (testDef) { gpii.tests.testem.instrumenterLauncher.runSingleTest(that, testDef);});
+    fluid.each(that.options.testDefs, function (testDef) {
+        if (!testDef.disableInLauncher) {
+            gpii.tests.testem.instrumenterLauncher.runSingleTest(that, testDef);
+        }
+    });
     rimraf.sync(that.options.baseOutputDir);
     fluid.log("Removed temporary output.");
 };
@@ -59,7 +70,6 @@ gpii.tests.testem.instrumenterLauncher.runSingleTest = function (that, testDef) 
 
         // Run the command with the specified arguments and environment variables.  Generate a coverage report for this run, which we will collate later.
         var command = fluid.stringTemplate("node %launcherPath %args", commandOptions);
-
         var execOptions = {
             // cwd: fluid.module.resolvePath("%gpii-testem")
         };

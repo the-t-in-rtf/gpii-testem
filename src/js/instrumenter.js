@@ -10,8 +10,9 @@ var fluid     = require("infusion");
 fluid.setLogging(true);
 var gpii      = fluid.registerNamespace("gpii");
 var fs        = require("fs");
+var path      = require("path");
 var mkdirp    = require("mkdirp");
-var minimatch = require("minimatch");
+var glob      = require("glob");
 
 var istanbul = require("istanbul-lib-instrument");
 
@@ -21,10 +22,9 @@ fluid.registerNamespace("gpii.testem.instrumenter");
 
 // The default options.  See the instrumenter docs for details.
 gpii.testem.instrumenter.defaultOptions = {
-    includes:        ["./**"],
-    excludes:        ["./node_modules/**/*", "./.git/**/*", "./reports/**/*", "./coverage/**/*", "./.idea/**/*", "./.vagrant/**/*", "tests/**/*", "./instrumented/**/*"],
-    sources:         ["./*.js", "./**/*.js"],
-    nonSources:      ["!./**/*.js", "./Gruntfile.js"],
+    sources:    ["./**/*.js"],
+    excludes:   ["./node_modules/**/*", "./.git/**/*", "./reports/**/*", "./coverage/**/*", "./.idea/**/*", "./.vagrant/**/*", "tests/**/*", "./instrumented/**/*"],
+    nonSources: ["./**/*.!(js)", "./Gruntfile.js"],
     istanbulOptions: {
         produceSourceMap: true,
         autoWrap: true
@@ -35,21 +35,54 @@ gpii.testem.instrumenter.defaultOptions = {
  *
  * Instrument the code found at `inputPath` and save the results to `outputPath`.
  *
- * @param `inputPath` `{String}` - The full or package-relative path to a directory containing code to instrument.
- * @param `outputPath` `{String}` - The full or package-relative path to the directory where you want to save the instrumented output.
- * @param `instrumentationOptions` `{Object}` - Configuration options to control what is instrumented.  See the instrumenter docs for details.
- * @returns `{Promise}` - A `fluid.promise` that will be resolved when the full instrumentation is complete or rejected if there is an error at any point.
+ * @param inputPath {String} - The full or package-relative path to a directory containing code to instrument.
+ * @param outputPath {String} - The full or package-relative path to the directory where you want to save the instrumented output.
+ * @param instrumentationOptions {Object} - Configuration options to control what is instrumented.  See the instrumenter docs for details.
+ * @return {Promise} - A `fluid.promise` that will be resolved when the full instrumentation is complete or rejected if there is an error at any point.
  *
  */
 gpii.testem.instrumenter.instrument = function (inputPath, outputPath, instrumentationOptions) {
-    var combinedInstrumentationOptions = fluid.merge({}, gpii.testem.instrumenter.defaultOptions, instrumentationOptions || {});
+    var promises = [];
 
     var resolvedInputPath  = gpii.testem.resolveFluidModulePathSafely(inputPath);
     var resolvedOutputPath = gpii.testem.resolveFluidModulePathSafely(outputPath);
 
-    var instrumenter = istanbul.createInstrumenter(combinedInstrumentationOptions.istanbulOptions);
+    // User-supplied patterns should completely replace the originals.
+    var mergePolicy = {
+        sources: "replace",
+        excludes: "replace",
+        nonSources: "replace"
+    };
 
-    return gpii.testem.instrumenter.processSingleDirectory(resolvedInputPath, resolvedInputPath, resolvedOutputPath, instrumenter, combinedInstrumentationOptions);
+    var combinedInstrumentationOptions = fluid.merge(mergePolicy, gpii.testem.instrumenter.defaultOptions, instrumentationOptions || {});
+
+    // Instrument files that are part of our "sources" pattern, but which are not defined as excluded or non-sources.
+    var sourceFileWrappedPromise = fluid.promise();
+    promises.push(sourceFileWrappedPromise);
+    var sourcesToExclude = combinedInstrumentationOptions.excludes.concat(combinedInstrumentationOptions.nonSources);
+    var sourceFilePromise = gpii.testem.instrumenter.findFilesMatchingFilter(resolvedInputPath, combinedInstrumentationOptions.sources, sourcesToExclude);
+    sourceFilePromise.then(
+        function (filesToInstrument) {
+            var instrumentationPromise = gpii.testem.instrumenter.instrumentAllFiles(filesToInstrument, inputPath, resolvedOutputPath, combinedInstrumentationOptions);
+            instrumentationPromise.then(sourceFileWrappedPromise.resolve, sourceFileWrappedPromise.reject);
+        },
+        sourceFileWrappedPromise.reject
+    );
+
+    // Copy "non source" files which are not excluded.
+    var nonSourceWrappedPromise = fluid.promise();
+    promises.push(nonSourceWrappedPromise);
+    var nonSourcePromise = gpii.testem.instrumenter.findFilesMatchingFilter(resolvedInputPath, combinedInstrumentationOptions.nonSources, combinedInstrumentationOptions.excludes);
+    nonSourcePromise.then(
+        function (filesToCopy) {
+            var fileCopyPromise = gpii.testem.instrumenter.copyAllFiles(filesToCopy, inputPath, resolvedOutputPath);
+            fileCopyPromise.then(nonSourceWrappedPromise.resolve, nonSourceWrappedPromise.reject);
+        },
+        nonSourceWrappedPromise.reject
+    );
+
+    var sequence = fluid.promise.sequence(promises);
+    return sequence;
 };
 
 /**
@@ -58,7 +91,7 @@ gpii.testem.instrumenter.instrument = function (inputPath, outputPath, instrumen
  *
  * @param basePath
  * @param pattern
- * @returns {string}
+ * @return {string}
  */
 gpii.testem.instrumenter.resolveRelativePattern = function (basePath, pattern) {
     if (pattern.indexOf("!") === 0) {
@@ -71,11 +104,8 @@ gpii.testem.instrumenter.resolveRelativePattern = function (basePath, pattern) {
 
 /**
  *
- * The library we use for matching (minimatch) supports "negated" patterns.  If we allow these in our arrays, to confirm
- * a match, we must ensure that there is at least one "positive" (non-negated) match for a given pattern, and also that
- * the pattern does not match any negated patterns.
- *
- * This function standardises "negative" patterns so that we can perform a single comparison pass. It combines the
+ * The library we use for matching (node-glob) does not support "negated" patterns.  This function standardises
+ * "negative" patterns so that we can use them with node-glob and perform a single comparison pass. It combines the
  * non-negated patterns from `patterns` with "negative" patterns from `inversePatterns`, minus their leading exclamation
  * point.  So:
  *
@@ -83,15 +113,13 @@ gpii.testem.instrumenter.resolveRelativePattern = function (basePath, pattern) {
  *
  * Outputs: `["onePos", "twoPos"]`
  *
- * Used by `gpii.testem.instrumenter.allowedByTwoWayFilter`.
- *
- * @param `patterns` `{Array}` - An array of minimatch patterns representing one state (inclusion, for example).
- * @param `inversePatterns` `{Array}` - An array of minimatch patterns representing the opposite state (exclusion, for example).
- * @returns `{Array}` - An array representing all "positive" matches (see above).
+ * @param patterns {Array} - An array of minimatch patterns representing one state (inclusion, for example).
+ * @param inversePatterns {Array} - An array of minimatch patterns representing the opposite state (exclusion, for example).
+ * @return {Array} - An array representing all "positive" matches (see above).
  *
  */
 gpii.testem.instrumenter.combinePositivePatterns = function (patterns, inversePatterns) {
-    var positivePatterns = fluid.makeArray(patterns).filter(function (pattern)  { return pattern.indexOf("!") === -1; });
+    var positivePatterns = fluid.makeArray(patterns).filter(function (pattern)  { return pattern.indexOf("!") !== 0; });
     var negativeInversePatterns = fluid.makeArray(inversePatterns).filter(function (inversePattern) { return inversePattern.indexOf("!") === 0; });
     var positiveInversePatterns = negativeInversePatterns.map(function (inverseWithExclamation) { return inverseWithExclamation.substring(1); });
     return positivePatterns.concat(positiveInversePatterns);
@@ -103,122 +131,179 @@ gpii.testem.instrumenter.combinePositivePatterns = function (patterns, inversePa
  * "negative" (material that should be excluded).  Used to determine whether to include a file in our instrumented
  * output, and also to determine whether it should be instrumented or copied.
  *
- * @param `baseInputPath` {String} - The full path to the base "input" directory that `filePath` is relative to.
- * @param `filePath` {String} - The full path to the file we are evaluating for inclusion/exclusion.
- * @param `positiveRules` {Array} - A list of minimatch patterns to include, relative to `baseInputPath`.
- * @param `negativeRules` {Array} - A list of minimatch patterns to exclude, relative to `baseInputPath`.
- * @returns `{Boolean}` - `true` if the file matches, `false` otherwise.
+ * @param baseInputPath {String} - The full path to the base "input" directory that `filePath` is relative to.
+ * @param positiveRules {Array} - A list of minimatch patterns to include, relative to `baseInputPath`.
+ * @param negativeRules {Array} - A list of minimatch patterns to exclude, relative to `baseInputPath`.
+ * @return {Promise} - A `fluid.promise` that will be resolved with a list of matching paths, relative to `baseInputPath`, or rejected if there is an error.
  *
  */
-gpii.testem.instrumenter.allowedByTwoWayFilter = function (baseInputPath, filePath, positiveRules, negativeRules) {
+gpii.testem.instrumenter.findFilesMatchingFilter = function (baseInputPath, positiveRules, negativeRules) {
+    var promise = fluid.promise();
     var positivePatterns = gpii.testem.instrumenter.combinePositivePatterns(positiveRules, negativeRules);
     var negativePatterns = gpii.testem.instrumenter.combinePositivePatterns(negativeRules, positiveRules);
 
-    var matchesPositive = fluid.find(positivePatterns, function (filePattern) {
-        if (minimatch(filePath, filePattern)) { return filePattern; }
-        else {
-            var baseDirRelativePattern = gpii.testem.instrumenter.resolveRelativePattern(baseInputPath, filePattern);
-            if (minimatch(filePath, baseDirRelativePattern)) { return baseDirRelativePattern; }
-        }
-    });
-    if (matchesPositive) {
-        var matchesNegative = fluid.find(negativePatterns, function (filePattern) {
-            if (minimatch(filePath, filePattern)) { return filePattern; }
+    // See https://github.com/isaacs/node-glob#options
+    var options = {
+        cwd: baseInputPath,
+        ignore: negativePatterns,
+        // Our approach very much depends on only having files, and NOT directories.  Remove this at your peril.
+        nodir: true
+    };
+    var promises = [];
+    fluid.each(positivePatterns, function (singlePositivePattern) {
+        var singlePatternPromise = fluid.promise();
+        promises.push(singlePatternPromise);
+        glob(singlePositivePattern, options, function (error, files) {
+            if (error) {
+                singlePatternPromise.reject(error);
+            }
             else {
-                var baseDirRelativeNegativePattern = gpii.testem.instrumenter.resolveRelativePattern(baseInputPath, filePattern);
-                if (minimatch(filePath, baseDirRelativeNegativePattern)) { return baseDirRelativeNegativePattern; }
+                singlePatternPromise.resolve(files);
             }
         });
-        return matchesNegative === undefined;
-    }
-    else {
-        return false;
-    }
+    });
+    var sequence = fluid.promise.sequence(promises);
+    sequence.then(
+        function (results) {
+            promise.resolve(fluid.flatten(results));
+        },
+        promise.reject
+    );
+    return promise;
 };
 
 /**
  *
- * Read through the contents of a single directory.  Recurses to examine any subdirectories.  Instruments matching
- * source files, copies matching non-source files.  Matching is controlled by supplying minimatch patterns in
- * `instrumentationOptions.includes` and `instrumentationOptions.excludes`.  See the documentation for details.
+ * Instrument a list of files.
  *
- * @param `baseInputPath` `{String}` - The full path to the "base" directory for the overall run.
- * @param `levelInputPath` `{String}` - The full or package-relative path to the input directory used for this level of the recursive instrumentation process.
- * @param `levelOutputPath` `{String}` - The full or package-relative path to output directory used for this level of the recursive instrumentation process.
- * @param `instrumenter` {Object} - An Istanbul.js "instrumenter", see https://github.com/istanbuljs/istanbuljs/tree/master/packages/istanbul-lib-instrument
- * @param `instrumentationOptions` `{Object}` - The configurations options that control this instrumentation pass. See our instrumenter docs for details.
- * @returns `{Promise}` - A `fluid.promise` that will be resolved when this level of the instrumentation is complete or rejected if there is an error.
+ * @param filesToInstrument {Array} - An array of paths to files that should be instrumented, relative to `baseInputPath`.
+ * @param baseInputPath {String} - The full path to the base "input" directory.
+ * @param baseOutputPath {String} - The full path to the base "output" directory.
+ * @param instrumentationOptions {Object} - Configuration options to control what is instrumented.  See the instrumenter docs for details.
+ * @return {Promise} - A `fluid.promise` that will be resolved when all files are instrumented, or rejected if there is an error.
  *
  */
-gpii.testem.instrumenter.processSingleDirectory = function (baseInputPath, levelInputPath, levelOutputPath, instrumenter, instrumentationOptions) {
+gpii.testem.instrumenter.instrumentAllFiles = function (filesToInstrument, baseInputPath, baseOutputPath, instrumentationOptions) {
+    var resolvedBaseInputPath = fluid.module.resolvePath(baseInputPath);
+    var resolvedBaseOutputPath = fluid.module.resolvePath(baseOutputPath);
+    var instrumenter = istanbul.createInstrumenter(instrumentationOptions.istanbulOptions);
+
     var promises = [];
-    var filesInPath = fs.readdirSync(levelInputPath);
-    fluid.each(filesInPath, function (filename) {
-        var levelEntryInputPath = gpii.testem.resolvePathSafely(levelInputPath, filename);
-        var levelEntryOutputPath = gpii.testem.resolvePathSafely(levelOutputPath, filename);
-        var levelEntryFileStats = fs.statSync(levelEntryInputPath);
-        if (levelEntryFileStats.isDirectory()) {
-            promises.push(function () { return gpii.testem.instrumenter.processSingleDirectory(baseInputPath, levelEntryInputPath, levelEntryOutputPath, instrumenter, instrumentationOptions); });
-        }
-        else {
-            if (gpii.testem.instrumenter.allowedByTwoWayFilter(baseInputPath, levelEntryInputPath, instrumentationOptions.includes, instrumentationOptions.excludes)) {
-                mkdirp.sync(levelOutputPath);
-                // Instrument the file.
-                if (gpii.testem.instrumenter.allowedByTwoWayFilter(baseInputPath, levelEntryInputPath, instrumentationOptions.sources, instrumentationOptions.nonSources) ) {
-                    try {
-                        var source = fs.readFileSync(levelEntryInputPath, "utf8");
-                        var instrumentedSource = instrumenter.instrumentSync(source, levelEntryInputPath);
-                        var instrumentedFileWritePromise = fluid.promise();
-                        promises.push(instrumentedFileWritePromise);
-                        fs.writeFile(levelEntryOutputPath, instrumentedSource, function (error) {
-                            if (error) {
-                                instrumentedFileWritePromise.reject(error);
-                            }
-                            else {
-                                instrumentedFileWritePromise.resolve();
-                            }
-                        });
+    fluid.each(filesToInstrument, function (relativePath) {
+        promises.push(function () {
+            var instrumentationOuterPromise = fluid.promise();
 
-                        if (instrumentationOptions.istanbulOptions.produceSourceMap) {
-                            var sourceMap = instrumenter.lastSourceMap();
-                            var sourceMapPath = levelEntryOutputPath + ".map";
-                            var sourceMapWritePromise = fluid.promise();
-                            promises.push(sourceMapWritePromise);
-                            fs.writeFile(sourceMapPath, JSON.stringify(sourceMap, null, 2), function (error) {
-                                if (error) {
-                                    sourceMapWritePromise.reject(error);
-                                }
-                                else {
-                                    sourceMapWritePromise.resolve();
-                                }
-                            });
+            var singleFilePromises = [];
+            var inputPath = path.resolve(resolvedBaseInputPath, relativePath);
+            var outputPath = path.resolve(resolvedBaseOutputPath, relativePath);
+            var outputDir = path.dirname(outputPath);
+            try {
+                if (!fs.existsSync(outputDir)) {
+                    mkdirp.sync(outputDir);
+                };
+                var source = fs.readFileSync(inputPath, "utf8");
+                var instrumentedSource = instrumenter.instrumentSync(source, inputPath);
+                var instrumentedFileWritePromise = fluid.promise();
+                singleFilePromises.push(instrumentedFileWritePromise);
+                fs.writeFile(outputPath, instrumentedSource, function (error) {
+                    if (error) {
+                        instrumentedFileWritePromise.reject(error);
+                    }
+                    else {
+                        instrumentedFileWritePromise.resolve();
+                    }
+                });
+
+                if (instrumentationOptions.istanbulOptions.produceSourceMap) {
+                    var sourceMap = instrumenter.lastSourceMap();
+                    var sourceMapPath = outputPath + ".map";
+                    var sourceMapWritePromise = fluid.promise();
+                    singleFilePromises.push(sourceMapWritePromise);
+                    fs.writeFile(sourceMapPath, JSON.stringify(sourceMap, null, 2), function (error) {
+                        if (error) {
+                            sourceMapWritePromise.reject(error);
                         }
-                    }
-                    catch (error) {
-                        fluid.log("Error instrumenting file '", levelEntryInputPath, "'.");
-                        fluid.fail(error);
-                    }
+                        else {
+                            sourceMapWritePromise.resolve();
+                        }
+                    });
                 }
-                // Copy the file.
-                else {
-                    var fileCopyPromise = fluid.promise();
-                    promises.push(fileCopyPromise);
-                    try {
-                        var readStream = fs.createReadStream(levelEntryInputPath);
-                        var writeStream = fs.createWriteStream(levelEntryOutputPath);
-                        writeStream.on("finish", function () {
-                            fileCopyPromise.resolve();
-                        });
-                        readStream.pipe(writeStream);
-                    }
-                    catch (err) {
-                        fileCopyPromise.reject(err);
-                    }
-                }
+                var singleFileSequence = fluid.promise.sequence(singleFilePromises);
+                singleFileSequence.then(instrumentationOuterPromise.resolve, instrumentationOuterPromise.reject);
             }
-        }
-    });
+            catch (error) {
+                fluid.log("Error instrumenting file '", inputPath, "':", error);
+                instrumentationOuterPromise.reject(error);
+            }
 
-    var levelPromise = fluid.promise.sequence(promises);
-    return levelPromise;
+            return instrumentationOuterPromise;
+        });
+    });
+    var sequence = fluid.promise.sequence(promises);
+    return sequence;
 };
+
+/**
+ *
+ * Copy a list of files to the combined "instrumented" output directory.  Used to interleave JSON data, uninstrumented
+ * bundled third-party libraries, etc. with our instrumented source.
+ *
+ * @param filesToCopy {Array} - An array of paths to files to copy, relative to `baseInputPath`.
+ * @param baseInputPath {String} - The base directory containing the original file (used to resolve the relative path).
+ * @param baseOutputPath {String} - The base output path.
+ * @return {Promise} - A `fluid.promise` that will be resolved when all files are copied or rejected if there is an error.
+ *
+ */
+gpii.testem.instrumenter.copyAllFiles = function (filesToCopy, baseInputPath, baseOutputPath) {
+    var resolvedBaseInputPath = fluid.module.resolvePath(baseInputPath);
+    var resolvedBaseOutputPath = fluid.module.resolvePath(baseOutputPath);
+    var promises = [];
+    fluid.each(filesToCopy, function (relativePath) {
+        promises.push(function () {
+            var fileCopyPromise = fluid.promise();
+            try {
+                var fullInputPath = path.resolve(resolvedBaseInputPath, relativePath);
+                var readStream = fs.createReadStream(fullInputPath);
+                var outputPath = path.resolve(resolvedBaseOutputPath, relativePath);
+                var outputDir = path.dirname(outputPath);
+                if (!fs.existsSync(outputDir)) {
+                    mkdirp.sync(outputDir);
+                };
+                var writeStream = fs.createWriteStream(outputPath);
+                writeStream.on("finish", function () {
+                    fileCopyPromise.resolve();
+                });
+                readStream.pipe(writeStream);
+            }
+            catch (err) {
+                fileCopyPromise.reject(err);
+            }
+            return fileCopyPromise;
+        });
+    });
+    var sequence = fluid.promise.sequence(promises);
+    return sequence;
+};
+
+fluid.registerNamespace("gpii.testem.instrumenter.runner");
+
+gpii.testem.instrumenter.runner.instrumentThenExit = function (that) {
+    var instrumentationPromise = gpii.testem.instrumenter.instrument(that.options.inputPath, that.options.outputPath, that.options);
+    instrumentationPromise.then(
+        function () {
+            fluid.log(fluid.logLevel.IMPORTANT, "Finished instrumentation.");
+            that.destroy();
+        },
+        fluid.fail
+    );
+};
+
+fluid.defaults("gpii.testem.instrumenter.runner", {
+    gradeNames: ["fluid.component"],
+    listeners: {
+        "onCreate.instrument": {
+            funcName: "gpii.testem.instrumenter.runner.instrumentThenExit",
+            args:     ["{that}"]
+        }
+    }
+});
