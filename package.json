@@ -28,18 +28,18 @@
     "dependencies": {
         "glob": "7.1.2",
         "gpii-express": "1.0.12",
-        "gpii-launcher": "1.0.0-dev.20171221T122035Z.edade23",
-        "infusion": "3.0.0-dev.20170724T165035Z.eee50c1",
+        "gpii-launcher": "1.0.0-dev.20180201T131745Z.4f4751f",
+        "infusion": "3.0.0-dev.20180122T170655Z.350441a9b",
         "istanbul": "0.4.5",
         "istanbul-lib-instrument": "1.9.1",
         "mkdirp": "0.5.1",
         "node-jqunit": "1.1.8",
-        "nyc": "11.3.0",
+        "nyc": "11.4.1",
         "rimraf": "2.6.2",
-        "testem": "1.18.4"
+        "testem": "2.0.0"
     },
     "devDependencies": {
-        "eslint": "4.12.1",
+        "eslint": "4.16.0",
         "eslint-config-fluid": "1.2.0",
         "fluid-grunt-eslint": "18.1.2",
         "grunt": "1.0.1",
