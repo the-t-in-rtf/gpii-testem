@@ -6,8 +6,11 @@ var gpii  = fluid.registerNamespace("gpii");
 fluid.require("%gpii-launcher");
 fluid.require("%gpii-testem");
 
+fluid.registerNamespace("gpii.testem.instrumenter.launcher");
+
 fluid.defaults("gpii.testem.instrumenter.launcher", {
     gradeNames: ["gpii.launcher"],
+    includeKeys: "@expand:Object.keys({that}.options.yargsOptions.options)",
     optionsFile: "%gpii-testem/configs/instrumenter.json",
     yargsOptions: {
         options: {

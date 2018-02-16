@@ -23,7 +23,6 @@ gpii.tests.testem.instrumenter.testDefs = {
         name:      "Test content within a nested 'node_modules' directory.",
         inputPath: "%gpii-testem/tests/instrumentation-fixtures/with-node-modules",
         instrumentationOptions: {
-            includes: ["./**/*"]
         },
         outputPath: {
             expander: {
@@ -39,7 +38,6 @@ gpii.tests.testem.instrumenter.testDefs = {
         name:      "Test inclusion of non javascript content.",
         inputPath: "%gpii-testem/tests/instrumentation-fixtures/with-non-js",
         instrumentationOptions: {
-            includes: ["./src/**/*"]
         },
         outputPath: {
             expander: {
@@ -56,7 +54,6 @@ gpii.tests.testem.instrumenter.testDefs = {
         name:      "Test exclusion of non javascript content.",
         inputPath: "%gpii-testem/tests/instrumentation-fixtures/with-non-js",
         instrumentationOptions: {
-            includes: ["./src/**/*.js"],
             nonSources: []
         },
         outputPath: {
@@ -74,7 +71,6 @@ gpii.tests.testem.instrumenter.testDefs = {
         name:      "Test exclusion of a specific file.",
         inputPath: "%gpii-testem/tests/instrumentation-fixtures/with-non-js",
         instrumentationOptions: {
-            sources:  ["./src/**/*"],
             excludes: ["./src/text/sample.txt"]
         },
         outputPath: {
@@ -92,7 +88,6 @@ gpii.tests.testem.instrumenter.testDefs = {
         name:      "Test instrumentation of (node) code with a return outside of a function.",
         inputPath: "%gpii-testem/tests/instrumentation-fixtures/with-return-outside-of-function",
         instrumentationOptions: {
-            includes: ["./src/**/*"]
         },
         outputPath: {
             expander: {

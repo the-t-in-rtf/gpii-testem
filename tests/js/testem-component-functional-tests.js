@@ -158,8 +158,7 @@ fluid.defaults("gpii.tests.testem.runner", {
             configFile:    "../testem-fixtures/failure-modes/testem-failure-modes.js",
             hasCoverage:   false,
             expectedErrors: [
-                "TypeError: Path must be a string. Received null",
-                "Cannot read property 'replace' of null"
+                "TypeError: Path must be a string. Received null"
             ]
         }
     },

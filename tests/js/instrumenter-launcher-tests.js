@@ -28,7 +28,7 @@ fluid.registerNamespace("gpii.tests.testem.instrumenterLauncher");
 gpii.tests.testem.instrumenterLauncher.generateArgs = function (testDef) {
     var argSegments = [];
     fluid.each(["inputPath", "outputPath"], function (propertyKey) {
-        argSegments.push("--" + propertyKey + " " + fluid.module.resolvePath(testDef[propertyKey]));
+        argSegments.push("--" + propertyKey + " \"" + fluid.module.resolvePath(testDef[propertyKey]) + "\"");
     });
 
     // This will only work for array values like "includes", "excludes", "sources", and "nonSources", but that's all we have at.
@@ -70,11 +70,7 @@ gpii.tests.testem.instrumenterLauncher.runSingleTest = function (that, testDef) 
 
         // Run the command with the specified arguments and environment variables.  Generate a coverage report for this run, which we will collate later.
         var command = fluid.stringTemplate("node %launcherPath %args", commandOptions);
-        var execOptions = {
-            // cwd: fluid.module.resolvePath("%gpii-testem")
-        };
-
-        child_process.exec(command, execOptions, function (error) {
+        child_process.exec(command, {}, function (error) {
             if (error) {
                 jqUnit.start();
                 jqUnit.fail(error);
