@@ -200,7 +200,7 @@ gpii.testem.instrumenter.instrumentAllFiles = function (filesToInstrument, baseI
             try {
                 if (!fs.existsSync(outputDir)) {
                     mkdirp.sync(outputDir);
-                };
+                }
                 var source = fs.readFileSync(inputPath, "utf8");
                 var instrumentedSource = instrumenter.instrumentSync(source, inputPath);
                 var instrumentedFileWritePromise = fluid.promise();
