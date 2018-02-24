@@ -31,8 +31,10 @@ gpii.testem.coverage.receiver.uaMatch = function (ua) {
 };
 
 gpii.testem.coverage.receiver.initMiddleware = function (that) {
-    var resolvedCoverageDir = fluid.module.resolvePath(that.options.coverageDir);
-    mkdirp(resolvedCoverageDir);
+    if (that.options.coverageDir) {
+        var resolvedCoverageDir = fluid.module.resolvePath(that.options.coverageDir);
+        mkdirp(resolvedCoverageDir);
+    }
 };
 
 gpii.testem.coverage.receiver.middlewareImpl = function (that, request, response) {

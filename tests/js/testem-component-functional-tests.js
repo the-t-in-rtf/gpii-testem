@@ -23,11 +23,11 @@ gpii.tests.testem.runner.runSingleTest = function (that, testDef) {
     jqUnit.test(testDef.name, function () {
         jqUnit.stop();
         var command = fluid.stringTemplate(that.options.commandTemplate, testDef);
-        exec(command, {cwd: __dirname }, function (error, stdout) {
+        exec(command, {cwd: __dirname }, function (error, stdout, stderr) {
             jqUnit.start();
             if (testDef.expectedErrors) {
                 fluid.each(fluid.makeArray(testDef.expectedErrors), function (expectedError) {
-                    jqUnit.assertTrue("The console should contain the error '" + expectedError + "'...", error.message.indexOf(expectedError) !== -1);
+                    jqUnit.assertTrue("The console should contain the error '" + expectedError + "'...", stderr.indexOf(expectedError) !== -1);
                 });
             }
             else if (error) {
@@ -48,7 +48,6 @@ gpii.tests.testem.runner.runSingleTest = function (that, testDef) {
                     var coverageSummaryPath = path.resolve(testemOptions.reportsDir, "coverage-summary.json");
 
                     if (testDef.hasCoverage) {
-                        jqUnit.assertEquals("There should be a route to the instrumented code...", "instrumented/src", testemOptions.testemOptions.routes["/src"]);
                         jqUnit.assertTrue("There should be an HTML coverage report...", fs.existsSync(htmlCoveragePath));
                         jqUnit.assertTrue("There should be a JSON coverage summary...", fs.existsSync(coverageSummaryPath));
 
@@ -102,11 +101,11 @@ gpii.tests.testem.runner.runSingleTest = function (that, testDef) {
 
 fluid.defaults("gpii.tests.testem.runner", {
     gradeNames: ["fluid.component"],
-    commandTemplate: "node ../node_modules/testem/testem.js ci --file %configFile --skip Safari",
+    commandTemplate: "node ../../node_modules/testem/testem.js ci --file %configFile",
     tests: {
         complete: {
             name: "Running a suite of tests that results in complete coverage...",
-            configFile: "testem-fixtures/testem-complete-coverage.js",
+            configFile: "../testem-fixtures/coverage-fixtures/testem-complete-coverage.js",
             hasCoverage: true,
             expectedCoverage: {
                 total: {
@@ -121,7 +120,7 @@ fluid.defaults("gpii.tests.testem.runner", {
         },
         incomplete: {
             name: "Running a suite of tests that results in incomplete coverage...",
-            configFile: "testem-fixtures/testem-incomplete-coverage.js",
+            configFile: "../testem-fixtures/coverage-fixtures/testem-incomplete-coverage.js",
             hasCoverage: true,
             expectedCoverage: {
                 total: {
@@ -136,12 +135,12 @@ fluid.defaults("gpii.tests.testem.runner", {
         },
         noCoverage: {
             name:        "Running a suite of tests without test coverage...",
-            configFile:  "testem-fixtures/testem-no-coverage.js",
+            configFile:  "../testem-fixtures/coverage-fixtures/testem-no-coverage.js",
             hasCoverage: false
         },
         instrumentationTiming: {
             name:       "Confirm that long-running instrumentation does not interfere with coverage collection...",
-            configFile: "testem-fixtures/testem-instrumentation-timing.js",
+            configFile: "../testem-fixtures/coverage-fixtures/testem-instrumentation-timing.js",
             hasCoverage: true,
             expectedCoverage: {
                 total: {
@@ -156,12 +155,10 @@ fluid.defaults("gpii.tests.testem.runner", {
         },
         failure: {
             name:          "Running a suite of tests with gross configuration errors...",
-            configFile:    "testem-fixtures/testem-failure-modes.js",
+            configFile:    "../testem-fixtures/failure-modes/testem-failure-modes.js",
             hasCoverage:   false,
             expectedErrors: [
-                "TypeError: Path must be a string. Received null",
-                "Cannot read property 'replace' of null",
-                "rimraf: missing path"
+                "TypeError: Path must be a string. Received null"
             ]
         }
     },

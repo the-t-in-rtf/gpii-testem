@@ -9,7 +9,7 @@
 var fluid = require("infusion");
 var gpii  = fluid.registerNamespace("gpii");
 
-require("../harness");
+require("../../harness");
 
 fluid.registerNamespace("gpii.tests.testem.instrumentationTiming");
 
@@ -37,14 +37,11 @@ gpii.tests.testem.instrumentationTiming.sleep = function (timeout) {
 gpii.tests.testem.instrumentationTiming.instrumentSlowly = function (that) {
     gpii.tests.testem.instrumentationTiming.sleep(that.options.instrumentationDelay);
     console.log("finally instrumenting code...");
-    gpii.testem.instrumentAsNeeded(that, that.events.constructFixtures.fire);
-
+    gpii.testem.coverage.instrumentSource(that);
 };
 
 fluid.defaults("gpii.tests.testem.instrumentationTiming.harness", {
     gradeNames: ["gpii.tests.testem.harness"],
-    sourceDirs: ["src"],
-    serveDirs:  ["src"],
     instrumentationDelay: 5000,
     testPages:   ["complete.html"],
     cwd: __dirname, // required because we are working outside of our package root.

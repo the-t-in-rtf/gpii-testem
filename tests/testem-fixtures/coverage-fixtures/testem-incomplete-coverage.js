@@ -1,17 +1,14 @@
-// A testem configuration file in which no code coverage data is collected.
+// A testem configuration file in which incomplete coverage is the expected result.
 /* eslint-env node */
 "use strict";
 var fluid = require("infusion");
 var gpii  = fluid.registerNamespace("gpii");
 
-require("../harness");
+require("../../harness");
 
 var testemComponent = gpii.tests.testem.harness({
-    sourceDirs: ["src"],
-    serveDirs:  ["src"],
-    testPages:   ["no-coverage.html"],
-    instrumentSource: false,
-    generateCoverageReport: false,
+    testPages:   ["incomplete.html"],
+    coveragePort: 7014,
     cwd: __dirname // required because we are working outside of our package root.
 });
 

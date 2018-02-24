@@ -14,20 +14,16 @@
     care of that yourself.
 
  */
-/* globals Testem */
-(function (fluid, $, Testem) {
+/* globals QUnit */
+(function (fluid, $, QUnit) {
     "use strict";
-    // Disabled as complex projects like "universal" managed to run their tests before QUnit was started, which resulted in errors.
-    // QUnit.config.autostart = false;
 
     var gpii = fluid.registerNamespace("gpii");
 
     fluid.registerNamespace("gpii.testem.coverage.sender");
 
     gpii.testem.coverage.sender.wireTestem = function (that) {
-        Testem.afterTests(that.sendCoverageData);
-        // Disabled, see above.
-        // QUnit.start();
+        QUnit.done(that.sendCoverageData);
     };
 
     gpii.testem.coverage.sender.sendCoverageData = function (that, config, data, callback) {
@@ -100,4 +96,4 @@
             }
         }
     });
-})(fluid, jQuery, Testem);
+})(fluid, jQuery, QUnit);
