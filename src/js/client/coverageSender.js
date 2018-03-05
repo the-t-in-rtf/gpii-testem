@@ -14,8 +14,8 @@
     care of that yourself.
 
  */
-/* globals QUnit */
-(function (fluid, $, QUnit) {
+/* globals Testem */
+(function (fluid, $, Testem) {
     "use strict";
 
     var gpii = fluid.registerNamespace("gpii");
@@ -23,7 +23,7 @@
     fluid.registerNamespace("gpii.testem.coverage.sender");
 
     gpii.testem.coverage.sender.wireTestem = function (that) {
-        QUnit.done(that.sendCoverageData);
+        Testem.afterTests(that.sendCoverageData);
     };
 
     gpii.testem.coverage.sender.sendCoverageData = function (that, config, data, callback) {
@@ -96,4 +96,4 @@
             }
         }
     });
-})(fluid, jQuery, QUnit);
+})(fluid, jQuery, Testem);
