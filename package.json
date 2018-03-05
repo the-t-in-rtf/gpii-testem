@@ -27,9 +27,9 @@
     "homepage": "https://github.com/GPII/gpii-testem/",
     "dependencies": {
         "glob": "7.1.2",
-        "gpii-express": "1.0.12",
-        "gpii-launcher": "1.0.0-dev.20170712T140305Z.aa60d4a",
-        "infusion": "3.0.0-dev.20180214T203645Z.eb2448d",
+        "gpii-express": "1.0.13",
+        "gpii-launcher": "1.0.0-dev.20180305T114318Z.39049a4",
+        "infusion": "3.0.0-dev.20180227T185528Z.08741e844",
         "istanbul": "0.4.5",
         "istanbul-lib-instrument": "1.9.2",
         "mkdirp": "0.5.1",
@@ -39,7 +39,7 @@
         "testem": "2.0.0"
     },
     "devDependencies": {
-        "eslint": "4.17.0",
+        "eslint": "4.18.2",
         "eslint-config-fluid": "1.2.0",
         "fluid-grunt-eslint": "18.1.2",
         "grunt": "1.0.2",
