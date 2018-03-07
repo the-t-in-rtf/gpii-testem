@@ -130,7 +130,7 @@ so that combined reports can be prepared.
 
 ### Components
 
-#### `gpii.testem.instrument`
+#### `gpii.testem.instrumentation`
 
 This grade instruments source itself and collects coverage data, but does not prepare a report at the end or remove the
 coverage data during its cleanup phase.
@@ -148,7 +148,8 @@ The key to preparing a combined report is to ensure that:
 
 1. Each stage saves its coverage data to the same location.
 2. Each stage avoids creating a misleading interim report.
-3. Each stage avoid removing its coverage data at the end of its run.
+3. Each stage avoids removing its coverage data at the end of its run.
+4. A combined report is prepared using `nyc report` once all stages are completed.
 
 #### Registering Your Package
 
