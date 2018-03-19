@@ -117,7 +117,13 @@ fluid.defaults("gpii.testem.coverage.express", {
             type:    "gpii.express.router.static",
             options: {
                 path:    "@expand:gpii.testem.extractRoutePath({source})",
-                content: "@expand:gpii.testem.extractContentPath({that}.options.cwd, {source})"
+                content: "@expand:gpii.testem.extractContentPath({gpii.testem.coverage.express}.options.cwd, {source})",
+                listeners: {
+                    "onCreate.saySomething": {
+                        funcName: "fluid.log",
+                        args:     ["CONTENT ROUTER:", "{that}.options.path", " - ", "{that}.options.content"]
+                    }
+                }
             }
         }
     }
