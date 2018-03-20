@@ -1,5 +1,4 @@
-(function (fluid){
+(function (){
     "use strict";
-    var gpii = fluid.registerNamespace("gpii");
-    gpii.testem.coverage.sender({ coveragePort: %coveragePort });
-})(fluid);
+    window.gpii.testem.coverage.sender({ coveragePort: %coveragePort });
+})();

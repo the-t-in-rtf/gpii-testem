@@ -37,9 +37,14 @@ fluid.defaults("gpii.testem.coverage.router", {
             options: {
                 priority: "first",
                 headers: {
-                    cors: {
+                    allowOrigin: {
                         fieldName: "Access-Control-Allow-Origin",
                         template:  "*",
+                        dataRules: {}
+                    },
+                    allowHeaders: {
+                        fieldName: "Access-Control-Allow-Headers",
+                        template: "Content-Type",
                         dataRules: {}
                     }
                 }
