@@ -225,7 +225,7 @@ gpii.testem.cleanupDir = function (cleanupDef) {
                 else {
                     rimraf(resolvedPath, function (error) {
                         if (error) {
-                            fluid.log(fluid.LogLevel.ERROR, "Error removing ", cleanupDef.name, " content:", error);
+                            fluid.log(fluid.logLevel.ERROR, "Error removing ", cleanupDef.name, " content:", error);
                         }
                         else {
                             fluid.log("Removed ", cleanupDef.name, " content...");
