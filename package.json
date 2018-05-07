@@ -30,7 +30,7 @@
         "istanbul-lib-instrument": "1.9.2",
         "mkdirp": "0.5.1",
         "node-jqunit": "1.1.8",
-        "nyc": "11.4.1",
+        "nyc": "11.6.0",
         "rimraf": "2.6.2",
         "testem": "2.0.0"
     },
