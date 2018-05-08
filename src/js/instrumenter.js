@@ -7,7 +7,6 @@
 /* eslint-env node */
 "use strict";
 var fluid     = require("infusion");
-fluid.setLogging(true);
 var gpii      = fluid.registerNamespace("gpii");
 var fs        = require("fs");
 var path      = require("path");
@@ -35,9 +34,9 @@ gpii.testem.instrumenter.defaultOptions = {
  *
  * Instrument the code found at `inputPath` and save the results to `outputPath`.
  *
- * @param inputPath {String} - The full or package-relative path to a directory containing code to instrument.
- * @param outputPath {String} - The full or package-relative path to the directory where you want to save the instrumented output.
- * @param instrumentationOptions {Object} - Configuration options to control what is instrumented.  See the instrumenter docs for details.
+ * @param {String} inputPath - The full or package-relative path to a directory containing code to instrument.
+ * @param {String} outputPath - The full or package-relative path to the directory where you want to save the instrumented output.
+ * @param {Object} instrumentationOptions - Configuration options to control what is instrumented.  See the instrumenter docs for details.
  * @return {Promise} - A `fluid.promise` that will be resolved when the full instrumentation is complete or rejected if there is an error at any point.
  *
  */
@@ -89,9 +88,9 @@ gpii.testem.instrumenter.instrument = function (inputPath, outputPath, instrumen
  *
  * Convert a relative pattern to an absolute pattern relative to `basePath`.
  *
- * @param basePath
- * @param pattern
- * @return {string}
+ * @param {String} basePath - A full or package-relative path.
+ * @param {String} pattern - A relative path beginning with a leading slash to resolve relative to `basePath`.
+ * @return {String} - The resolved path.
  */
 gpii.testem.instrumenter.resolveRelativePattern = function (basePath, pattern) {
     if (pattern.indexOf("!") === 0) {
@@ -113,8 +112,8 @@ gpii.testem.instrumenter.resolveRelativePattern = function (basePath, pattern) {
  *
  * Outputs: `["onePos", "twoPos"]`
  *
- * @param patterns {Array} - An array of minimatch patterns representing one state (inclusion, for example).
- * @param inversePatterns {Array} - An array of minimatch patterns representing the opposite state (exclusion, for example).
+ * @param {Array} patterns - An array of minimatch patterns representing one state (inclusion, for example).
+ * @param {Array} inversePatterns - An array of minimatch patterns representing the opposite state (exclusion, for example).
  * @return {Array} - An array representing all "positive" matches (see above).
  *
  */
@@ -131,9 +130,9 @@ gpii.testem.instrumenter.combinePositivePatterns = function (patterns, inversePa
  * "negative" (material that should be excluded).  Used to determine whether to include a file in our instrumented
  * output, and also to determine whether it should be instrumented or copied.
  *
- * @param baseInputPath {String} - The full path to the base "input" directory that `filePath` is relative to.
- * @param positiveRules {Array} - A list of minimatch patterns to include, relative to `baseInputPath`.
- * @param negativeRules {Array} - A list of minimatch patterns to exclude, relative to `baseInputPath`.
+ * @param {String} baseInputPath - The full path to the base "input" directory that `filePath` is relative to.
+ * @param {Array} positiveRules - A list of minimatch patterns to include, relative to `baseInputPath`.
+ * @param {Array} negativeRules - A list of minimatch patterns to exclude, relative to `baseInputPath`.
  * @return {Promise} - A `fluid.promise` that will be resolved with a list of matching paths, relative to `baseInputPath`, or rejected if there is an error.
  *
  */
@@ -176,10 +175,10 @@ gpii.testem.instrumenter.findFilesMatchingFilter = function (baseInputPath, posi
  *
  * Instrument a list of files.
  *
- * @param filesToInstrument {Array} - An array of paths to files that should be instrumented, relative to `baseInputPath`.
- * @param baseInputPath {String} - The full path to the base "input" directory.
- * @param baseOutputPath {String} - The full path to the base "output" directory.
- * @param instrumentationOptions {Object} - Configuration options to control what is instrumented.  See the instrumenter docs for details.
+ * @param {Array} filesToInstrument - An array of paths to files that should be instrumented, relative to `baseInputPath`.
+ * @param {String} baseInputPath - The full path to the base "input" directory.
+ * @param {String} baseOutputPath - The full path to the base "output" directory.
+ * @param {Object} instrumentationOptions - Configuration options to control what is instrumented.  See the instrumenter docs for details.
  * @return {Promise} - A `fluid.promise` that will be resolved when all files are instrumented, or rejected if there is an error.
  *
  */
@@ -248,9 +247,9 @@ gpii.testem.instrumenter.instrumentAllFiles = function (filesToInstrument, baseI
  * Copy a list of files to the combined "instrumented" output directory.  Used to interleave JSON data, uninstrumented
  * bundled third-party libraries, etc. with our instrumented source.
  *
- * @param filesToCopy {Array} - An array of paths to files to copy, relative to `baseInputPath`.
- * @param baseInputPath {String} - The base directory containing the original file (used to resolve the relative path).
- * @param baseOutputPath {String} - The base output path.
+ * @param {Array} filesToCopy - An array of paths to files to copy, relative to `baseInputPath`.
+ * @param {String} baseInputPath - The base directory containing the original file (used to resolve the relative path).
+ * @param {String} baseOutputPath - The base output path.
  * @return {Promise} - A `fluid.promise` that will be resolved when all files are copied or rejected if there is an error.
  *
  */

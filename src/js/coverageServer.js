@@ -92,8 +92,8 @@ fluid.registerNamespace("gpii.testem.coverage.express");
  * Generate a definition that can be used to instantiate a piece of middleware to host each source and content
  * directory.
  *
- * @param sourceDirs {Object} - A map of source directories to host.
- * @param contentDirs {Object} - A map of content directories to host.
+ * @param {Object} sourceDirs - A map of source directories to host.
+ * @param {Object} contentDirs - A map of content directories to host.
  * @return {Array} - A copy of `contentDirs`, ordered by namespaced priorities.
  *
  */
