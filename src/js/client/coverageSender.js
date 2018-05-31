@@ -17,8 +17,10 @@
 /* globals Testem */
 (function (Testem) {
     "use strict";
-    // Pure JS equivalent of several fluid.registerNamespace calls.
-    window.gpii = { testem: { coverage: {} } };
+    // Pure JS equivalent of a fluid.registerNamespace call.
+    window.gpii = window.gpii || {};
+    window.gpii.testem = window.gpii.testem || {};
+    window.gpii.testem.coverage = window.gpii.testem.coverage || {};
 
     // A work-alike pure JS implementation of the previous gpii.testem.coverage.sender grade.
     // NOTE: Only options.coveragePort is meaningful.
