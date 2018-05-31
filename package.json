@@ -24,7 +24,7 @@
     "homepage": "https://github.com/GPII/gpii-testem/",
     "dependencies": {
         "glob": "7.1.2",
-        "gpii-express": "1.0.14-dev.20180319T152816Z.3ddd5fa",
+        "gpii-express": "1.0.14",
         "infusion": "3.0.0-dev.20180312T184056Z.e4d2974d2",
         "istanbul": "0.4.5",
         "istanbul-lib-instrument": "1.9.2",
