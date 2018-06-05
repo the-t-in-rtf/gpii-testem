@@ -10,7 +10,8 @@
         ]
     },
     "scripts": {
-        "test": "node node_modules/nyc/bin/nyc.js -r text -r lcov node tests/all-tests.js"
+        "pretest": "node node_modules/rimraf/rimraf.js coverage/* reports/*",
+        "test": "node node_modules/nyc/bin/nyc.js node tests/all-tests.js"
     },
     "repository": {
         "type": "git",

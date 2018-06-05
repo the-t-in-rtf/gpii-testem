@@ -86,23 +86,6 @@ gpii.testem.instrumenter.instrument = function (inputPath, outputPath, instrumen
 
 /**
  *
- * Convert a relative pattern to an absolute pattern relative to `basePath`.
- *
- * @param {String} basePath - A full or package-relative path.
- * @param {String} pattern - A relative path beginning with a leading slash to resolve relative to `basePath`.
- * @return {String} - The resolved path.
- */
-gpii.testem.instrumenter.resolveRelativePattern = function (basePath, pattern) {
-    if (pattern.indexOf("!") === 0) {
-        return "!" + gpii.testem.resolvePathSafely(basePath, pattern.substring(1));
-    }
-    else {
-        return gpii.testem.resolvePathSafely(basePath, pattern);
-    }
-};
-
-/**
- *
  * The library we use for matching (node-glob) does not support "negated" patterns.  This function standardises
  * "negative" patterns so that we can use them with node-glob and perform a single comparison pass. It combines the
  * non-negated patterns from `patterns` with "negative" patterns from `inversePatterns`, minus their leading exclamation
@@ -283,26 +266,3 @@ gpii.testem.instrumenter.copyAllFiles = function (filesToCopy, baseInputPath, ba
     var sequence = fluid.promise.sequence(promises);
     return sequence;
 };
-
-fluid.registerNamespace("gpii.testem.instrumenter.runner");
-
-gpii.testem.instrumenter.runner.instrumentThenExit = function (that) {
-    var instrumentationPromise = gpii.testem.instrumenter.instrument(that.options.inputPath, that.options.outputPath, that.options);
-    instrumentationPromise.then(
-        function () {
-            fluid.log(fluid.logLevel.IMPORTANT, "Finished instrumentation.");
-            that.destroy();
-        },
-        fluid.fail
-    );
-};
-
-fluid.defaults("gpii.testem.instrumenter.runner", {
-    gradeNames: ["fluid.component"],
-    listeners: {
-        "onCreate.instrument": {
-            funcName: "gpii.testem.instrumenter.runner.instrumentThenExit",
-            args:     ["{that}"]
-        }
-    }
-});
