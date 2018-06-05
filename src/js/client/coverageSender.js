@@ -15,85 +15,57 @@
 
  */
 /* globals Testem */
-(function (fluid, $, Testem) {
+(function (Testem) {
     "use strict";
+    // Pure JS equivalent of a fluid.registerNamespace call.
+    window.gpii = window.gpii || {};
+    window.gpii.testem = window.gpii.testem || {};
+    window.gpii.testem.coverage = window.gpii.testem.coverage || {};
 
-    var gpii = fluid.registerNamespace("gpii");
-
-    fluid.registerNamespace("gpii.testem.coverage.sender");
-
-    gpii.testem.coverage.sender.wireTestem = function (that) {
-        Testem.afterTests(that.sendCoverageData);
-    };
-
-    gpii.testem.coverage.sender.sendCoverageData = function (that, config, data, callback) {
-        if (window.__coverage__) {
-            // TODO: Convert to using fluid.dataSource.AJAX once that's been reviewed.
-            var payload = {
-                document:  fluid.filterKeys(document, ["title", "URL"]),
-                navigator: fluid.filterKeys(navigator, ["userAgent", "vendor", "vendorSub", "product", "productSub", "appCodeName", "appName"]),
-                coverage:  window.__coverage__
-            };
-            var requestOptions = fluid.extend(that.options.ajaxOptions, {
-                data: { payload: JSON.stringify(payload, null, 2)},
-                complete: function () {
-                    // Temporary delay to help us investigate disconnects when sending coverage data.
-                    setTimeout(callback, 250);
-                }
-            });
-            $.ajax(requestOptions);
-        }
-        else {
-            fluid.log("No coverage data, firing test completion callback immediately...");
-            callback();
-        }
-    };
-
-    gpii.testem.coverage.sender.handleSuccess = function (that, data, textStatus, jqXHR) {
-        if (jqXHR.status === 200) {
-            fluid.log("Successfully saved coverage results...");
-        }
-        else {
-            fluid.log("Coverage results save returned status code:", jqXHR.status);
-        }
-    };
-
-    gpii.testem.coverage.sender.handleError = function (that, jqXHR, textStatus, errorThrown) {
-        fluid.log("Error saving test coverage:", errorThrown);
-    };
-
-    fluid.defaults("gpii.testem.coverage.sender", {
-        gradeNames: ["fluid.component"],
-        ajaxOptions: {
-            method:      "POST",
-            url:         "{that}.options.coverageUrl"
-        },
-        coveragePort: 7000,
-        coverageUrl: {
-            expander: {
-                funcName: "fluid.stringTemplate",
-                args:     ["http://localhost:%port/coverage", { port: "{that}.options.coveragePort"}]
+    // A work-alike pure JS implementation of the previous gpii.testem.coverage.sender grade.
+    // NOTE: Only options.coveragePort is meaningful.
+    window.gpii.testem.coverage.sender = function (options) {
+        var afterTestsCallback = function (config, data, testemCallback) {
+            if (window.__coverage__) {
+                var xhr = new XMLHttpRequest();
+                xhr.onreadystatechange = function () {
+                    if (this.readyState === 4) {
+                        if (this.status === 200) {
+                            console.log("Saved coverage data.");
+                        }
+                        else {
+                            console.error("Error saving coverage data:", this.responseText);
+                        }
+                        testemCallback();
+                    }
+                };
+                xhr.open("POST", "http://localhost:" + options.coveragePort + "/coverage");
+                xhr.setRequestHeader("Content-type", "application/json");
+                var wrappedPayload = {
+                    payload: {
+                        document: {
+                            title: document.title,
+                            URL: document.URL
+                        },
+                        navigator: {
+                            appCodeName: navigator.appCodeName,
+                            appName: navigator.appName,
+                            product: navigator.product,
+                            productSub: navigator.productSub,
+                            userAgent: navigator.userAgent,
+                            vendor: navigator.vendor,
+                            vendorSub: navigator.vendorSub
+                        },
+                        coverage: window.__coverage__
+                    }
+                };
+                xhr.send(JSON.stringify(wrappedPayload, null, 2));
             }
-        },
-        listeners: {
-            "onCreate.wireTestem": {
-                funcName: "gpii.testem.coverage.sender.wireTestem",
-                args:     ["{that}"]
+            else {
+                fluid.log("No coverage data, firing Testem callback immediately...");
+                testemCallback();
             }
-        },
-        invokers: {
-            "sendCoverageData": {
-                funcName: "gpii.testem.coverage.sender.sendCoverageData",
-                args: ["{that}", "{arguments}.0", "{arguments}.1", "{arguments}.2"] // config, data, callback
-            },
-            "handleSuccess": {
-                funcName: "gpii.testem.coverage.sender.handleSuccess",
-                args: ["{that}", "{arguments}.0", "{arguments}.1", "{arguments}.2"] // data, textStatus, jqXHR
-            },
-            "handleError": {
-                funcName: "gpii.testem.coverage.sender.handleError",
-                args: ["{that}", "{arguments}.0", "{arguments}.1", "{arguments}.2"] // jqXHR, textStatus, errorThrown
-            }
-        }
-    });
-})(fluid, jQuery, Testem);
+        };
+        Testem.afterTests(afterTestsCallback);
+    };
+})(Testem);

@@ -6,7 +6,6 @@
 /* eslint-env node */
 "use strict";
 var fluid = require("infusion");
-fluid.setLogging(true);
 
 var gpii  = fluid.registerNamespace("gpii");
 
@@ -30,8 +29,8 @@ fluid.registerNamespace("gpii.testem");
  *
  * Fire a pseudo-event, ensuring that a Testem callback is always called regardless of the result.
  *
- * @param componentEvent - The component event to be fired using `fluid.promise.fireTransformEvent`.
- * @param testemCallback - A function that will be called, for example, when we are ready for Testem to run the tests.
+ * @param {String} componentEvent - The component event to be fired using `fluid.promise.fireTransformEvent`.
+ * @param {Function} testemCallback - A function that will be called, for example, when we are ready for Testem to run the tests.
  *
  */
 gpii.testem.handleTestemLifecycleEvent = function (componentEvent, testemCallback) {
@@ -52,8 +51,8 @@ gpii.testem.handleTestemLifecycleEvent = function (componentEvent, testemCallbac
  *
  * A function to wrap a secondary component event so that we can represent the entire startup and shutdown as two chains.
  *
- * @param that - The component itself.
- * @param event - The event to listen to.
+ * @param {Object} that - The component itself.
+ * @param {String} event - The event to listen to.
  * @return {Promise} - A promise that will be resolved the next time `event` is fired.
  */
 gpii.testem.wrapSecondaryEvent = function (that, event) {
@@ -69,9 +68,9 @@ gpii.testem.wrapSecondaryEvent = function (that, event) {
  *
  * Only works with Fluid Promises, see: http://docs.fluidproject.org/infusion/development/PromisesAPI.html
  *
- * @param that - The component itself.
- * @param event - The event to wrap with a promise.
- * @return {*}
+ * @param {Object} that - The component itself.
+ * @param {String} event - The event to wrap with a promise.
+ * @return {Promise} - The event promise.
  */
 gpii.testem.generateSingleUseEventListener = function (that, event) {
     var eventPromise = fluid.promise();
@@ -94,10 +93,10 @@ gpii.testem.generateSingleUseEventListener = function (that, event) {
  *
  * Only works with Fluid Promises, see: http://docs.fluidproject.org/infusion/development/PromisesAPI.html
  *
- * @param originalPromise {Promise} The original promise to wrap in a timeout.
- * @param rejectionPayload {Object} The payload to use when rejecting the message.
- * @param timeoutInMillis {Number} The number of milliseconds to wait before timing out.
- * @return originalPromise {Object} The original promise.
+ * @param {Promise} originalPromise - The original promise to wrap in a timeout.
+ * @param {Object} rejectionPayload - The payload to use when rejecting the message.
+ * @param {Number} timeoutInMillis - The number of milliseconds to wait before timing out.
+ * @return {Object} - The original promise.
  */
 gpii.testem.addPromiseTimeout = function (originalPromise, rejectionPayload, timeoutInMillis) {
     // Hold onto a handle so that we can clear the timeout if needed.
@@ -118,7 +117,7 @@ gpii.testem.addPromiseTimeout = function (originalPromise, rejectionPayload, tim
  * Deliver our effective options to Testem.  We do this this way to avoid exposing options to Testem before they have
  * been completely assembled.
  *
- * @param that - The component itself.
+ * @param {Object} that - The component itself.
  * @return {Object} - The Testem options to use for this run.
  *
  */
@@ -126,10 +125,10 @@ gpii.testem.getTestemOptions = function (that) {
     return that.options.testemOptions;
 };
 
-gpii.testem.generateRimrafWrapper = function (path) {
+gpii.testem.generateRimrafWrapper = function (path, rimrafOptions) {
     return function () {
         var rimrafPromise = fluid.promise();
-        rimraf(path, function (rimrafError) {
+        rimraf(path, rimrafOptions, function (rimrafError) {
             if (rimrafError) {
                 rimrafPromise.reject(rimrafError);
             }
@@ -145,11 +144,12 @@ gpii.testem.generateRimrafWrapper = function (path) {
  *
  * Remove all Testem browser data from this run.
  *
- * @param path {String} - The path to the directory which contains Testem's browser data from this run.
+ * @param {String} path - The path to the directory which contains Testem's browser data from this run.
+ * @param {Object} rimrafOptions - Configuration options to pass when calling rimraf.
  * @return {Promise} - A promise that will be resolved when cleanup is complete, or rejected if there is an error.
  *
  */
-gpii.testem.cleanupTestemContent = function (path) {
+gpii.testem.cleanupTestemContent = function (path, rimrafOptions) {
     var testemRegexp = /testem-.+/;
 
     if (path) {
@@ -169,12 +169,12 @@ gpii.testem.cleanupTestemContent = function (path) {
                         var cleanupPromises = [];
                         fluid.each(testemDirs, function (dirName) {
                             if (dirName.match(testemRegexp)) {
-                                cleanupPromises.push(gpii.testem.generateRimrafWrapper(dirName));
+                                cleanupPromises.push(gpii.testem.generateRimrafWrapper(dirName, rimrafOptions));
                             }
                         });
 
                         // Remove the enclosing directory as well...
-                        cleanupPromises.push(gpii.testem.generateRimrafWrapper(resolvedPath));
+                        cleanupPromises.push(gpii.testem.generateRimrafWrapper(resolvedPath, rimrafOptions));
 
                         var cleanupSequence = fluid.promise.sequence(cleanupPromises);
                         cleanupSequence.then(togo.resolve, togo.reject);
@@ -204,15 +204,16 @@ gpii.testem.cleanupTestemContent = function (path) {
  *  isTestemContent: true
  * }
  *
- * @param cleanupDef {Object} - A cleanup definition, see example above.
+ * @param {Object} cleanupDef - A cleanup definition, see example above.
+ * @param {Object} rimrafOptions - Configuration options to pass when calling rimraf.
  * @return {Function} - A promise-returning function which will be executed when it's our turn in the sequence.
  *
  */
-gpii.testem.cleanupDir = function (cleanupDef) {
+gpii.testem.cleanupDir = function (cleanupDef, rimrafOptions) {
     return function () {
         var resolvedPath = fluid.module.resolvePath(cleanupDef.path);
         if (cleanupDef.isTestemContent) {
-            return gpii.testem.cleanupTestemContent(resolvedPath);
+            return gpii.testem.cleanupTestemContent(resolvedPath, rimrafOptions);
         }
         else {
             var promise = fluid.promise();
@@ -223,9 +224,9 @@ gpii.testem.cleanupDir = function (cleanupDef) {
                     promise.resolve();
                 }
                 else {
-                    rimraf(resolvedPath, function (error) {
+                    rimraf(resolvedPath, rimrafOptions, function (error) {
                         if (error) {
-                            fluid.log(fluid.LogLevel.ERROR, "Error removing ", cleanupDef.name, " content:", error);
+                            fluid.log(fluid.logLevel.ERROR, "Error removing ", cleanupDef.name, " content:", error);
                         }
                         else {
                             fluid.log("Removed ", cleanupDef.name, " content...");
@@ -253,17 +254,19 @@ gpii.testem.cleanupDir = function (cleanupDef) {
  *  isTestemContent: true
  * }
  *
- * @param key {String} -  A string describing which cleanup phase this is (typically "initial" or "final").
- * @param cleanupDefs {Object} - An array of cleanup definitions (see example above).
+ * @param {String} stage -  A string describing which cleanup phase this is (typically "initial" or "final").
+ * @param {Object} cleanupDefs - An array of cleanup definitions (see example above).
+ * @param {Object} rimrafOptions - Configuration options to pass when calling rimraf.
+ * @return {Promise} - A promise that will be resolved when cleanup is complete.
  *
  */
-gpii.testem.cleanup = function (stage, cleanupDefs) {
+gpii.testem.cleanup = function (stage, cleanupDefs, rimrafOptions) {
     var togo = fluid.promise();
     togo.then(function () { fluid.log(stage, " cleanup completed successfully...");});
 
     var cleanupPromises = [];
     fluid.each(cleanupDefs, function (singleDirEntry) {
-        var cleanupPromise = gpii.testem.cleanupDir(singleDirEntry);
+        var cleanupPromise = gpii.testem.cleanupDir(singleDirEntry, rimrafOptions);
         cleanupPromises.push(cleanupPromise);
     });
 
@@ -277,9 +280,9 @@ gpii.testem.cleanup = function (stage, cleanupDefs) {
  *
  * Generate a unique subdirectory path based on a supplied prefix and suffix.
  *
- * @param basePath {String} - A full or package-relative path to the subdirectory in which the new directory will live.
- * @param prefix {String} - A "prefix" that will be prepended to the filename.
- * @param suffix {String} - A "suffix" that will be appended to the end of the filename.
+ * @param {String} basePath - A full or package-relative path to the subdirectory in which the new directory will live.
+ * @param {String} prefix - A "prefix" that will be prepended to the filename.
+ * @param {String} suffix - A "suffix" that will be appended to the end of the filename.
  * @return {String} - The full path to the unique subdirectory.
  */
 gpii.testem.generateUniqueDirName = function (basePath, prefix, suffix) {
@@ -336,10 +339,10 @@ gpii.testem.constructBrowserArgs = function (browserArgs, headlessBrowserArgs) {
  *
  * Construct a full set of Testem proxy configuration options based on component options.
  *
- * @param sourceDirs {Object} - An object whose top-level values each refer to a source directory definition.
- * @param contentDirs {Object} - An object whose top-level values each refer to a content directory definition.
- * @param additionalProxies {Object} - An array of additional proxy paths that should be directed to `coverageUrl`.
- * @param coverageUrl {String} - The URL where the gpii-express instance that collects coverage data (and hosts our content) is located.
+ * @param {Object} sourceDirs - An object whose top-level values each refer to a source directory definition.
+ * @param {Object} contentDirs - An object whose top-level values each refer to a content directory definition.
+ * @param {Object} additionalProxies - An array of additional proxy paths that should be directed to `coverageUrl`.
+ * @param {String} coverageUrl - The URL where the gpii-express instance that collects coverage data (and hosts our content) is located.
  * @return {Object} - An object representing Testem proxy configuration options.
  *
  */
@@ -381,6 +384,7 @@ fluid.defaults("gpii.testem.base", {
     mergePolicy: {
         cleanup: "nomerge"
     },
+    rimrafOptions: {},
     cleanup: {
         initial:  gpii.testem.dirs.onlyTestemContent,
         final:    gpii.testem.dirs.onlyTestemContent
@@ -487,7 +491,7 @@ fluid.defaults("gpii.testem.base", {
         "onTestemStart.cleanup": {
             priority: "first",
             funcName: "gpii.testem.cleanup",
-            args:     ["Initial", "{that}.options.cleanup.initial"]
+            args:     ["Initial", "{that}.options.cleanup.initial", "{that}.options.rimrafOptions"] // , rimrafOptions
         },
         "onTestemStart.constructFixtures": {
             priority: "after:cleanup",
@@ -512,7 +516,7 @@ fluid.defaults("gpii.testem.base", {
         "onTestemExit.cleanup": {
             priority: "last",
             funcName: "gpii.testem.cleanup",
-            args:     ["Final", "{that}.options.cleanup.final"] // cleanupDefs
+            args:     ["Final", "{that}.options.cleanup.final", "{that}.options.rimrafOptions"] // cleanupDefs, rimrafOptions
         }
     },
     components: {
@@ -542,7 +546,7 @@ fluid.defaults("gpii.testem.base", {
  *
  * Optionally instrument the source code under test.
  *
- * @param that - The component itself.
+ * @param {Object} that - The component itself.
  * @return {Promise} - A promise that will be resolved or rejected when the instrumentation pass finishes.
  */
 gpii.testem.coverage.instrumentSource = function (that) {
@@ -575,9 +579,10 @@ gpii.testem.coverage.instrumentSource = function (that) {
  *
  * Produce a list of paths where our instrumented source will eventually be housed.
  *
- * @param cwd {String} - The full path to the current working directory.  Will be used to resolve relative paths.
- * @param instrumentedSourceDir {String} - The full path to the location where the instrumented source should be saved.
- * @param sourceDirs {Object} - A map of named source dirs that will instrumented and hosted.
+ * @param {String} cwd - The full path to the current working directory.  Will be used to resolve relative paths.
+ * @param {String} instrumentedSourceDir - The full path to the location where the instrumented source should be saved.
+ * @param {Object} sourceDirs - A map of named source dirs that will instrumented and hosted.
+ * @return {Array<String>} - An array of expanded paths.
  *
  */
 gpii.testem.coverage.expandInstrumentedSourceDirs = function (cwd, instrumentedSourceDir, sourceDirs) {

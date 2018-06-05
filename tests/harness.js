@@ -12,6 +12,7 @@ gpii.tests.testem.harness.outputOptions = function (that) {
     console.log(
         "= START TESTEM COMPONENT OPTIONS =\n",
         JSON.stringify(
+            //that.options, null, 2
             fluid.filterKeys(that.options, [
                 "contentDirs",
                 "coverageDir",

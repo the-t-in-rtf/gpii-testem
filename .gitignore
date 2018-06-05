@@ -1,4 +1,6 @@
 /node_modules/
 .vagrant
-.nyc_output
+.project
+.nyc_output/
 coverage
+reports

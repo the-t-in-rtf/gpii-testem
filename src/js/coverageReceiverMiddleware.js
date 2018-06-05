@@ -40,17 +40,17 @@ gpii.testem.coverage.receiver.initMiddleware = function (that) {
 gpii.testem.coverage.receiver.middlewareImpl = function (that, request, response) {
     var resolvedCoverageDir = fluid.module.resolvePath(that.options.coverageDir);
 
-    var body         = JSON.parse(request.body.payload);
+    var coveragePayload = request.body.payload;
 
-    var browser      = gpii.testem.coverage.receiver.uaMatch(fluid.get(body, "navigator.userAgent"));
+    var browser      = gpii.testem.coverage.receiver.uaMatch(fluid.get(coveragePayload, "navigator.userAgent"));
 
-    var testPath     = fluid.get(body.document, "URL");
+    var testPath     = fluid.get(coveragePayload.document, "URL");
     var testFilename = testPath ? testPath.split("/").pop() : "unknown";
 
     var coverageFilename    = ["coverage", "-", browser.name, "-", browser.version, "-", testFilename, "-", that.id, "-", Math.round(Math.random() * 10000), ".json"].join("");
     var coverageOutputPath  = path.join(resolvedCoverageDir, coverageFilename);
 
-    fs.writeFile(coverageOutputPath, JSON.stringify(body.coverage, null, 2), { encoding: "utf8"}, function (error) {
+    fs.writeFile(coverageOutputPath, JSON.stringify(coveragePayload.coverage, null, 2), { encoding: "utf8"}, function (error) {
         if (error) {
             response.status(500).send({ isError: true, message: error});
         }

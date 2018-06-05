@@ -17,7 +17,7 @@ fluid.registerNamespace("gpii.tests.testem.instrumentationTiming");
  *
  * Function to synchronously block until `timeout` milliseconds have passed.
  *
- * @param timeout
+ * @param {Number} timeout - The timeout, in milliseconds.
  */
 gpii.tests.testem.instrumentationTiming.sleep = function (timeout) {
     var start = new Date().getTime();
@@ -32,7 +32,7 @@ gpii.tests.testem.instrumentationTiming.sleep = function (timeout) {
  *
  * A function that intentionally delays the usual instrumentation phase to ensure that a coverage report is still prepared and complete.
  *
- * @param that
+ * @param {Object} that - The component itself.
  */
 gpii.tests.testem.instrumentationTiming.instrumentSlowly = function (that) {
     gpii.tests.testem.instrumentationTiming.sleep(that.options.instrumentationDelay);
