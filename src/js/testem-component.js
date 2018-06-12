@@ -433,10 +433,9 @@ fluid.defaults("gpii.testem.base", {
         ]
     },
     "headlessBrowserArgs": {
-        // TODO: enable once a new enough version of Firefox is available in CI.
-        // "Firefox": [
-        //     "--headless"
-        // ],
+        "Firefox": [
+            "--headless"
+        ],
         // See this ticket for details on the minimum options required to get "headless" Chrome working: https://github.com/testem/testem/issues/1106#issuecomment-298841383
         "Chrome": [
             "--disable-gpu",
