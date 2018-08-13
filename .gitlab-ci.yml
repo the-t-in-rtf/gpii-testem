@@ -45,4 +45,3 @@ vagrant_destroy:
     - vagrant destroy -f
     - "rm -fr ../.vagrant-$CI_COMMIT_SHA"
   when: always
-  

@@ -1,0 +1,39 @@
+<html>
+<head>
+    <title>Sample Test "Rollup"</title>
+
+    <!-- QUnit and other includes -->
+    <link rel="stylesheet" href="../../node_modules/infusion/tests/lib/qunit/css/qunit.css"/>
+    <script src="../../node_modules/infusion/tests/lib/qunit/js/qunit.js"></script>
+    <link rel="stylesheet"
+          href="../../node_modules/infusion/tests/lib/qunit/addons/composite/qunit-composite.css">
+    <script src="/testem.js"></script>
+    <script src="../../node_modules/infusion/tests/lib/qunit/addons/composite/qunit-composite.js"></script>
+
+    <!-- The static "safe rollup" function provided by gpii-testem -->
+    <script src="../../node_modules/infusion/dist/infusion-all.js"></script>
+    <script src="../../src/js/client/safeRollup.js"></script>
+
+    <!-- NOTE: Typically we don't use the coverage sender for a rollup, but instead only in the "child" pages.  This is
+         a special case, we are testing functionality associated with the rollup itself. -->
+    <script type="text/javascript" src="/coverage/client/coverageSender.js"></script>
+
+    <!-- Collect the test results observed for inspection from webdriver tests -->
+    <script type="text/javascript" src="./js/test-result-collector.js"></script>
+</head>
+<body>
+<!-- Your QUnit HTML fixtures -->
+<div id="qunit"></div>
+<div id="qunit-fixture">
+</div>
+
+<!-- This could easily be in a separate JS file, but is inline here for purposes of illustration -->
+<script type="text/javascript">
+    // Two arguments, i.e. no Testem prefix
+    gpii.testem.safeRollup(["/tests/rollup-fixtures/test1.html", "/tests/rollup-fixtures/test2.html"], "../..");
+
+    // Three arguments, i.e. an explicit Testem prefix
+    gpii.testem.safeRollup(["test3.html", "test4.html"], "", "/tests/rollup-fixtures/");
+</script>
+</body>
+</html>

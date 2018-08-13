@@ -1,0 +1,27 @@
+{
+  "version": 3,
+  "sources": [
+    "/Users/duhrer/Source/rtf/gpii-testem/src/js/client/safeRollup.js"
+  ],
+  "names": [
+    "fluid",
+    "QUnit",
+    "Testem",
+    "gpii",
+    "registerNamespace",
+    "testem",
+    "safeRollup",
+    "rawTestSuitePaths",
+    "nonTestemPrefix",
+    "testemPrefix",
+    "prefix",
+    "testSuitePaths",
+    "map",
+    "entry",
+    "testSuites"
+  ],
+  "mappings": "+tEACA,CAAC,SAAUA,KAAV,CAAiBC,KAAjB,CAAwBC,MAAxB,CAAgC,CAC7B,aAD6B,sBAE7B,GAAIC,6BAAOH,MAAMI,iBAAN,CAAwB,MAAxB,CAAP,CAAJ,CAF6B,sBAG7BJ,MAAMI,iBAAN,CAAwB,aAAxB,EAH6B,sBAgB7BD,KAAKE,MAAL,CAAYC,UAAZ,CAAyB,SAAUC,iBAAV,CAA6BC,eAA7B,CAA8CC,YAA9C,CAA4D,6CACjFA,aAAe,mEAAgB,EAAhB,CAAf,CACA,GAAIC,+BAASR,iCAASO,YAAT,4BAAwBD,eAAxB,CAAT,CAAJ,CACA,GAAIG,uCAAiBJ,kBAAkBK,GAAlB,CAAsB,SAAUC,KAAV,CAAiB,6CACxD,MAAOH,QAASG,KAAhB,CACH,CAFoB,CAAjB,CAAJ,CAHiF,sBAMjFZ,MAAMa,UAAN,CAAiBH,cAAjB,EACH,CAPD,CAQH,CAxBD,EAwBGX,KAxBH,CAwBUC,KAxBV,CAwBiB,MAAOC,OAAP,GAAkB,WAAlB,2BAAgCA,MAAhC,4BAAyC,KAAzC,CAxBjB",
+  "sourcesContent": [
+    "/* globals Testem, QUnit */\n(function (fluid, QUnit, Testem) {\n    \"use strict\";\n    var gpii = fluid.registerNamespace(\"gpii\");\n    fluid.registerNamespace(\"gpii.testem\");\n\n    /**\n     *\n     * A static function to safely \"roll up\" multiple test fixtures using QUnit.composite so that they can be used\n     * whether or not Testem itself is available.  The tested use case is loading locally hosted test fixtures\n     * manually in a browser rather than via Testem.\n     *\n     * @param {Array<String>} rawTestSuitePaths - An array of \"raw\" paths (lacking either prefix).\n     * @param {String} nonTestemPrefix - The prefix to prepend to all paths when Testem is not available.\n     * @param {String} [testemPrefix] - The (optional) prefix to prepend to all paths when Testem is available.\n     *\n     */\n    gpii.testem.safeRollup = function (rawTestSuitePaths, nonTestemPrefix, testemPrefix) {\n        testemPrefix = testemPrefix || \"\";\n        var prefix = Testem ? testemPrefix : nonTestemPrefix;\n        var testSuitePaths = rawTestSuitePaths.map(function (entry) {\n            return prefix + entry;\n        });\n        QUnit.testSuites(testSuitePaths);\n    };\n})(fluid, QUnit, typeof Testem !== \"undefined\" ? Testem : false);\n"
+  ]
+}

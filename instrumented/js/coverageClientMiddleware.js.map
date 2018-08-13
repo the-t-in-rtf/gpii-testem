@@ -1,0 +1,52 @@
+{
+  "version": 3,
+  "sources": [
+    "/Users/duhrer/Source/rtf/gpii-testem/src/js/coverageClientMiddleware.js"
+  ],
+  "names": [
+    "fluid",
+    "require",
+    "gpii",
+    "registerNamespace",
+    "fs",
+    "testem",
+    "middleware",
+    "coverageClient",
+    "middlewareImpl",
+    "that",
+    "req",
+    "res",
+    "next",
+    "readFile",
+    "module",
+    "resolvePath",
+    "options",
+    "baseClientSource",
+    "error",
+    "data",
+    "resolvedInvokerTemplatePath",
+    "clientInvokerTemplatePath",
+    "invokerTemplateContent",
+    "readFileSync",
+    "invokerCode",
+    "stringTemplate",
+    "combinedPayload",
+    "join",
+    "set",
+    "status",
+    "send",
+    "defaults",
+    "gradeNames",
+    "path",
+    "coveragePort",
+    "hookTestem",
+    "hookQUnit",
+    "invokers",
+    "funcName",
+    "args"
+  ],
+  "mappings": "AACA,a,koEACA,GAAIA,8BAAQC,QAAQ,UAAR,CAAR,CAAJ,CACA,GAAIC,6BAAQF,MAAMG,iBAAN,CAAwB,MAAxB,CAAR,CAAJ,CAEA,GAAIC,2BAAKH,QAAQ,IAAR,CAAL,CAAJ,C,sBAEAA,QAAQ,cAAR,E,sBAGAD,MAAMG,iBAAN,CAAwB,uCAAxB,E,sBACAD,KAAKG,MAAL,CAAYC,UAAZ,CAAuBC,cAAvB,CAAsCC,cAAtC,CAAuD,SAAUC,IAAV,CAAgBC,GAAhB,CAAqBC,GAArB,CAA0BC,IAA1B,CAAgC,6CACnFR,GAAGS,QAAH,CAAYb,MAAMc,MAAN,CAAaC,WAAb,CAAyBN,KAAKO,OAAL,CAAaC,gBAAtC,CAAZ,CAAqE,SAAUC,KAAV,CAAiBC,IAAjB,CAAuB,6CACxF,GAAID,KAAJ,CAAW,gDACPN,KAAKM,KAAL,EACH,CAFD,IAGK,gDACD,GAAI,CACA,GAAIE,qDAA8BpB,MAAMc,MAAN,CAAaC,WAAb,CAAyBN,KAAKO,OAAL,CAAaK,yBAAtC,CAA9B,CAAJ,CACA,GAAIC,gDAAyBlB,GAAGmB,YAAH,CAAgBH,2BAAhB,CAA6C,MAA7C,CAAzB,CAAJ,CACA,GAAII,qCAAcxB,MAAMyB,cAAN,CAAqBH,sBAArB,CAA6Cb,KAAKO,OAAlD,CAAd,CAAJ,CACA,GAAIU,yCAAkB,CAACP,IAAD,CAAOK,WAAP,EAAoBG,IAApB,CAAyB,IAAzB,CAAlB,CAAJ,CAJA,uBAKAhB,IAAIiB,GAAJ,CAAQ,cAAR,CAAwB,iBAAxB,EAA2CC,MAA3C,CAAkD,GAAlD,EAAuDC,IAAvD,CAA4DJ,eAA5D,EACH,CACD,MAAOR,KAAP,CAAc,wBACVN,KAAMM,KAAN,EACH,CACJ,CACJ,CAhBD,EAiBH,CAlBD,C,uBAoBAlB,MAAM+B,QAAN,CAAe,uCAAf,CAAwD,CACpDC,WAAY,CAAC,yBAAD,CADwC,CAEpDC,KAAS,SAF2C,CAGpDhB,iBAAkB,8CAHkC,CAIpDI,0BAA2B,+DAJyB,CAKpDa,aAAc,IALsC,CAMpDC,WAAY,IANwC,CAOpDC,UAAW,KAPyC,CAQpDC,SAAU,CACN/B,WAAY,CACRgC,SAAU,sDADF,CAERC,KAAU,CAAC,QAAD,CAAW,eAAX,CAA4B,eAA5B,CAA6C,eAA7C,CAFF,CADN,CAR0C,CAAxD",
+  "sourcesContent": [
+    "/* eslint-env node */\n\"use strict\";\nvar fluid = require(\"infusion\");\nvar gpii  = fluid.registerNamespace(\"gpii\");\n\nvar fs = require(\"fs\");\n\nrequire(\"gpii-express\");\n//fluid.require(\"%gpii-express\");\n\nfluid.registerNamespace(\"gpii.testem.middleware.coverageClient\");\ngpii.testem.middleware.coverageClient.middlewareImpl = function (that, req, res, next) {\n    fs.readFile(fluid.module.resolvePath(that.options.baseClientSource), function (error, data) {\n        if (error) {\n            next(error);\n        }\n        else {\n            try {\n                var resolvedInvokerTemplatePath = fluid.module.resolvePath(that.options.clientInvokerTemplatePath);\n                var invokerTemplateContent = fs.readFileSync(resolvedInvokerTemplatePath, \"utf8\");\n                var invokerCode = fluid.stringTemplate(invokerTemplateContent, that.options);\n                var combinedPayload = [data, invokerCode].join(\"\\n\");\n                res.set(\"Content-Type\", \"text/javascript\").status(200).send(combinedPayload);\n            }\n            catch (error) {\n                next (error);\n            }\n        }\n    });\n};\n\nfluid.defaults(\"gpii.testem.middleware.coverageClient\", {\n    gradeNames: [\"gpii.express.middleware\"],\n    path:    \"/client\",\n    baseClientSource: \"%gpii-testem/src/js/client/coverageSender.js\",\n    clientInvokerTemplatePath: \"%gpii-testem/src/templates/coverage-client-invoker.handlebars\" ,\n    coveragePort: 7000,\n    hookTestem: true,\n    hookQUnit: false,\n    invokers: {\n        middleware: {\n            funcName: \"gpii.testem.middleware.coverageClient.middlewareImpl\",\n            args:     [\"{that}\", \"{arguments}.0\", \"{arguments}.1\", \"{arguments}.2\"] // req, res, next\n        }\n    }\n});\n"
+  ]
+}

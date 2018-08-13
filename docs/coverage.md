@@ -18,7 +18,7 @@ collecting code coverage in your tests is to:
 By default, the `gpii.testem` grade does everything but step 5 for you.  Step 5 requires you to load the client-side
 coverage sender using markup like the following:
 
-```
+```html
 <script type="text/javascript" src="../../../lib/qunit/js/qunit.js"></script>
 <script type="text/javascript" src="../../../test-core/jqUnit/js/jqUnit.js"></script>
 
@@ -39,4 +39,3 @@ Please note, as shown in the above example:
 
 The middleware that receives the coverage data is built into Testem component grades found in this package.  See
 [the Testem component docs](./testem-component.md) for more details.
-

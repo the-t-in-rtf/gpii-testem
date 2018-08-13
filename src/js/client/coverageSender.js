@@ -14,8 +14,8 @@
     care of that yourself.
 
  */
-/* globals Testem */
-(function (Testem) {
+/* globals Testem, QUnit */
+(function (Testem, QUnit) {
     "use strict";
     // Pure JS equivalent of a fluid.registerNamespace call.
     window.gpii = window.gpii || {};
@@ -36,7 +36,10 @@
                         else {
                             console.error("Error saving coverage data:", this.responseText);
                         }
-                        testemCallback();
+
+                        if (testemCallback) {
+                            testemCallback();
+                        }
                     }
                 };
                 xhr.open("POST", "http://localhost:" + options.coveragePort + "/coverage");
@@ -61,11 +64,20 @@
                 };
                 xhr.send(JSON.stringify(wrappedPayload, null, 2));
             }
-            else {
+            else if (testemCallback) {
                 fluid.log("No coverage data, firing Testem callback immediately...");
                 testemCallback();
             }
         };
-        Testem.afterTests(afterTestsCallback);
+
+        var hookTestem = fluid.get(options, "hookTestem");
+        if (hookTestem && Testem) {
+            Testem.afterTests(afterTestsCallback);
+        }
+
+        var hookQUnit = fluid.get(options, "hookQUnit");
+        if (hookQUnit && QUnit) {
+            QUnit.done(afterTestsCallback);
+        }
     };
-})(Testem);
+})(typeof Testem !== "undefined" ? Testem : false, QUnit);
