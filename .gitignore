@@ -4,3 +4,4 @@
 coverage
 reports
 package-lock.json
+instrumented
