@@ -35,6 +35,8 @@ fluid.defaults("gpii.testem.middleware.coverageClient", {
     baseClientSource: "%gpii-testem/src/js/client/coverageSender.js",
     clientInvokerTemplatePath: "%gpii-testem/src/templates/coverage-client-invoker.handlebars" ,
     coveragePort: 7000,
+    hookTestem: true,
+    hookQUnit: false,
     invokers: {
         middleware: {
             funcName: "gpii.testem.middleware.coverageClient.middlewareImpl",

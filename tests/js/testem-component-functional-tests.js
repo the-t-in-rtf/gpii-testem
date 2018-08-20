@@ -6,9 +6,11 @@ var gpii   = fluid.registerNamespace("gpii");
 var jqUnit = require("node-jqunit");
 
 var exec   = require("child_process").exec;
-var path   = require("path");
 var fs     = require("fs");
 var rimraf = require("rimraf");
+
+require("../../src/js/lib/pathUtils");
+require("../testem-fixtures/coverage-fixtures/package-relative");
 
 fluid.registerNamespace("gpii.tests.testem.runner");
 
@@ -41,11 +43,11 @@ gpii.tests.testem.runner.runSingleTest = function (that, testDef) {
                 var testemOptions = JSON.parse(matches[1]);
 
                 if (!testDef.expectedErrors) {
-                    var tapReportPath = path.resolve(testemOptions.reportsDir, "report.tap");
+                    var tapReportPath = gpii.testem.resolvePackageOrCwdRelativePath (testemOptions.reportsDir, "report.tap");
                     jqUnit.assertTrue("There should be a TAP report...", fs.existsSync(tapReportPath));
 
-                    var htmlCoveragePath = path.resolve(testemOptions.reportsDir, "index.html");
-                    var coverageSummaryPath = path.resolve(testemOptions.reportsDir, "coverage-summary.json");
+                    var htmlCoveragePath = gpii.testem.resolvePackageOrCwdRelativePath (testemOptions.reportsDir, "index.html");
+                    var coverageSummaryPath = gpii.testem.resolvePackageOrCwdRelativePath (testemOptions.reportsDir, "coverage-summary.json");
 
                     if (testDef.hasCoverage) {
                         jqUnit.assertTrue("There should be an HTML coverage report...", fs.existsSync(htmlCoveragePath));
@@ -71,8 +73,9 @@ gpii.tests.testem.runner.runSingleTest = function (that, testDef) {
                     if (dirToRemove) {
                         cleanupPromises.push(function () {
                             var promise = fluid.promise();
-                            fluid.log("Removing dir '", dirToRemove, "'...");
-                            rimraf(dirToRemove, function (error) {
+                            var resolvedPathToRemove = fluid.module.resolvePath(dirToRemove);
+                            fluid.log("Removing dir '", resolvedPathToRemove, "'...");
+                            rimraf(resolvedPathToRemove, function (error) {
                                 error ? promise.reject(error) : promise.resolve();
                             });
                             return promise;
@@ -138,6 +141,21 @@ fluid.defaults("gpii.tests.testem.runner", {
             configFile:  "../testem-fixtures/coverage-fixtures/testem-no-coverage.js",
             hasCoverage: false
         },
+        packageRelative: {
+            name: "Running a suite of tests with package-relative paths...",
+            configFile: "../testem-fixtures/coverage-fixtures/testem-package-relative-paths.js",
+            hasCoverage: true,
+            expectedCoverage: {
+                total: {
+                    branches: {
+                        total: 2,
+                        covered: 2,
+                        skipped: 0,
+                        pct: 100
+                    }
+                }
+            }
+        },
         instrumentationTiming: {
             name:       "Confirm that long-running instrumentation does not interfere with coverage collection...",
             configFile: "../testem-fixtures/coverage-fixtures/testem-instrumentation-timing.js",
@@ -158,7 +176,7 @@ fluid.defaults("gpii.tests.testem.runner", {
             configFile:    "../testem-fixtures/failure-modes/testem-failure-modes.js",
             hasCoverage:   false,
             expectedErrors: [
-                "TypeError: Path must be a string. Received null"
+                "TypeError: Cannot read property 'indexOf' of null"
             ]
         }
     },

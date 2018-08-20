@@ -1,6 +1,7 @@
 /node_modules/
 .vagrant
 .project
-.nyc_output/
 coverage
 reports
+package-lock.json
+instrumented

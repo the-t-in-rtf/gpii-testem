@@ -1,17 +1,18 @@
-/* global module */
+/* eslint-env node */
+"use strict";
 module.exports = function (grunt) {
-    "use strict";
     grunt.initConfig({
-        eslint: {
-            src: ["./src/**/*.js", "./tests/**/*.js", "./*.js", "!./tests/testem-fixtures/instrumented/**/*.js"]
-        },
-        jsonlint: {
-            src: ["src/**/*.json", "tests/**/*.json", "./*.json"]
+        lintAll: {
+            sources: {
+                md:    [ "./*.md", "./docs/*.md"],
+                js:    ["./src/**/*.js", "./tests/**/*.js", "./*.js", "!./tests/testem-fixtures/instrumented/**/*.js"],
+                json:  ["src/**/*.json", "tests/**/*.json", "./*.json"],
+                json5: [],
+                other: ["./.*", "!./package-lock.json"]
+            }
         }
     });
 
-    grunt.loadNpmTasks("fluid-grunt-eslint");
-    grunt.loadNpmTasks("grunt-jsonlint");
-
-    grunt.registerTask("lint", "Apply jshint and jsonlint", ["eslint", "jsonlint"]);
+    grunt.loadNpmTasks("gpii-grunt-lint-all");
+    grunt.registerTask("lint", "Perform all standard lint checks.", ["lint-all"]);
 };

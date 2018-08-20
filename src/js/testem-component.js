@@ -458,8 +458,8 @@ fluid.defaults("gpii.testem.base", {
                 args:     ["{that}.options.reportsDir", "report.tap"]
             }
         },
-        cwd: "{that}.options.cwd",
-        user_data_dir: "{that}.options.testemDir",
+        cwd: "@expand:fluid.module.resolvePath({that}.options.cwd)",
+        user_data_dir: "@expand:gpii.testem.resolveFluidModulePathSafely({that}.options.testemDir)",
         on_start: "{that}.handleTestemStart",
         on_exit:  "{that}.handleTestemExit",
         src_files: [], // Explicitly tell testem not to watch or host any "source" content.
@@ -552,12 +552,14 @@ gpii.testem.coverage.instrumentSource = function (that) {
     fluid.log("Instrumenting source.");
     var promises = [];
     var expandedDefs = fluid.transform(that.options.sourceDirs, gpii.testem.expandPath);
+    var resolvedInstrumentationDir = fluid.module.resolvePath(that.options.instrumentedSourceDir);
+    var resolvedCwd = fluid.module.resolvePath(that.options.cwd);
 
     fluid.each(expandedDefs, function (sourcePathDef) {
-        var resolvedSourcePath = gpii.testem.resolvePackageOrCwdRelativePath(that.options.cwd, sourcePathDef.filePath);
+        var resolvedSourcePath = gpii.testem.resolvePackageOrCwdRelativePath(resolvedCwd, sourcePathDef.filePath);
         promises.push(function () {
             var lastDirSegment = gpii.testem.extractLastContentSegment(sourcePathDef, "");
-            var instrumentedPath = gpii.testem.resolvePackageOrCwdRelativePath(that.options.instrumentedSourceDir, lastDirSegment);
+            var instrumentedPath = gpii.testem.resolvePackageOrCwdRelativePath(resolvedInstrumentationDir, lastDirSegment);
             return gpii.testem.instrumenter.instrument(resolvedSourcePath, instrumentedPath, that.options.instrumentationOptions);
         });
     });
@@ -585,11 +587,11 @@ gpii.testem.coverage.instrumentSource = function (that) {
  *
  */
 gpii.testem.coverage.expandInstrumentedSourceDirs = function (cwd, instrumentedSourceDir, sourceDirs) {
-    var expandedDefs = fluid.transform(sourceDirs, gpii.testem.expandPath);
+    var resolvedInstrumentedSourceDir = gpii.testem.resolvePackageOrCwdRelativePath(cwd, instrumentedSourceDir);
 
+    var expandedDefs = fluid.transform(sourceDirs, gpii.testem.expandPath);
     return fluid.transform(expandedDefs, function (sourcePathDef) {
         var lastDirSegment = gpii.testem.extractLastContentSegment(sourcePathDef, "");
-        var resolvedInstrumentedSourceDir = fluid.module.resolvePath(instrumentedSourceDir);
         return path.resolve(resolvedInstrumentedSourceDir, lastDirSegment);
     });
 };
@@ -688,4 +690,3 @@ fluid.defaults("gpii.testem", {
         }
     }
 });
-

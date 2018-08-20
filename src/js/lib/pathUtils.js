@@ -105,17 +105,17 @@ gpii.testem.extractProxyPath = function (pathDef) {
 
 /**
  *
- * Resolve either a package-relative or cwd-relative path safely.  If `pathToResolve` is package relative or full,
- * it will be preserved.  If `pathToResolve` is a simple relative path (i.e. `src` or `./src`) it will be resolved
- * relative to `cwd`.
+ * Resolve a path relative to either a package-relative or full path safely.  If `pathToResolve` is package relative or
+ * full,  it will be preserved.  If `pathToResolve` is a simple relative path (i.e. `src` or `./src`) it will be
+ * resolved relative to `basePath`.
  *
- * @param {String} cwd - The full path to the current working directory.
+ * @param {String} basePath - A full or package-relative base path, for example, to the current working directory.
  * @param {String} pathToResolve - A relative, full, or package-relative path to resolve.
  * @return {String} - The resolved full path.
  *
  */
-gpii.testem.resolvePackageOrCwdRelativePath = function (cwd, pathToResolve) {
-    return path.resolve(cwd, fluid.module.resolvePath(pathToResolve));
+gpii.testem.resolvePackageOrCwdRelativePath = function (basePath, pathToResolve) {
+    return path.resolve(fluid.module.resolvePath(basePath), fluid.module.resolvePath(pathToResolve));
 };
 
 /**

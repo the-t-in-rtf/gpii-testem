@@ -21,7 +21,7 @@ ensure that, even in the event of an error, you always call the callback.
 
 See below for an example.
 
-```
+```javascript
 var fluid = require("infusion");
 fluid.require("gpii-testem");
 
@@ -66,7 +66,7 @@ needs to be given the chance to cleanup asynchronously on shutdown, by calling i
 for its `onMyDoneEvent` event.  To wire such a fixture into your own derived grade, you might use code like the
 following:
 
-```
+```javascript
 fluid.defaults("my.testem.grade", {
     gradeNames: ["gpii.testem"],
     events: {
@@ -108,5 +108,6 @@ fluid.defaults("my.testem.grade", {
     }
 });
 ```
+
 Note: In redefining `onFixturesConstructed` and `onFixturesStopped`, you should preserve the existing events, which can
 be found in [the `gpii.testem` component's source](../src/js/testem-component.js).

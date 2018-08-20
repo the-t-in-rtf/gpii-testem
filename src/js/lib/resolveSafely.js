@@ -9,9 +9,9 @@ fluid.registerNamespace("gpii.testem");
 
 // If we call path.resolve directly from an expansion definition, we can't cleanly handle errors.  So, we use this
 // convenience function.  It's important to trap errors which might prevent Testem callbacks from being triggered.
-gpii.testem.resolvePathSafely = function (pathToResolve, filename) {
+gpii.testem.resolvePathSafely = function (basePath, subPath) {
     try {
-        var resolvedPath = path.resolve(pathToResolve, filename);
+        var resolvedPath = path.resolve(fluid.module.resolvePath(basePath), subPath);
         return resolvedPath;
     }
     catch (error) {

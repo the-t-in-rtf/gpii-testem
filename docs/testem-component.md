@@ -11,7 +11,7 @@ The `gpii.testem` component is designed to:
 For basic usage instructions and requirements, see the [README file](../README.md).  For detailed configuration options,
 see below.
 
-# Component Options
+## Component Options
 
 | Option                    | Type        | Description                           |
 | ------------------------- | ----------- | ------------------------------------- |
@@ -36,7 +36,7 @@ see below.
 Please note, although you can change `options.testemOptions.framework`, `gpii.testem` is only tested with QUnit and is
 unlikely to work with other frameworks supported by Testem.
 
-## Cleanup Definitions
+### Cleanup Definitions
 
 The initial and final cleanup options expect to be passed an array of "cleanup definitions", which support the following
 attributes:
@@ -47,35 +47,41 @@ attributes:
 | `path` (required) | `{String}`   | The path to remove. |
 | `isTestemContent` | `{Boolean}`  | If this directory contains testem-generated content, we use a different cleanup method. |
 
-# Component Invokers
+## Component Invokers
 
-## `{gpii.testem}.handleTestemStart(config, data, callback)`
+### `{gpii.testem}.handleTestemStart(config, data, callback)`
+
 * `config`: The configuration information Testem exposes as part of its lifecycle.
 * `data`: The data Testem exposes as part of its lifecycle.
-* `callback`: A function to be called when it is safe for Testem to run tests.  If you do not call this callback, Testem will hang indefinitely before running tests.
+* `callback`: A function to be called when it is safe for Testem to run tests.  If you do not call this callback, Testem
+  will hang indefinitely before running tests.
 * Returns: Nothing.
 
-An invoker which is called before testem begins its test run.  Starts a chain of events which cleanup before the tests, instrument code, start test fixtures, and perform
-other preparatory work.  For details on how this works, see ["The Testem Event Lifecycle"](testem-lifecycle.md).
+An invoker which is called before testem begins its test run.  Starts a chain of events which cleanup before the tests,
+instrument code, start test fixtures, and perform other preparatory work.  For details on how this works, see ["The
+Testem Event Lifecycle"](testem-lifecycle.md).
 
-## `{gpii.testem}.handleTestemExit(config, data, callback)`
+### `{gpii.testem}.handleTestemExit(config, data, callback)`
+
 * `config`: The configuration information Testem exposes as part of its lifecycle.
 * `data`: The data Testem exposes as part of its lifecycle.
-* `callback`: A function to be called when it is safe for Testem to exit.  If you do not call this callback, you will not be able to quit Testem without killing the process.
+* `callback`: A function to be called when it is safe for Testem to exit.  If you do not call this callback, you will
+  not be able to quit Testem without killing the process.
 * Returns: Nothing.
 
 An invoker which is called when Testem has completed all tests.  Used to stop test fixtures, prepare reports, and remove
 temporary content.  For details on how this works, see ["The Testem Event Lifecycle"](testem-lifecycle.md).
 
-## `{gpii.testem}.getTestemOptions()`
+### `{gpii.testem}.getTestemOptions()`
 
-An invoker which retrieves the Testem options, including all "generated" options, such as routes to replace the original 
+An invoker which retrieves the Testem options, including all "generated" options, such as routes to replace the original
 source with instrumented source.  This invoker is intended to be used with `module.exports` to expose the component
-options in the way the Testem expects when working with [javascript Testem configuration files](https://github.com/testem/testem/blob/master/docs/config_file.md#an-example).
+options in the way the Testem expects when working with [javascript Testem configuration
+files](https://github.com/testem/testem/blob/master/docs/config_file.md#an-example).
 
 See [the README file](../README.md) for an example of using this invoker.
 
-## Content and Source Directories
+### Content and Source Directories
 
 Both "source" and "content" (non-source) directories can be referred to using a "short" or "long" notation.  Here is an
 example of hosting our source and node_modules directories using "short" notation:
@@ -103,6 +109,7 @@ contentDirs: {
   }
 }
 ```
+
 The following sub-options are supported:
 
 | Option      | Type       | Description                           |
@@ -111,38 +118,41 @@ The following sub-options are supported:
 | `routePath` | `{String}` | The path at which this content should be mounted within our express instance. Defaults to the last segment of `filePath`. |
 | `proxyPath` | `{String}` | The path associated with this content that should be redirected from Testem to our express instance. Defaults to the last segment of `filePath`. |
 
-## Cleanup
+### Cleanup
 
-By default, Testem generates browser content in the directory [`os.tmpdir()`](https://nodejs.org/api/os.html#os_os_tmpdir),
-which it does not clean up when the test run is complete.  The `gpii.testem` component automatically cleans this up by
-default.  The component also cleans up instrumented code and raw coverage data.
+By default, Testem generates browser content in the directory
+[`os.tmpdir()`](https://nodejs.org/api/os.html#os_os_tmpdir), which it does not clean up when the test run is complete.
+The `gpii.testem` component automatically cleans this up by default.  The component also cleans up instrumented code and
+raw coverage data.
 
-## Collecting Browser Coverage Data
+### Collecting Browser Coverage Data
 
 See [the README](../README.md) for an example of using the components in this package to collect only browser coverage
 data.
 
-## Combining Browser Coverage with non-Browser coverage
+### Combining Browser Coverage with non-Browser coverage
 
 If your work involves a mixture of node and browser tests, you may want to collect coverage data across a range of test
 runs and then collate it yourself.  This package makes use of the same libraries as [Istanbul](https://istanbul.js.org),
 so that combined reports can be prepared.
 
-### Components
+#### Additional Components
 
-#### `gpii.testem.instrumentation`
+##### `gpii.testem.instrumentation`
 
 This grade instruments source itself and collects coverage data, but does not prepare a report at the end or remove the
-coverage data during its cleanup phase.
+coverage data during its cleanup phase.  It is provided for use in combining reports from different test runs, such
+as when running node tests and browser tests in the same package.  See below for a detailed example.
 
-#### `gpii.testem.coverage`
+##### `gpii.testem.coverage`
 
 This grade collects coverage data, but does not instrument source.  It is intended for use when you have already
 instrumented the code by other means.  Please note, you must set `instrumentedSourceDir` (see above) to the location of
 your instrumented code to use this grade.  This grade only removes the temporary content generated by Testem itself, and
-not any pre-instrumented code or coverage data.  
+not any pre-instrumented code or coverage data.  This grade is mainly provided for legacy setups, in almost all cases
+you should use the`gpii.testem.instrumentation` grade instead.
 
-### Example: Combining Node Coverage with Browser Coverage.
+#### Example: Combining Node Coverage with Browser Coverage.
 
 The key to preparing a combined report is to ensure that:
 
@@ -151,7 +161,7 @@ The key to preparing a combined report is to ensure that:
 3. Each stage avoids removing its coverage data at the end of its run.
 4. A combined report is prepared using `nyc report` once all stages are completed.
 
-#### Registering Your Package
+##### Registering Your Package
 
 In your package's main (node) entry point, you will need code like the following:
 
@@ -160,7 +170,7 @@ var fluid = require("infusion");
 fluid.module.register("my-package", __dirname, require);
 ```
 
-#### Setting up your Testem Component
+##### Setting up your Testem Component
 
 ```javascript
 var fluid = require("infusion");
@@ -185,7 +195,7 @@ module.exports = my.testem.grade.getTestemOptions();
 
 Save this to `tests/testem.js`.
 
-#### Setting up your `package.json` file.
+##### Setting up your `package.json` file.
 
 For this example, you need to install a few modules, using a command like:
 
@@ -202,7 +212,8 @@ Once you've done this, you'll need to update the `scripts` section of your `pack
     "posttest": "node node_modules/.bin/nyc report --temp-directory coverage --reporter text-summary --reporter html"
   }
 ```
-#### Running the Tests and Combined Report
+
+##### Running the Tests and Combined Report
 
 To use this configuration, you would simply call `npm test` from the root of your repository.  Let's go through what
 happens step by step.
