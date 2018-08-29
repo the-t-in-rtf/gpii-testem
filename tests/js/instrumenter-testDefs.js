@@ -84,6 +84,24 @@ gpii.tests.testem.instrumenter.testDefs = {
         shouldBeInstrumented:    ["src/js/index.js"],
         shouldNotBeInstrumented: []
     },
+    // TODO: Create a test fixture for negated excludes once https://issues.gpii.net/browse/GPII-3308 is resolved.
+    //negatedExclude: {
+    //    name:      "Test negation of exclusions.",
+    //    inputPath: "%gpii-testem/tests/instrumentation-fixtures/negated-exclude",
+    //    instrumentationOptions: {
+    //        excludes: ["!./src/js/excluded/exception.js", "./src/js/excluded/*.js"]
+    //    },
+    //    outputPath: {
+    //        expander: {
+    //            funcName: "path.resolve",
+    //            args:     ["{that}.options.baseOutputDir", "negated-exclude"]
+    //        }
+    //    },
+    //    shouldExist:             ["src/js/excluded/exception.js", "index.js"],
+    //    shouldNotExist:          ["src/js/excluded/bad.js"],
+    //    shouldBeInstrumented:    ["src/js/excluded/exception.js", "index.js"],
+    //    shouldNotBeInstrumented: []
+    //},
     returnOutsideOfFunction: {
         name:      "Test instrumentation of (node) code with a return outside of a function.",
         inputPath: "%gpii-testem/tests/instrumentation-fixtures/with-return-outside-of-function",
