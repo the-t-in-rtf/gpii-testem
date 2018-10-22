@@ -1,0 +1,21 @@
+<html>
+<head>
+    <title>Testing manual exercising of client-side fixtures.</title>
+
+    <script type="text/javascript" src="/node_modules/infusion/dist/infusion-all.js"></script>
+
+    <!-- Wire up a coverage reporter to save test coverage reports after the run completes -->
+    <script type="text/javascript" src="/coverage/client/coverageSender.js"></script>
+
+    <!-- The client-side code under test -->
+    <script type="text/javascript" src="/src/js/lucky-coin.js"></script>
+</head>
+<body>
+    <p>These tests have no visible output.</p>
+
+    <script type="text/javascript">
+        var coin = my.lucky.coin();
+        coin.flip();
+    </script>
+</body>
+</html>

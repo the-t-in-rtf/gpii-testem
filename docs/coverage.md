@@ -39,3 +39,19 @@ Please note, as shown in the above example:
 
 The middleware that receives the coverage data is built into Testem component grades found in this package.  See
 [the Testem component docs](./testem-component.md) for more details.
+
+## Coverage Sender Advanced Options
+
+The middleware that serves up the coverage sender accepts three options, which are used to generate the client-side code
+that your browser loads.
+
+| Option           | Type        | Description                           |
+| ---------------- | ----------- | ------------------------------------- |
+| `exposeCallback` | `{Boolean}` | Whether to expose the callback that sends coverage data as the global named variable `window.gpii.testem.coverage.afterTestsCallback` so that it can be called directly in situations where Testem and QUnit are not available. |
+| `hookTestem`     | `{Boolean}` | Whether to hook the callback that sends coverage data into the Testem lifecycle, so that test results are send when Testem detects that the tests on a page have completed.  Defaults to `true`. |
+| `hookQunit`      | `{Boolean}` | Whether to hook the callback that sends coverage data into the QUnit lifecycle, so that test results are send when QUnit detects that the tests on a page have completed. Defaults to `false`. |
+
+The `hookTestem` option is enabled by default, and if you are only using Testem, you should not need to supply custom
+options. See [the rollup tests in this package](../tests/js/rollup-non-testem-tests.js) for an example of using QUnit
+without using Testem.  See [the callback tests in this package](../tests/js/callback-tests.js) for an example of using
+the coverage sender without either Testem or QUnit.

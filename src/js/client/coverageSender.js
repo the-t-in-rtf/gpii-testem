@@ -70,6 +70,11 @@
             }
         };
 
+
+        if (fluid.get(options, "exposeCallback")) {
+            window.gpii.testem.coverage.afterTestsCallback = afterTestsCallback;
+        }
+
         var hookTestem = fluid.get(options, "hookTestem");
         if (hookTestem && Testem) {
             Testem.afterTests(afterTestsCallback);
@@ -80,4 +85,4 @@
             QUnit.done(afterTestsCallback);
         }
     };
-})(typeof Testem !== "undefined" ? Testem : false, QUnit);
+})(typeof Testem !== "undefined" ? Testem : false, typeof QUnit !== "undefined" ? QUnit : false);

@@ -6,7 +6,6 @@ var gpii  = fluid.registerNamespace("gpii");
 var fs = require("fs");
 
 require("gpii-express");
-//fluid.require("%gpii-express");
 
 fluid.registerNamespace("gpii.testem.middleware.coverageClient");
 gpii.testem.middleware.coverageClient.middlewareImpl = function (that, req, res, next) {
