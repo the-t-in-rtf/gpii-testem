@@ -14,7 +14,6 @@
     care of that yourself.
 
  */
-/* globals Testem, QUnit */
 (function (Testem, QUnit) {
     "use strict";
     // Pure JS equivalent of a fluid.registerNamespace call.
@@ -85,4 +84,4 @@
             QUnit.done(afterTestsCallback);
         }
     };
-})(typeof Testem !== "undefined" ? Testem : false, typeof QUnit !== "undefined" ? QUnit : false);
+})(window.Testem, window.QUnit);
