@@ -48,8 +48,8 @@ that your browser loads.
 | Option           | Type        | Description                           |
 | ---------------- | ----------- | ------------------------------------- |
 | `exposeCallback` | `{Boolean}` | Whether to expose the callback that sends coverage data as the global named variable `window.gpii.testem.coverage.afterTestsCallback` so that it can be called directly in situations where Testem and QUnit are not available. |
-| `hookTestem`     | `{Boolean}` | Whether to hook the callback that sends coverage data into the Testem lifecycle, so that test results are send when Testem detects that the tests on a page have completed.  Defaults to `true`. |
-| `hookQunit`      | `{Boolean}` | Whether to hook the callback that sends coverage data into the QUnit lifecycle, so that test results are send when QUnit detects that the tests on a page have completed. Defaults to `false`. |
+| `hookTestem`     | `{Boolean}` | Whether to hook the callback that sends coverage data into the Testem lifecycle, so that test results are sent when Testem detects that the tests on a page have completed.  Defaults to `true`. |
+| `hookQunit`      | `{Boolean}` | Whether to hook the callback that sends coverage data into the QUnit lifecycle, so that test results are sent when QUnit detects that the tests on a page have completed. Defaults to `false`. |
 
 The `hookTestem` option is enabled by default, and if you are only using Testem, you should not need to supply custom
 options. See [the rollup tests in this package](../tests/js/rollup-non-testem-tests.js) for an example of using QUnit
