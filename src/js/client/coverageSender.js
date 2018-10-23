@@ -5,7 +5,7 @@
 
     <script src="/coverage/client/coverageSender.js"></script>
 
-    NOTE: This script requires Testem, and must be loaded after Testem loads, but before your tests start.
+    NOTE: By default, this script requires Testem, and must be loaded after Testem loads, but before your tests start.
 
     Adapted from https://github.com/testem/testem/blob/master/examples/coverage_istanbul/tests.html#L11
 
@@ -14,7 +14,6 @@
     care of that yourself.
 
  */
-/* globals Testem, QUnit */
 (function (Testem, QUnit) {
     "use strict";
     // Pure JS equivalent of a fluid.registerNamespace call.
@@ -70,6 +69,11 @@
             }
         };
 
+
+        if (fluid.get(options, "exposeCallback")) {
+            window.gpii.testem.coverage.afterTestsCallback = afterTestsCallback;
+        }
+
         var hookTestem = fluid.get(options, "hookTestem");
         if (hookTestem && Testem) {
             Testem.afterTests(afterTestsCallback);
@@ -80,4 +84,4 @@
             QUnit.done(afterTestsCallback);
         }
     };
-})(typeof Testem !== "undefined" ? Testem : false, QUnit);
+})(window.Testem, window.QUnit);

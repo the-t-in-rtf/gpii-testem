@@ -6,7 +6,6 @@ var gpii  = fluid.registerNamespace("gpii");
 var fs = require("fs");
 
 require("gpii-express");
-//fluid.require("%gpii-express");
 
 fluid.registerNamespace("gpii.testem.middleware.coverageClient");
 gpii.testem.middleware.coverageClient.middlewareImpl = function (that, req, res, next) {
@@ -37,6 +36,7 @@ fluid.defaults("gpii.testem.middleware.coverageClient", {
     coveragePort: 7000,
     hookTestem: true,
     hookQUnit: false,
+    exposeCallback: false,
     invokers: {
         middleware: {
             funcName: "gpii.testem.middleware.coverageClient.middlewareImpl",
