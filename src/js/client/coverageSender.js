@@ -5,7 +5,7 @@
 
     <script src="/coverage/client/coverageSender.js"></script>
 
-    NOTE: This script requires Testem, and must be loaded after Testem loads, but before your tests start.
+    NOTE: By default, this script requires Testem, and must be loaded after Testem loads, but before your tests start.
 
     Adapted from https://github.com/testem/testem/blob/master/examples/coverage_istanbul/tests.html#L11
 
