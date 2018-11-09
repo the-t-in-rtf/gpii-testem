@@ -64,23 +64,21 @@
                 xhr.send(JSON.stringify(wrappedPayload, null, 2));
             }
             else if (testemCallback) {
-                fluid.log("No coverage data, firing Testem callback immediately...");
+                console.log("No coverage data, firing Testem callback immediately...");
                 testemCallback();
             }
         };
 
 
-        if (fluid.get(options, "exposeCallback")) {
+        if (options && options.exposeCallback) {
             window.gpii.testem.coverage.afterTestsCallback = afterTestsCallback;
         }
 
-        var hookTestem = fluid.get(options, "hookTestem");
-        if (hookTestem && Testem) {
+        if (options && options.hookTestem && Testem) {
             Testem.afterTests(afterTestsCallback);
         }
 
-        var hookQUnit = fluid.get(options, "hookQUnit");
-        if (hookQUnit && QUnit) {
+        if (options && options.hookQUnit && QUnit) {
             QUnit.done(afterTestsCallback);
         }
     };
