@@ -425,6 +425,9 @@ fluid.defaults("gpii.testem.base", {
         }
     },
     "browserArgs": {
+        "Firefox": [
+            "--no-remote"
+        ],
         "Chrome": [
             "--disable-extensions",
             "--memory-pressure-threshholds=1",
@@ -434,6 +437,7 @@ fluid.defaults("gpii.testem.base", {
     },
     "headlessBrowserArgs": {
         "Firefox": [
+            "--no-remote",
             "--headless"
         ],
         // See this ticket for details on the minimum options required to get "headless" Chrome working: https://github.com/testem/testem/issues/1106#issuecomment-298841383
