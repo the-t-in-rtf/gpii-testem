@@ -31,6 +31,7 @@
         "istanbul-lib-instrument": "2.3.2",
         "mkdirp": "0.5.1",
         "node-jqunit": "1.1.8",
+        "nyc": "13.1.0",
         "rimraf": "2.6.2",
         "testem": "2.10.0"
     },
@@ -42,7 +43,6 @@
         "gpii-webdriver": "1.0.2",
         "grunt": "1.0.3",
         "kettle": "1.8.0",
-        "nyc": "13.1.0",
         "qunitjs": "2.4.1"
     }
 }
