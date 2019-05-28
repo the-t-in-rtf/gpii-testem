@@ -21,6 +21,7 @@ setup_job:
   script:
     - choco install nodejs-lts -y
     - choco install chromedriver -y
+    - npm install -g grunt
     - do.ps1 -c "npm config set bin-links false --global"
   # required for Windows 7 VM
 #    - "net use v: \\\\vboxsrv\\vagrant  /yes"
