@@ -19,6 +19,7 @@ stages:                # Stages to perform when 'ci test' command is invoked
 setup_job:
   stage: setup
   script:
+    - choco upgrade googlechrome -y
     - choco install nodejs-lts -y
     - choco install chromedriver -y
     - npm install -g grunt
