@@ -452,7 +452,6 @@ fluid.defaults("gpii.testem.base", {
             }
         },
         cwd: "@expand:fluid.module.resolvePath({that}.options.cwd)",
-        //user_data_dir: "@expand:gpii.testem.resolveFluidModulePathSafely({that}.options.testemDir)",
         on_start: "{that}.handleTestemStart",
         on_exit:  "{that}.handleTestemExit",
         src_files: [], // Explicitly tell testem not to watch or host any "source" content.
@@ -647,7 +646,6 @@ fluid.defaults("gpii.testem.instrumentation", {
     },
     listeners: {
         "onTestemStart.instrument": {
-            //priority: "first",
             priority: "after:cleanup",
             funcName: "gpii.testem.coverage.instrumentSource",
             args:     ["{that}"]
