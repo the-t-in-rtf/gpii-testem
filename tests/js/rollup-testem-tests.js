@@ -6,10 +6,9 @@ var exec   = require("child_process").exec;
 
 require("../../");
 
-jqUnit.test("Testing 'safe rollup' with Testem.", function () {
+jqUnit.asyncTest("Testing 'safe rollup' with Testem.", function () {
     var command = "node node_modules/testem/testem.js ci --file tests/rollup-fixtures/testem.js";
 
-    jqUnit.stop();
     exec(command, {cwd: fluid.module.resolvePath("%gpii-testem") }, function (error, stdout, stderr) {
         jqUnit.start();
 

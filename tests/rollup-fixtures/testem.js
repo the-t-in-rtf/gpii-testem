@@ -8,7 +8,7 @@ var gpii  = fluid.registerNamespace("gpii");
 
 fluid.require("%gpii-testem");
 
-var testemComponent = gpii.testem.instrumentation({
+var testemComponent = gpii.testem.base({
     cwd:         __dirname, // required because we are working outside of our package root.
     testPages:   ["rollup.html"],
     sourceDirs: {
