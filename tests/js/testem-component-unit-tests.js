@@ -25,9 +25,8 @@ fluid.defaults("gpii.tests.testem.eventTestingHarness", {
 });
 
 jqUnit.module("Testing event wrapper....");
-jqUnit.test("A promise should resolve when the associated event is fired...", function () {
+jqUnit.asyncTest("A promise should resolve when the associated event is fired...", function () {
     jqUnit.expect(2);
-    jqUnit.stop();
     var testComponent = gpii.tests.testem.eventTestingHarness();
     var eventPromise = testComponent.getWrappedPromise();
     eventPromise.then(
@@ -76,10 +75,9 @@ jqUnit.test("The event listener should not throw an error if the promise is reje
 
 jqUnit.module("Testing promise timeout wrapper...");
 
-jqUnit.test("A promise should resolve after the a timeout if it is not rejected/resolve externally...", function () {
+jqUnit.asyncTest("A promise should resolve after the a timeout if it is not rejected/resolve externally...", function () {
     jqUnit.expect(1);
 
-    jqUnit.stop();
     var timeoutPromise = gpii.testem.addPromiseTimeout(fluid.promise(), "Timed out as expected...", 250);
 
     timeoutPromise.then(
@@ -94,12 +92,11 @@ jqUnit.test("A promise should resolve after the a timeout if it is not rejected/
     );
 });
 
-jqUnit.test("The timeout should be cleared if the promise is resolved externally...", function () {
+jqUnit.asyncTest("The timeout should be cleared if the promise is resolved externally...", function () {
     jqUnit.expect(1);
 
     var originalPromise = fluid.promise();
 
-    jqUnit.stop();
     gpii.testem.addPromiseTimeout(originalPromise, "Timed out as expected...", 250);
     originalPromise.then(
         function () {
@@ -118,12 +115,11 @@ jqUnit.test("The timeout should be cleared if the promise is resolved externally
     setTimeout(jqUnit.start, 300);
 });
 
-jqUnit.test("The timeout should be cleared if the promise is rejected externally...", function () {
+jqUnit.asyncTest("The timeout should be cleared if the promise is rejected externally...", function () {
     jqUnit.expect(1);
 
     var originalPromise = fluid.promise();
 
-    jqUnit.stop();
     gpii.testem.addPromiseTimeout(originalPromise, "Timed out as expected...", 250);
     originalPromise.then(
         function () {
