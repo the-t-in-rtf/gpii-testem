@@ -22,8 +22,7 @@ gpii.tests.testem.runner.runAllTests = function (that) {
 };
 
 gpii.tests.testem.runner.runSingleTest = function (that, testDef) {
-    jqUnit.test(testDef.name, function () {
-        jqUnit.stop();
+    jqUnit.asyncTest(testDef.name, function () {
         var command = fluid.stringTemplate(that.options.commandTemplate, testDef);
         exec(command, {cwd: __dirname }, function (error, stdout, stderr) {
             jqUnit.start();

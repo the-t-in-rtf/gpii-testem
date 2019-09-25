@@ -19,8 +19,10 @@ stages:                # Stages to perform when 'ci test' command is invoked
 setup_job:
   stage: setup
   script:
+    - choco upgrade googlechrome -y
     - choco install nodejs-lts -y
     - choco install chromedriver -y
+    - npm install -g grunt
     - do.ps1 -c "npm config set bin-links false --global"
   # required for Windows 7 VM
 #    - "net use v: \\\\vboxsrv\\vagrant  /yes"

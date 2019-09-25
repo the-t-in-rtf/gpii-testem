@@ -27,8 +27,7 @@ gpii.tests.testem.instrumenter.runAllTests = function (that) {
 };
 
 gpii.tests.testem.instrumenter.runSingleTest = function (testDef) {
-    jqUnit.test(testDef.name, function () {
-        jqUnit.stop();
+    jqUnit.asyncTest(testDef.name, function () {
         try {
             gpii.testem.instrumenter.instrument(testDef.inputPath, testDef.outputPath, testDef.instrumentationOptions).then(
                 function () {

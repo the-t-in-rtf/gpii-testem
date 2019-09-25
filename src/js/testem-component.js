@@ -144,55 +144,40 @@ gpii.testem.generateRimrafWrapper = function (path, rimrafOptions) {
  *
  * Remove all Testem browser data from this run.
  *
- * @param {String} path - The path to the directory which contains Testem's browser data from this run.
+ * @param {String} pathToCleanup - The path to the directory which contains Testem's browser data from this run.
  * @param {Object} rimrafOptions - Configuration options to pass when calling rimraf.
  * @return {Promise} - A promise that will be resolved when cleanup is complete, or rejected if there is an error.
  *
  */
-gpii.testem.cleanupTestemContent = function (path, rimrafOptions) {
-    var testemRegexp = /testem-.+/;
+gpii.testem.cleanupTestemContent = function (pathToCleanup, rimrafOptions) {
+    var togo = fluid.promise();
 
-    if (path) {
+    try {
+        var resolvedPath = gpii.testem.resolveFluidModulePathSafely(pathToCleanup);
+        var cleanupPromises = [];
+        cleanupPromises.push(gpii.testem.generateRimrafWrapper(resolvedPath, rimrafOptions));
 
-        var togo = fluid.promise();
 
-        togo.then(function () { fluid.log("Removed Testem content..."); });
-        try {
-            var resolvedPath = gpii.testem.resolveFluidModulePathSafely(path);
-
-            if (fs.existsSync(resolvedPath)) {
-                fs.readdir(resolvedPath, function (testemError, testemDirs) {
-                    if (testemError) {
-                        togo.reject(testemError);
-                    }
-                    else {
-                        var cleanupPromises = [];
-                        fluid.each(testemDirs, function (dirName) {
-                            if (dirName.match(testemRegexp)) {
-                                cleanupPromises.push(gpii.testem.generateRimrafWrapper(dirName, rimrafOptions));
-                            }
-                        });
-
-                        // Remove the enclosing directory as well...
-                        cleanupPromises.push(gpii.testem.generateRimrafWrapper(resolvedPath, rimrafOptions));
-
-                        var cleanupSequence = fluid.promise.sequence(cleanupPromises);
-                        cleanupSequence.then(togo.resolve, togo.reject);
-                    }
-                });
+        // Cleanup the empty directories Testem leaves in os.tmpDir();
+        var testemRegexp = /^Temp-.+/;
+        var tmpFiles = fs.readdirSync(os.tmpdir());
+        fluid.each(tmpFiles, function (tmpFile) {
+            if (tmpFile.match(testemRegexp)) {
+                var fullPath = path.resolve(os.tmpdir(), tmpFile);
+                cleanupPromises.push(gpii.testem.generateRimrafWrapper(fullPath, rimrafOptions));
             }
-            else {
-                fluid.log("No testem content found, skipping cleanup...");
-                togo.resolve();
-            }
+        });
 
-        }
-        catch (exception) {
-            togo.reject(exception);
-        }
-
-        return togo;
+        var cleanupSequence = fluid.promise.sequence(cleanupPromises);
+        cleanupSequence.then(function () {
+            if (!togo.disposition) { togo.resolve(); }
+        }, togo.reject);
     }
+    catch (error) {
+        togo.reject(error);
+    }
+
+    return togo;
 };
 
 /**
@@ -262,7 +247,11 @@ gpii.testem.cleanupDir = function (cleanupDef, rimrafOptions) {
  */
 gpii.testem.cleanup = function (stage, cleanupDefs, rimrafOptions) {
     var togo = fluid.promise();
-    togo.then(function () { fluid.log(stage, " cleanup completed successfully...");});
+    togo.then(
+        function () { fluid.log(stage, " cleanup completed successfully...");},
+        function (error) {
+            fluid.log("Cleanup failed:", JSON.stringify(error));
+        });
 
     var cleanupPromises = [];
     fluid.each(cleanupDefs, function (singleDirEntry) {
@@ -463,7 +452,6 @@ fluid.defaults("gpii.testem.base", {
             }
         },
         cwd: "@expand:fluid.module.resolvePath({that}.options.cwd)",
-        user_data_dir: "@expand:gpii.testem.resolveFluidModulePathSafely({that}.options.testemDir)",
         on_start: "{that}.handleTestemStart",
         on_exit:  "{that}.handleTestemExit",
         src_files: [], // Explicitly tell testem not to watch or host any "source" content.
@@ -497,6 +485,7 @@ fluid.defaults("gpii.testem.base", {
             args:     ["Initial", "{that}.options.cleanup.initial", "{that}.options.rimrafOptions"] // , rimrafOptions
         },
         "onTestemStart.constructFixtures": {
+            //priority: "first",
             priority: "after:cleanup",
             func:     "{that}.events.constructFixtures.fire"
         },
