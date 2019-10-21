@@ -27,20 +27,33 @@
         var afterTestsCallback = function (config, data, testemCallback) {
             if (window.__coverage__) {
                 var xhr = new XMLHttpRequest();
-                xhr.onreadystatechange = function () {
-                    if (this.readyState === 4) {
-                        if (this.status === 200) {
-                            console.log("Saved coverage data.");
-                        }
-                        else {
-                            console.error("Error saving coverage data:", this.responseText);
-                        }
+
+                xhr.addEventListener("abort", function () {
+                    console.error("The coverage send request was aborted.");
+                });
+
+                xhr.addEventListener("error", function (event) {
+                    var errorDetails = xhr.responseText || JSON.stringify(event);
+                    console.error("The coverage send request encountered an error:\n" + errorDetails);
+                });
+
+                xhr.addEventListener("timeout", function () {
+                    console.error("The coverage send request timed out.");
+                });
+
+                xhr.addEventListener("load", function () {
+                    if (this.status === 200) {
+                        console.log("Saved coverage data.");
 
                         if (testemCallback) {
                             testemCallback();
                         }
                     }
-                };
+                    else {
+                        console.error("Error saving coverage data:", this.responseText);
+                    }
+                });
+
                 xhr.open("POST", "http://localhost:" + options.coveragePort + "/coverage");
                 xhr.setRequestHeader("Content-type", "application/json");
                 var wrappedPayload = {
