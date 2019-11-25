@@ -24,7 +24,7 @@ gpii.testem.reporter.report = function (that) {
         promise.resolve();
     }
     catch (error) {
-        console.log("NYC ERROR:", JSON.stringify(error, null, 2));
+        fluid.log(fluid.logLevel.WARN, "NYC ERROR:", JSON.stringify(error, null, 2));
         promise.reject(error.stack || error.message || error);
     }
     return promise;

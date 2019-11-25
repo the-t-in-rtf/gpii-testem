@@ -29,20 +29,24 @@
                 var xhr = new XMLHttpRequest();
 
                 xhr.addEventListener("abort", function () {
+                    //eslint-disable-next-line no-console
                     console.error("The coverage send request was aborted.");
                 });
 
                 xhr.addEventListener("error", function (event) {
                     var errorDetails = xhr.responseText || JSON.stringify(event);
+                    //eslint-disable-next-line no-console
                     console.error("The coverage send request encountered an error:\n" + errorDetails);
                 });
 
                 xhr.addEventListener("timeout", function () {
+                    //eslint-disable-next-line no-console
                     console.error("The coverage send request timed out.");
                 });
 
                 xhr.addEventListener("load", function () {
                     if (this.status === 200) {
+                        //eslint-disable-next-line no-console
                         console.log("Saved coverage data.");
 
                         if (testemCallback) {
@@ -50,6 +54,7 @@
                         }
                     }
                     else {
+                        //eslint-disable-next-line no-console
                         console.error("Error saving coverage data:", this.responseText);
                     }
                 });
@@ -77,6 +82,7 @@
                 xhr.send(JSON.stringify(wrappedPayload, null, 2));
             }
             else if (testemCallback) {
+                //eslint-disable-next-line no-console
                 console.log("No coverage data, firing Testem callback immediately...");
                 testemCallback();
             }

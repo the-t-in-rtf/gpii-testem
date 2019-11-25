@@ -36,6 +36,7 @@ gpii.tests.testem.instrumentationTiming.sleep = function (timeout) {
  */
 gpii.tests.testem.instrumentationTiming.instrumentSlowly = function (that) {
     gpii.tests.testem.instrumentationTiming.sleep(that.options.instrumentationDelay);
+    //eslint-disable-next-line no-console
     console.log("finally instrumenting code...");
     gpii.testem.coverage.instrumentSource(that);
 };

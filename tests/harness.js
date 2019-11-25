@@ -9,6 +9,7 @@ fluid.registerNamespace("gpii.tests.testem.harness");
 
 // Some of our temporary directories are based on the component ID.  This bit of logging gives us a way to find out where things are stored from the outside.
 gpii.tests.testem.harness.outputOptions = function (that) {
+    //eslint-disable-next-line no-console
     console.log(
         "= START TESTEM COMPONENT OPTIONS =\n",
         JSON.stringify(

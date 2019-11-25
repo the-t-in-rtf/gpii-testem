@@ -214,7 +214,7 @@ gpii.testem.instrumenter.instrumentAllFiles = function (filesToInstrument, baseI
                 singleFileSequence.then(instrumentationOuterPromise.resolve, instrumentationOuterPromise.reject);
             }
             catch (error) {
-                fluid.log("Error instrumenting file '", inputPath, "':", error);
+                fluid.log(fluid.logLevel.WARN, "Error instrumenting file '", inputPath, "':", error);
                 instrumentationOuterPromise.reject(error);
             }
 
