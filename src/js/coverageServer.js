@@ -107,7 +107,7 @@ gpii.testem.coverage.express.generateRouterSources = function (sourceDirs, conte
 fluid.defaults("gpii.testem.coverage.express", {
     gradeNames:  ["gpii.express"],
     sourceDirs:  {},
-    conparsePrioritytentDirs: {},
+    contentDirs: {},
     components: {
         coverageRouter: {
             type: "gpii.testem.coverage.router",

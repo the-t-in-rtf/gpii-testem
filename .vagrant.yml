@@ -8,8 +8,6 @@ env:
       memory: 2048             # amount of RAM memory (in Mb)
       clone: true              # use the linked_clone Vagrant feature
       autostart: true
-      # Swap these lines to test with the (very old) Windows 7 VM
-#      box: 	 inclusivedesign/windows7-eval-x64-Apps
       box: inclusivedesign/windows10-eval-x64-Apps
 
 stages:                # Stages to perform when 'ci test' command is invoked
@@ -19,14 +17,12 @@ stages:                # Stages to perform when 'ci test' command is invoked
 setup_job:
   stage: setup
   script:
-    - choco upgrade googlechrome -y
     - choco install nodejs-lts -y
     - choco install chromedriver -y
+    - choco upgrade googlechrome -y
+    - choco upgrade firefox -y
     - npm install -g grunt
     - do.ps1 -c "npm config set bin-links false --global"
-  # required for Windows 7 VM
-#    - "net use v: \\\\vboxsrv\\vagrant  /yes"
-#    - "do.ps1 -c 'net use v: \\\\VBOXSVR\\vagrant /yes'"
 
 test_job:
   stage: test          # name of the stage

@@ -15,7 +15,7 @@ gpii.testem.resolvePathSafely = function (basePath, subPath) {
         return resolvedPath;
     }
     catch (error) {
-        console.error(error);
+        fluid.log(fluid.logLevel.FAIL, error);
     }
 };
 
@@ -32,6 +32,6 @@ gpii.testem.resolveFluidModulePathSafely = function (path) {
         return resolvedPath;
     }
     catch (error) {
-        console.error(error);
+        fluid.log(fluid.logLevel.FAIL, error);
     }
 };

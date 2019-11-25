@@ -28,7 +28,8 @@ gpii.tests.testem.runner.runSingleTest = function (that, testDef) {
             jqUnit.start();
             if (testDef.expectedErrors) {
                 fluid.each(fluid.makeArray(testDef.expectedErrors), function (expectedError) {
-                    jqUnit.assertTrue("The console should contain the error '" + expectedError + "'...", stderr.indexOf(expectedError) !== -1);
+                    var hasError = stderr.indexOf(expectedError) !== -1 || stdout.indexOf(expectedError) !== -1;
+                    jqUnit.assertTrue("The console should contain the error '" + expectedError + "'...", hasError);
                 });
             }
             else if (error) {
@@ -175,7 +176,7 @@ fluid.defaults("gpii.tests.testem.runner", {
             configFile:    "../testem-fixtures/failure-modes/testem-failure-modes.js",
             hasCoverage:   false,
             expectedErrors: [
-                "TypeError: Cannot read property 'indexOf' of null"
+                "TypeError"
             ]
         }
     },

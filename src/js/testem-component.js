@@ -122,13 +122,13 @@ gpii.testem.addPromiseTimeout = function (originalPromise, rejectionPayload, tim
  *
  */
 gpii.testem.getTestemOptions = function (that) {
-    return that.options.testemOptions;
+    return fluid.copy(that.options.testemOptions);
 };
 
 gpii.testem.generateRimrafWrapper = function (path, rimrafOptions) {
     return function () {
         var rimrafPromise = fluid.promise();
-        rimraf(path, rimrafOptions, function (rimrafError) {
+        rimraf(path, fluid.copy(rimrafOptions), function (rimrafError) {
             if (rimrafError) {
                 rimrafPromise.reject(rimrafError);
             }
@@ -209,9 +209,9 @@ gpii.testem.cleanupDir = function (cleanupDef, rimrafOptions) {
                     promise.resolve();
                 }
                 else {
-                    rimraf(resolvedPath, rimrafOptions, function (error) {
+                    rimraf(resolvedPath, fluid.copy(rimrafOptions), function (error) {
                         if (error) {
-                            fluid.log(fluid.logLevel.ERROR, "Error removing ", cleanupDef.name, " content:", error);
+                            fluid.log(fluid.logLevel.WARN, "Error removing ", cleanupDef.name, " content:", error);
                         }
                         else {
                             fluid.log("Removed ", cleanupDef.name, " content...");
@@ -221,7 +221,7 @@ gpii.testem.cleanupDir = function (cleanupDef, rimrafOptions) {
                 }
             }
             catch (error) {
-                console.error(error);
+                fluid.log(fluid.logLevel.WARN, error);
                 promise.resolve();
             }
             return promise;
@@ -250,7 +250,8 @@ gpii.testem.cleanup = function (stage, cleanupDefs, rimrafOptions) {
     togo.then(
         function () { fluid.log(stage, " cleanup completed successfully...");},
         function (error) {
-            fluid.log("Cleanup failed:", JSON.stringify(error));
+            var errorMessage = fluid.get(error, "stack") || fluid.get(error, "message") || error;
+            fluid.log("Cleanup failed:", JSON.stringify(errorMessage));
         });
 
     var cleanupPromises = [];
@@ -562,7 +563,7 @@ gpii.testem.coverage.instrumentSource = function (that) {
             fluid.log("Finished instrumentation...");
         },
         function (error) {
-            console.error("Instrumentation error:", error);
+            fluid.log(fluid.logLevel.FAIL, "Instrumentation error:\n" + error);
             fluid.fail(error);
         }
     );
