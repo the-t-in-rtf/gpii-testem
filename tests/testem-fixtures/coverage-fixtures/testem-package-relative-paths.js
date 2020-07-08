@@ -2,12 +2,11 @@
 /* eslint-env node */
 "use strict";
 var fluid = require("infusion");
-var gpii  = fluid.registerNamespace("gpii");
 
 require("../../harness");
 require("./package-relative");
 
-var testemComponent = gpii.tests.testem.harness({
+var testemComponent = fluid.tests.testem.harness({
     coveragePort: 7018,
     testPages:   ["complete.html"],
     cwd: "%package-relative",
@@ -18,7 +17,7 @@ var testemComponent = gpii.tests.testem.harness({
         src: "%package-relative/src"
     },
     contentDirs: {
-        nm: "%gpii-testem/node_modules"
+        nm: "%fluid-testem/node_modules"
     }
 });
 

@@ -7,7 +7,6 @@
 /* eslint-env node */
 "use strict";
 var fluid     = require("infusion");
-var gpii      = fluid.registerNamespace("gpii");
 var fs        = require("fs");
 var path      = require("path");
 var mkdirp    = require("mkdirp");
@@ -17,10 +16,10 @@ var istanbul = require("istanbul-lib-instrument");
 
 require("./lib/resolveSafely");
 
-fluid.registerNamespace("gpii.testem.instrumenter");
+fluid.registerNamespace("fluid.testem.instrumenter");
 
 // The default options.  See the instrumenter docs for details.
-gpii.testem.instrumenter.defaultOptions = {
+fluid.testem.instrumenter.defaultOptions = {
     sources:    ["./**/*.js"],
     excludes:   ["./node_modules/**/*", "./.git/**/*", "./reports/**/*", "./coverage/**/*", "./.idea/**/*", "./.vagrant/**/*", "tests/**/*", "./instrumented/**/*"],
     nonSources: ["./**/*.!(js)", "./Gruntfile.js"],
@@ -40,11 +39,11 @@ gpii.testem.instrumenter.defaultOptions = {
  * @return {Promise} - A `fluid.promise` that will be resolved when the full instrumentation is complete or rejected if there is an error at any point.
  *
  */
-gpii.testem.instrumenter.instrument = function (inputPath, outputPath, instrumentationOptions) {
+fluid.testem.instrumenter.instrument = function (inputPath, outputPath, instrumentationOptions) {
     var promises = [];
 
-    var resolvedInputPath  = gpii.testem.resolveFluidModulePathSafely(inputPath);
-    var resolvedOutputPath = gpii.testem.resolveFluidModulePathSafely(outputPath);
+    var resolvedInputPath  = fluid.testem.resolveFluidModulePathSafely(inputPath);
+    var resolvedOutputPath = fluid.testem.resolveFluidModulePathSafely(outputPath);
 
     // User-supplied patterns should completely replace the originals.
     var mergePolicy = {
@@ -53,16 +52,16 @@ gpii.testem.instrumenter.instrument = function (inputPath, outputPath, instrumen
         nonSources: "replace"
     };
 
-    var combinedInstrumentationOptions = fluid.merge(mergePolicy, gpii.testem.instrumenter.defaultOptions, instrumentationOptions || {});
+    var combinedInstrumentationOptions = fluid.merge(mergePolicy, fluid.testem.instrumenter.defaultOptions, instrumentationOptions || {});
 
     // Instrument files that are part of our "sources" pattern, but which are not defined as excluded or non-sources.
     var sourceFileWrappedPromise = fluid.promise();
     promises.push(sourceFileWrappedPromise);
     var sourcesToExclude = combinedInstrumentationOptions.excludes.concat(combinedInstrumentationOptions.nonSources);
-    var sourceFilePromise = gpii.testem.instrumenter.findFilesMatchingFilter(resolvedInputPath, combinedInstrumentationOptions.sources, sourcesToExclude);
+    var sourceFilePromise = fluid.testem.instrumenter.findFilesMatchingFilter(resolvedInputPath, combinedInstrumentationOptions.sources, sourcesToExclude);
     sourceFilePromise.then(
         function (filesToInstrument) {
-            var instrumentationPromise = gpii.testem.instrumenter.instrumentAllFiles(filesToInstrument, inputPath, resolvedOutputPath, combinedInstrumentationOptions);
+            var instrumentationPromise = fluid.testem.instrumenter.instrumentAllFiles(filesToInstrument, inputPath, resolvedOutputPath, combinedInstrumentationOptions);
             instrumentationPromise.then(sourceFileWrappedPromise.resolve, sourceFileWrappedPromise.reject);
         },
         sourceFileWrappedPromise.reject
@@ -71,10 +70,10 @@ gpii.testem.instrumenter.instrument = function (inputPath, outputPath, instrumen
     // Copy "non source" files which are not excluded.
     var nonSourceWrappedPromise = fluid.promise();
     promises.push(nonSourceWrappedPromise);
-    var nonSourcePromise = gpii.testem.instrumenter.findFilesMatchingFilter(resolvedInputPath, combinedInstrumentationOptions.nonSources, combinedInstrumentationOptions.excludes);
+    var nonSourcePromise = fluid.testem.instrumenter.findFilesMatchingFilter(resolvedInputPath, combinedInstrumentationOptions.nonSources, combinedInstrumentationOptions.excludes);
     nonSourcePromise.then(
         function (filesToCopy) {
-            var fileCopyPromise = gpii.testem.instrumenter.copyAllFiles(filesToCopy, inputPath, resolvedOutputPath);
+            var fileCopyPromise = fluid.testem.instrumenter.copyAllFiles(filesToCopy, inputPath, resolvedOutputPath);
             fileCopyPromise.then(nonSourceWrappedPromise.resolve, nonSourceWrappedPromise.reject);
         },
         nonSourceWrappedPromise.reject
@@ -91,7 +90,7 @@ gpii.testem.instrumenter.instrument = function (inputPath, outputPath, instrumen
  * non-negated patterns from `patterns` with "negative" patterns from `inversePatterns`, minus their leading exclamation
  * point.  So:
  *
- * gpii.testem.instrumenter.combinePositivePatterns(["onePos", "!oneNeg"], ["twoPos", "!twoNeg"]);
+ * fluid.testem.instrumenter.combinePositivePatterns(["onePos", "!oneNeg"], ["twoPos", "!twoNeg"]);
  *
  * Outputs: `["onePos", "twoPos"]`
  *
@@ -100,7 +99,7 @@ gpii.testem.instrumenter.instrument = function (inputPath, outputPath, instrumen
  * @return {Array} - An array representing all "positive" matches (see above).
  *
  */
-gpii.testem.instrumenter.combinePositivePatterns = function (patterns, inversePatterns) {
+fluid.testem.instrumenter.combinePositivePatterns = function (patterns, inversePatterns) {
     var positivePatterns = fluid.makeArray(patterns).filter(function (pattern)  { return pattern.indexOf("!") !== 0; });
     var negativeInversePatterns = fluid.makeArray(inversePatterns).filter(function (inversePattern) { return inversePattern.indexOf("!") === 0; });
     var positiveInversePatterns = negativeInversePatterns.map(function (inverseWithExclamation) { return inverseWithExclamation.substring(1); });
@@ -119,10 +118,10 @@ gpii.testem.instrumenter.combinePositivePatterns = function (patterns, inversePa
  * @return {Promise} - A `fluid.promise` that will be resolved with a list of matching paths, relative to `baseInputPath`, or rejected if there is an error.
  *
  */
-gpii.testem.instrumenter.findFilesMatchingFilter = function (baseInputPath, positiveRules, negativeRules) {
+fluid.testem.instrumenter.findFilesMatchingFilter = function (baseInputPath, positiveRules, negativeRules) {
     var promise = fluid.promise();
-    var positivePatterns = gpii.testem.instrumenter.combinePositivePatterns(positiveRules, negativeRules);
-    var negativePatterns = gpii.testem.instrumenter.combinePositivePatterns(negativeRules, positiveRules);
+    var positivePatterns = fluid.testem.instrumenter.combinePositivePatterns(positiveRules, negativeRules);
+    var negativePatterns = fluid.testem.instrumenter.combinePositivePatterns(negativeRules, positiveRules);
 
     // See https://github.com/isaacs/node-glob#options
     var options = {
@@ -165,7 +164,7 @@ gpii.testem.instrumenter.findFilesMatchingFilter = function (baseInputPath, posi
  * @return {Promise} - A `fluid.promise` that will be resolved when all files are instrumented, or rejected if there is an error.
  *
  */
-gpii.testem.instrumenter.instrumentAllFiles = function (filesToInstrument, baseInputPath, baseOutputPath, instrumentationOptions) {
+fluid.testem.instrumenter.instrumentAllFiles = function (filesToInstrument, baseInputPath, baseOutputPath, instrumentationOptions) {
     var resolvedBaseInputPath = fluid.module.resolvePath(baseInputPath);
     var resolvedBaseOutputPath = fluid.module.resolvePath(baseOutputPath);
     var instrumenter = istanbul.createInstrumenter(instrumentationOptions.istanbulOptions);
@@ -236,7 +235,7 @@ gpii.testem.instrumenter.instrumentAllFiles = function (filesToInstrument, baseI
  * @return {Promise} - A `fluid.promise` that will be resolved when all files are copied or rejected if there is an error.
  *
  */
-gpii.testem.instrumenter.copyAllFiles = function (filesToCopy, baseInputPath, baseOutputPath) {
+fluid.testem.instrumenter.copyAllFiles = function (filesToCopy, baseInputPath, baseOutputPath) {
     var resolvedBaseInputPath = fluid.module.resolvePath(baseInputPath);
     var resolvedBaseOutputPath = fluid.module.resolvePath(baseOutputPath);
     var promises = [];

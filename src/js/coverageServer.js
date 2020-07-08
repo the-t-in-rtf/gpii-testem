@@ -1,6 +1,6 @@
 /*
 
-    An instance of gpii.express that:
+    An instance of fluid.express that:
 
     1. Receives coverage data from browser tests.
     2. Hosts content that can be referred to in the tests using the testem "proxies" option.
@@ -16,24 +16,23 @@
 /* eslint-env node */
 "use strict";
 var fluid = require("infusion");
-var gpii  = fluid.registerNamespace("gpii");
 
-require("gpii-express");
+require("fluid-express");
 
 require("./coverageClientMiddleware");
 require("./coverageReceiverMiddleware");
 require("./lib/pathUtils");
 
-fluid.require("%gpii-testem");
+fluid.require("%fluid-testem");
 
-fluid.defaults("gpii.testem.coverage.router", {
-    gradeNames: ["gpii.express.router"],
+fluid.defaults("fluid.testem.coverage.router", {
+    gradeNames: ["fluid.express.router"],
     path: "/coverage",
     coveragePort: 7003,
     components: {
         // Allow content hosted (by proxy or otherwise) within Testem to communicate with us on our own port.
         corsHeaders: {
-            type: "gpii.express.middleware.headerSetter",
+            type: "fluid.express.middleware.headerSetter",
             options: {
                 priority: "first",
                 headers: {
@@ -52,13 +51,13 @@ fluid.defaults("gpii.testem.coverage.router", {
         },
         // Serve up the required coverage browser client that transmits results to `coverageCatcher` below.
         client: {
-            type: "gpii.testem.middleware.coverageClient",
+            type: "fluid.testem.middleware.coverageClient",
             options: {
-                coveragePort: "{gpii.testem.coverage.router}.options.coveragePort"
+                coveragePort: "{fluid.testem.coverage.router}.options.coveragePort"
             }
         },
         json: {
-            type: "gpii.express.middleware.bodyparser.json",
+            type: "fluid.express.middleware.bodyparser.json",
             options: {
                 priority: "after:client",
                 middlewareOptions: {
@@ -67,7 +66,7 @@ fluid.defaults("gpii.testem.coverage.router", {
             }
         },
         urlencoded: {
-            type: "gpii.express.middleware.bodyparser.urlencoded",
+            type: "fluid.express.middleware.bodyparser.urlencoded",
             options: {
                 priority: "after:json",
                 middlewareOptions: {
@@ -76,16 +75,16 @@ fluid.defaults("gpii.testem.coverage.router", {
             }
         },
         coverageReceiver: {
-            type: "gpii.testem.coverage.receiver.middleware",
+            type: "fluid.testem.coverage.receiver.middleware",
             options: {
                 priority:     "after:urlencoded",
-                coveragePort: "{gpii.testem.coverage.router}.options.coveragePort"
+                coveragePort: "{fluid.testem.coverage.router}.options.coveragePort"
             }
         }
     }
 });
 
-fluid.registerNamespace("gpii.testem.coverage.express");
+fluid.registerNamespace("fluid.testem.coverage.express");
 
 /**
  *
@@ -97,32 +96,32 @@ fluid.registerNamespace("gpii.testem.coverage.express");
  * @return {Array} - A copy of `contentDirs`, ordered by namespaced priorities.
  *
  */
-gpii.testem.coverage.express.generateRouterSources = function (sourceDirs, contentDirs) {
+fluid.testem.coverage.express.generateRouterSources = function (sourceDirs, contentDirs) {
     var combinedDefs = fluid.merge({}, sourceDirs, contentDirs);
-    var expandedDefs = fluid.transform(combinedDefs, gpii.testem.expandPath);
-    var orderedCombinedDirs = fluid.parsePriorityRecords(expandedDefs, "gpii-testem-router-content");
+    var expandedDefs = fluid.transform(combinedDefs, fluid.testem.expandPath);
+    var orderedCombinedDirs = fluid.parsePriorityRecords(expandedDefs, "fluid-testem-router-content");
     return orderedCombinedDirs;
 };
 
-fluid.defaults("gpii.testem.coverage.express", {
-    gradeNames:  ["gpii.express"],
+fluid.defaults("fluid.testem.coverage.express", {
+    gradeNames:  ["fluid.express"],
     sourceDirs:  {},
     contentDirs: {},
     components: {
         coverageRouter: {
-            type: "gpii.testem.coverage.router",
+            type: "fluid.testem.coverage.router",
             options: {
-                coveragePort: "{gpii.testem.coverage.express}.options.port"
+                coveragePort: "{fluid.testem.coverage.express}.options.port"
             }
         }
     },
     dynamicComponents: {
         contentRouter: {
-            sources: "@expand:gpii.testem.coverage.express.generateRouterSources({gpii.testem.coverage.express}.options.sourceDirs, {gpii.testem.coverage.express}.options.contentDirs)",
-            type:    "gpii.express.router.static",
+            sources: "@expand:fluid.testem.coverage.express.generateRouterSources({fluid.testem.coverage.express}.options.sourceDirs, {fluid.testem.coverage.express}.options.contentDirs)",
+            type:    "fluid.express.router.static",
             options: {
-                path:    "@expand:gpii.testem.extractRoutePath({source})",
-                content: "@expand:gpii.testem.extractContentPath({gpii.testem.coverage.express}.options.cwd, {source})",
+                path:    "@expand:fluid.testem.extractRoutePath({source})",
+                content: "@expand:fluid.testem.extractContentPath({fluid.testem.coverage.express}.options.cwd, {source})",
                 listeners: {
                     "onCreate.saySomething": {
                         funcName: "fluid.log",

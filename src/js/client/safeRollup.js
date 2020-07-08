@@ -1,8 +1,7 @@
 /* globals Testem, QUnit */
 (function (fluid, QUnit, Testem) {
     "use strict";
-    var gpii = fluid.registerNamespace("gpii");
-    fluid.registerNamespace("gpii.testem");
+    fluid.registerNamespace("fluid.testem");
 
     /**
      *
@@ -15,7 +14,7 @@
      * @param {String} [testemPrefix] - The (optional) prefix to prepend to all paths when Testem is available.
      *
      */
-    gpii.testem.safeRollup = function (rawTestSuitePaths, nonTestemPrefix, testemPrefix) {
+    fluid.testem.safeRollup = function (rawTestSuitePaths, nonTestemPrefix, testemPrefix) {
         testemPrefix = testemPrefix || "";
         var prefix = Testem ? testemPrefix : nonTestemPrefix;
         var testSuitePaths = rawTestSuitePaths.map(function (entry) {

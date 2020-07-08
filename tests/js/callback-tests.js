@@ -1,7 +1,6 @@
 /* eslint-env node */
 "use strict";
 var fluid = require("infusion");
-var gpii  = fluid.registerNamespace("gpii");
 
 var jqUnit = require("node-jqunit");
 
@@ -12,17 +11,17 @@ var path = require("path");
 require("../../");
 
 require("kettle");
-require("gpii-webdriver");
-gpii.webdriver.loadTestingSupport();
+require("fluid-webdriver");
+fluid.webdriver.loadTestingSupport();
 
-fluid.registerNamespace("gpii.tests.testem.callback");
+fluid.registerNamespace("fluid.tests.testem.callback");
 
 // Simple function to retrieve data our "test result collector" set aside on the client side.
-gpii.tests.testem.callback.fireCallback = function () {
-    window.gpii.testem.coverage.afterTestsCallback();
+fluid.tests.testem.callback.fireCallback = function () {
+    window.fluid.testem.coverage.afterTestsCallback();
 };
 
-gpii.tests.testem.callback.checkTestResults = function (that) {
+fluid.tests.testem.callback.checkTestResults = function (that) {
     var coverageFiles = fs.readdirSync(that.options.coverageDir);
     jqUnit.assertTrue("There should be coverage data.", coverageFiles && coverageFiles.length > 0);
     fluid.each(coverageFiles, function (filename) {
@@ -40,12 +39,12 @@ gpii.tests.testem.callback.checkTestResults = function (that) {
 
 };
 
-gpii.tests.testem.callback.cleanup = function (that) {
+fluid.tests.testem.callback.cleanup = function (that) {
     var promises = [];
 
     fluid.each(["coverageDir", "instrumentedSourceDir"], function (dirToClean) {
         var pathToClean = fluid.get(that, ["options", dirToClean]);
-        promises.push(gpii.testem.cleanupDir({ path: pathToClean }, {}));
+        promises.push(fluid.testem.cleanupDir({ path: pathToClean }, {}));
     });
 
     var sequence = fluid.promise.sequence(promises);
@@ -55,8 +54,8 @@ gpii.tests.testem.callback.cleanup = function (that) {
     );
 };
 
-fluid.defaults("gpii.tests.testem.callback.caseHolder", {
-    gradeNames: ["gpii.test.webdriver.caseHolder"],
+fluid.defaults("fluid.tests.testem.callback.caseHolder", {
+    gradeNames: ["fluid.test.webdriver.caseHolder"],
     rawModules: [{
         name: "Testing direct use of coverage client callback...",
         tests: [
@@ -77,7 +76,7 @@ fluid.defaults("gpii.tests.testem.callback.caseHolder", {
                     {
                         event:    "{testEnvironment}.webdriver.events.onSleepComplete",
                         listener: "{testEnvironment}.webdriver.executeScript",
-                        args:     [gpii.tests.testem.callback.fireCallback]
+                        args:     [fluid.tests.testem.callback.fireCallback]
                     },
                     // Give the data time to be transmitted.
                     {
@@ -86,7 +85,7 @@ fluid.defaults("gpii.tests.testem.callback.caseHolder", {
                     },
                     {
                         event:    "{testEnvironment}.webdriver.events.onSleepComplete",
-                        listener: "gpii.tests.testem.callback.checkTestResults",
+                        listener: "fluid.tests.testem.callback.checkTestResults",
                         args:     ["{testEnvironment}"]
                     }
                 ]
@@ -95,22 +94,22 @@ fluid.defaults("gpii.tests.testem.callback.caseHolder", {
     }]
 });
 
-gpii.tests.testem.callback.generateUniqueTmpDir = function (that, prefix) {
+fluid.tests.testem.callback.generateUniqueTmpDir = function (that, prefix) {
     return path.resolve(os.tmpdir(), prefix + "-" + that.id);
 };
 
-gpii.tests.testem.callback.instrumentSource = function (that) {
-    gpii.testem.instrumenter.instrument("%gpii-testem/tests/callback-fixtures/src", that.options.instrumentedSourceDir).then(function () {
+fluid.tests.testem.callback.instrumentSource = function (that) {
+    fluid.testem.instrumenter.instrument("%fluid-testem/tests/callback-fixtures/src", that.options.instrumentedSourceDir).then(function () {
         that.events.onSourceInstrumented.fire();
     }, fluid.fail);
 };
 
-fluid.defaults("gpii.tests.testem.callback.environment", {
-    gradeNames: ["gpii.test.webdriver.testEnvironment.withExpress"],
+fluid.defaults("fluid.tests.testem.callback.environment", {
+    gradeNames: ["fluid.test.webdriver.testEnvironment.withExpress"],
     coveragePrefix: "coverage",
-    coverageDir: "@expand:gpii.tests.testem.callback.generateUniqueTmpDir({that}, {that}.options.coveragePrefix)",
+    coverageDir: "@expand:fluid.tests.testem.callback.generateUniqueTmpDir({that}, {that}.options.coveragePrefix)",
     instrumentedPrefix: "instrumented",
-    instrumentedSourceDir: "@expand:gpii.tests.testem.callback.generateUniqueTmpDir({that}, {that}.options.instrumentedPrefix)",
+    instrumentedSourceDir: "@expand:fluid.tests.testem.callback.generateUniqueTmpDir({that}, {that}.options.instrumentedPrefix)",
     url: {
         expander: {
             funcName: "fluid.stringTemplate",
@@ -119,11 +118,11 @@ fluid.defaults("gpii.tests.testem.callback.environment", {
     },
     listeners: {
         "onCreate.instrumentSource": {
-            funcName: "gpii.tests.testem.callback.instrumentSource",
+            funcName: "fluid.tests.testem.callback.instrumentSource",
             args:     ["{that}"]
         },
         "onDestroy.cleanup": {
-            funcName: "gpii.tests.testem.callback.cleanup",
+            funcName: "fluid.tests.testem.callback.cleanup",
             args: ["{that}"]
         }
     },
@@ -139,13 +138,13 @@ fluid.defaults("gpii.tests.testem.callback.environment", {
     },
     components: {
         caseHolder: {
-            type: "gpii.tests.testem.callback.caseHolder"
+            type: "fluid.tests.testem.callback.caseHolder"
         },
         express: {
             options: {
                 components: {
                     coverage: {
-                        type: "gpii.testem.coverage.router",
+                        type: "fluid.testem.coverage.router",
                         options: {
                             coveragePort: "{testEnvironment}.options.port",
                             components: {
@@ -158,31 +157,31 @@ fluid.defaults("gpii.tests.testem.callback.environment", {
                                 },
                                 coverageReceiver: {
                                     options: {
-                                        coverageDir: "{gpii.tests.testem.callback.environment}.options.coverageDir"
+                                        coverageDir: "{fluid.tests.testem.callback.environment}.options.coverageDir"
                                     }
                                 }
                             }
                         }
                     },
                     nm: {
-                        type: "gpii.express.router.static",
+                        type: "fluid.express.router.static",
                         options: {
                             path:    "/node_modules",
-                            content: ["%gpii-testem/node_modules"]
+                            content: ["%fluid-testem/node_modules"]
                         }
                     },
                     tests: {
-                        type: "gpii.express.router.static",
+                        type: "fluid.express.router.static",
                         options: {
                             path:    "/tests",
-                            content: ["%gpii-testem/tests"]
+                            content: ["%fluid-testem/tests"]
                         }
                     },
                     src: {
-                        type: "gpii.express.router.static",
+                        type: "fluid.express.router.static",
                         options: {
                             path:    "/src",
-                            content: ["{gpii.tests.testem.callback.environment}.options.instrumentedSourceDir"]
+                            content: ["{fluid.tests.testem.callback.environment}.options.instrumentedSourceDir"]
                         }
                     }
                 }
@@ -191,4 +190,4 @@ fluid.defaults("gpii.tests.testem.callback.environment", {
     }
 });
 
-gpii.test.webdriver.allBrowsers({ baseTestEnvironment: "gpii.tests.testem.callback.environment" });
+fluid.test.webdriver.allBrowsers({ baseTestEnvironment: "fluid.tests.testem.callback.environment" });

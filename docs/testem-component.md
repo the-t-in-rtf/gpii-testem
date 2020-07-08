@@ -1,6 +1,6 @@
-# `gpii.testem`
+# `fluid.testem`
 
-The `gpii.testem` component is designed to:
+The `fluid.testem` component is designed to:
 
 1. Instrument the code under test.
 2. Start test fixtures.
@@ -18,7 +18,7 @@ see below.
 | `cwd`                     | `{String}`  | Defaults to `process.cwd()`, i.e. the directory from which the script was called. |
 | `testemDir`               | `{String}`  | The directory in which testem's browser settings and temporary files should be stored. |
 | `wrappedEventTimeout`     | `{Number}`  | How long to wait (in milliseconds) before triggering a timeout when waiting for key startup/shutdown events. |
-| `coveragePort` (required) | `{Number}`  | The port gpii-express should listen on to record coverage data. Defaults to `7000`.|
+| `coveragePort` (required) | `{Number}`  | The port fluid-express should listen on to record coverage data. Defaults to `7000`.|
 | `coverageUrl`             | `{String}`  | The URL on which the coverage listener should be run.  Set based on `coveragePort` by default. |
 | `coverageDir` (required)  | `{String}`  | The full or package-relative path where coverage data should be saved. By default, a unique subdirectory is created in `os.tmpdir()`. |
 | `reportsDir` (required)   | `{String}`  | The full or package-relative path where coverage reports and test results should be saved. By default, a unique subdirectory is created in `os.tmpdir()`. |
@@ -33,7 +33,7 @@ see below.
 | `cleanup.initial`         | `{Array}`   | An array of cleanup definitions (see below) to be cleaned up before the tests are run. |
 | `cleanup.final`           | `{Array}`   | An array of cleanup definitions (see below) to be cleaned up after the tests are run and all reporting is complete. |
 
-Please note, although you can change `options.testemOptions.framework`, `gpii.testem` is only tested with QUnit and is
+Please note, although you can change `options.testemOptions.framework`, `fluid.testem` is only tested with QUnit and is
 unlikely to work with other frameworks supported by Testem.
 
 ### Cleanup Definitions
@@ -49,7 +49,7 @@ attributes:
 
 ## Component Invokers
 
-### `{gpii.testem}.handleTestemStart(config, data, callback)`
+### `{fluid.testem}.handleTestemStart(config, data, callback)`
 
 * `config`: The configuration information Testem exposes as part of its lifecycle.
 * `data`: The data Testem exposes as part of its lifecycle.
@@ -61,7 +61,7 @@ An invoker which is called before testem begins its test run.  Starts a chain of
 instrument code, start test fixtures, and perform other preparatory work.  For details on how this works, see ["The
 Testem Event Lifecycle"](testem-lifecycle.md).
 
-### `{gpii.testem}.handleTestemExit(config, data, callback)`
+### `{fluid.testem}.handleTestemExit(config, data, callback)`
 
 * `config`: The configuration information Testem exposes as part of its lifecycle.
 * `data`: The data Testem exposes as part of its lifecycle.
@@ -72,7 +72,7 @@ Testem Event Lifecycle"](testem-lifecycle.md).
 An invoker which is called when Testem has completed all tests.  Used to stop test fixtures, prepare reports, and remove
 temporary content.  For details on how this works, see ["The Testem Event Lifecycle"](testem-lifecycle.md).
 
-### `{gpii.testem}.getTestemOptions()`
+### `{fluid.testem}.getTestemOptions()`
 
 An invoker which retrieves the Testem options, including all "generated" options, such as routes to replace the original
 source with instrumented source.  This invoker is intended to be used with `module.exports` to expose the component
@@ -122,7 +122,7 @@ The following sub-options are supported:
 
 By default, Testem generates browser content in the directory
 [`os.tmpdir()`](https://nodejs.org/api/os.html#os_os_tmpdir), which it does not clean up when the test run is complete.
-The `gpii.testem` component automatically cleans this up by default.  The component also cleans up instrumented code and
+The `fluid.testem` component automatically cleans this up by default.  The component also cleans up instrumented code and
 raw coverage data.
 
 ### Collecting Browser Coverage Data
@@ -138,19 +138,19 @@ so that combined reports can be prepared.
 
 #### Additional Components
 
-##### `gpii.testem.instrumentation`
+##### `fluid.testem.instrumentation`
 
 This grade instruments source itself and collects coverage data, but does not prepare a report at the end or remove the
 coverage data during its cleanup phase.  It is provided for use in combining reports from different test runs, such
 as when running node tests and browser tests in the same package.  See below for a detailed example.
 
-##### `gpii.testem.coverage`
+##### `fluid.testem.coverage`
 
 This grade collects coverage data, but does not instrument source.  It is intended for use when you have already
 instrumented the code by other means.  Please note, you must set `instrumentedSourceDir` (see above) to the location of
 your instrumented code to use this grade.  This grade only removes the temporary content generated by Testem itself, and
 not any pre-instrumented code or coverage data.  This grade is mainly provided for legacy setups, in almost all cases
-you should use the`gpii.testem.instrumentation` grade instead.
+you should use the`fluid.testem.instrumentation` grade instead.
 
 #### Example: Combining Node Coverage with Browser Coverage.
 
@@ -177,7 +177,7 @@ var fluid = require("infusion");
 fluid.require("%my-package");
 var my = registerNamespace("my");
 fluid.defaults("my.testem.grade", {
-    gradeNames: ["gpii.testem.coverage"],
+    gradeNames: ["fluid.testem.coverage"],
     reportsDir: "%my-package/reports",
     coverageDir: "%my-package/coverage",
     instrumentedSourceDir: "%my-package/instrumented",
@@ -199,7 +199,7 @@ Save this to `tests/testem.js`.
 
 For this example, you need to install a few modules, using a command like:
 
-`npm install --save-dev nyc rimraf gpii-testem`
+`npm install --save-dev nyc rimraf fluid-testem`
 
 Once you've done this, you'll need to update the `scripts` section of your `package.json`:
 

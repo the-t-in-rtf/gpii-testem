@@ -1,32 +1,30 @@
 /* eslint-env node */
 "use strict";
 var fluid = require("infusion");
-var gpii  = fluid.registerNamespace("gpii");
-
 var jqUnit = require("node-jqunit");
 
 require("../../");
 //require("../../src/js/coverageServer");
 
 require("kettle");
-require("gpii-webdriver");
-gpii.webdriver.loadTestingSupport();
+require("fluid-webdriver");
+fluid.webdriver.loadTestingSupport();
 
-fluid.registerNamespace("gpii.tests.testem.rollup.webdriver");
+fluid.registerNamespace("fluid.tests.testem.rollup.webdriver");
 
 // Simple function to retrieve data our "test result collector" set aside on the client side.
-gpii.tests.testem.rollup.webdriver.retrieveTestResults = function () {
+fluid.tests.testem.rollup.webdriver.retrieveTestResults = function () {
     return window.__testDetails;
 };
 
-gpii.tests.testem.rollup.webdriver.checkTestResults = function (results) {
+fluid.tests.testem.rollup.webdriver.checkTestResults = function (results) {
     jqUnit.assertEquals("There should have been four tests run.", 4, results.total);
     jqUnit.assertEquals("All tests should have passed.", 4, results.passed);
     jqUnit.assertEquals("No tests should have failed.", 0, results.failed);
 };
 
-fluid.defaults("gpii.tests.testem.rollup.webdriver.caseHolder", {
-    gradeNames: ["gpii.test.webdriver.caseHolder"],
+fluid.defaults("fluid.tests.testem.rollup.webdriver.caseHolder", {
+    gradeNames: ["fluid.test.webdriver.caseHolder"],
     rawModules: [{
         name: "Testing 'safe rollup' outside of Testem...",
         tests: [
@@ -47,11 +45,11 @@ fluid.defaults("gpii.tests.testem.rollup.webdriver.caseHolder", {
                     {
                         event:    "{testEnvironment}.webdriver.events.onSleepComplete",
                         listener: "{testEnvironment}.webdriver.executeScript",
-                        args:     [gpii.tests.testem.rollup.webdriver.retrieveTestResults]
+                        args:     [fluid.tests.testem.rollup.webdriver.retrieveTestResults]
                     },
                     {
                         event:    "{testEnvironment}.webdriver.events.onExecuteScriptComplete",
-                        listener: "gpii.tests.testem.rollup.webdriver.checkTestResults",
+                        listener: "fluid.tests.testem.rollup.webdriver.checkTestResults",
                         args:     ["{arguments}.0"]
                     }
                 ]
@@ -60,14 +58,14 @@ fluid.defaults("gpii.tests.testem.rollup.webdriver.caseHolder", {
     }]
 });
 
-gpii.tests.testem.rollup.webdriver.instrumentSource = function (that) {
-    gpii.testem.instrumenter.instrument("%gpii-testem/src", "%gpii-testem/instrumented").then(function () {
+fluid.tests.testem.rollup.webdriver.instrumentSource = function (that) {
+    fluid.testem.instrumenter.instrument("%fluid-testem/src", "%fluid-testem/instrumented").then(function () {
         that.events.onSourceInstrumented.fire();
     }, fluid.fail);
 };
 
-fluid.defaults("gpii.tests.testem.rollup.webdriver.environment", {
-    gradeNames: ["gpii.test.webdriver.testEnvironment.withExpress"],
+fluid.defaults("fluid.tests.testem.rollup.webdriver.environment", {
+    gradeNames: ["fluid.test.webdriver.testEnvironment.withExpress"],
     rollupUrl: {
         expander: {
             funcName: "fluid.stringTemplate",
@@ -76,7 +74,7 @@ fluid.defaults("gpii.tests.testem.rollup.webdriver.environment", {
     },
     listeners: {
         "onCreate.instrumentSource": {
-            funcName: "gpii.tests.testem.rollup.webdriver.instrumentSource",
+            funcName: "fluid.tests.testem.rollup.webdriver.instrumentSource",
             args:     ["{that}"]
         }
     },
@@ -92,13 +90,13 @@ fluid.defaults("gpii.tests.testem.rollup.webdriver.environment", {
     },
     components: {
         caseHolder: {
-            type: "gpii.tests.testem.rollup.webdriver.caseHolder"
+            type: "fluid.tests.testem.rollup.webdriver.caseHolder"
         },
         express: {
             options: {
                 components: {
                     coverage: {
-                        type: "gpii.testem.coverage.router",
+                        type: "fluid.testem.coverage.router",
                         options: {
                             coveragePort: "{testEnvironment}.options.port",
                             components: {
@@ -110,31 +108,31 @@ fluid.defaults("gpii.tests.testem.rollup.webdriver.environment", {
                                 },
                                 coverageReceiver: {
                                     options: {
-                                        coverageDir: "%gpii-testem/coverage"
+                                        coverageDir: "%fluid-testem/coverage"
                                     }
                                 }
                             }
                         }
                     },
                     nm: {
-                        type: "gpii.express.router.static",
+                        type: "fluid.express.router.static",
                         options: {
                             path:    "/node_modules",
-                            content: ["%gpii-testem/node_modules"]
+                            content: ["%fluid-testem/node_modules"]
                         }
                     },
                     tests: {
-                        type: "gpii.express.router.static",
+                        type: "fluid.express.router.static",
                         options: {
                             path:    "/tests",
-                            content: ["%gpii-testem/tests"]
+                            content: ["%fluid-testem/tests"]
                         }
                     },
                     src: {
-                        type: "gpii.express.router.static",
+                        type: "fluid.express.router.static",
                         options: {
                             path:    "/src",
-                            content: ["%gpii-testem/instrumented"]
+                            content: ["%fluid-testem/instrumented"]
                         }
                     }
                 }
@@ -143,4 +141,4 @@ fluid.defaults("gpii.tests.testem.rollup.webdriver.environment", {
     }
 });
 
-gpii.test.webdriver.allBrowsers({ baseTestEnvironment: "gpii.tests.testem.rollup.webdriver.environment" });
+fluid.test.webdriver.allBrowsers({ baseTestEnvironment: "fluid.tests.testem.rollup.webdriver.environment" });

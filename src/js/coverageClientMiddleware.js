@@ -1,14 +1,13 @@
 /* eslint-env node */
 "use strict";
 var fluid = require("infusion");
-var gpii  = fluid.registerNamespace("gpii");
 
 var fs = require("fs");
 
-require("gpii-express");
+require("fluid-express");
 
-fluid.registerNamespace("gpii.testem.middleware.coverageClient");
-gpii.testem.middleware.coverageClient.middlewareImpl = function (that, req, res, next) {
+fluid.registerNamespace("fluid.testem.middleware.coverageClient");
+fluid.testem.middleware.coverageClient.middlewareImpl = function (that, req, res, next) {
     fs.readFile(fluid.module.resolvePath(that.options.baseClientSource), function (error, data) {
         if (error) {
             next(error);
@@ -28,18 +27,18 @@ gpii.testem.middleware.coverageClient.middlewareImpl = function (that, req, res,
     });
 };
 
-fluid.defaults("gpii.testem.middleware.coverageClient", {
-    gradeNames: ["gpii.express.middleware"],
+fluid.defaults("fluid.testem.middleware.coverageClient", {
+    gradeNames: ["fluid.express.middleware"],
     path:    "/client",
-    baseClientSource: "%gpii-testem/src/js/client/coverageSender.js",
-    clientInvokerTemplatePath: "%gpii-testem/src/templates/coverage-client-invoker.handlebars" ,
+    baseClientSource: "%fluid-testem/src/js/client/coverageSender.js",
+    clientInvokerTemplatePath: "%fluid-testem/src/templates/coverage-client-invoker.handlebars" ,
     coveragePort: 7000,
     hookTestem: true,
     hookQUnit: false,
     exposeCallback: false,
     invokers: {
         middleware: {
-            funcName: "gpii.testem.middleware.coverageClient.middlewareImpl",
+            funcName: "fluid.testem.middleware.coverageClient.middlewareImpl",
             args:     ["{that}", "{arguments}.0", "{arguments}.1", "{arguments}.2"] // req, res, next
         }
     }

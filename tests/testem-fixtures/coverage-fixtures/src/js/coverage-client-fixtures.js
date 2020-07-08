@@ -1,7 +1,7 @@
 (function (fluid) {
     "use strict";
 
-    fluid.defaults("gpii.tests.testem.coverage.caseHolder.incomplete", {
+    fluid.defaults("fluid.tests.testem.coverage.caseHolder.incomplete", {
         gradeNames: ["fluid.test.testCaseHolder"],
         modules: [{
             name: "Testing incomplete test coverage.",
@@ -24,21 +24,21 @@
         }],
         components: {
             coverage: {
-                type: "gpii.tests.testem.coverage"
+                type: "fluid.tests.testem.coverage"
             }
         }
     });
 
-    fluid.defaults("gpii.tests.testem.coverage.environment.incomplete", {
+    fluid.defaults("fluid.tests.testem.coverage.environment.incomplete", {
         gradeNames: ["fluid.test.testEnvironment"],
         components: {
             caseHolder: {
-                type: "gpii.tests.testem.coverage.caseHolder.incomplete"
+                type: "fluid.tests.testem.coverage.caseHolder.incomplete"
             }
         }
     });
 
-    fluid.defaults("gpii.tests.testem.coverage.caseHolder.complete", {
+    fluid.defaults("fluid.tests.testem.coverage.caseHolder.complete", {
         gradeNames: ["fluid.test.testCaseHolder"],
         modules: [{
             name: "Testing complete test coverage.",
@@ -75,16 +75,16 @@
         }],
         components: {
             coverage: {
-                type: "gpii.tests.testem.coverage"
+                type: "fluid.tests.testem.coverage"
             }
         }
     });
 
-    fluid.defaults("gpii.tests.testem.coverage.environment.complete", {
+    fluid.defaults("fluid.tests.testem.coverage.environment.complete", {
         gradeNames: ["fluid.test.testEnvironment"],
         components: {
             caseHolder: {
-                type: "gpii.tests.testem.coverage.caseHolder.complete"
+                type: "fluid.tests.testem.coverage.caseHolder.complete"
             }
         }
     });

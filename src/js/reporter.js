@@ -7,15 +7,14 @@
 /* eslint-env node */
 "use strict";
 var fluid   = require("infusion");
-var gpii    = fluid.registerNamespace("gpii");
 var NYC     = require("nyc");
 var process = require("process");
 
 require("./lib/resolveSafely");
 
-fluid.registerNamespace("gpii.testem.reporter");
+fluid.registerNamespace("fluid.testem.reporter");
 
-gpii.testem.reporter.report = function (that) {
+fluid.testem.reporter.report = function (that) {
     fluid.log("Generating coverage report.");
     var promise = fluid.promise();
     var nyc = new NYC(that.options.nycOptions);
@@ -30,21 +29,21 @@ gpii.testem.reporter.report = function (that) {
     return promise;
 };
 
-fluid.defaults("gpii.testem.reporter", {
+fluid.defaults("fluid.testem.reporter", {
     gradeNames:  ["fluid.component"],
     reportsDir:  "reports",
     coverageDir: "coverage",
     reports:     ["html", "text-summary"],
     cwd:         process.cwd(),
     nycOptions: {
-        cwd:           "@expand:gpii.testem.resolveFluidModulePathSafely({that}.options.cwd)",
+        cwd:           "@expand:fluid.testem.resolveFluidModulePathSafely({that}.options.cwd)",
         reporter:      "@expand:fluid.makeArray({that}.options.reports)",
-        reportDir:     "@expand:gpii.testem.resolveFluidModulePathSafely({that}.options.reportsDir)",
-        tempDirectory: "@expand:gpii.testem.resolveFluidModulePathSafely({that}.options.coverageDir)"
+        reportDir:     "@expand:fluid.testem.resolveFluidModulePathSafely({that}.options.reportsDir)",
+        tempDirectory: "@expand:fluid.testem.resolveFluidModulePathSafely({that}.options.coverageDir)"
     },
     invokers: {
         report: {
-            funcName: "gpii.testem.reporter.report",
+            funcName: "fluid.testem.reporter.report",
             args:     ["{that}"]
         }
     }

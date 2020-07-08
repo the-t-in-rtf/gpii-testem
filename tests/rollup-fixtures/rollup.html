@@ -10,7 +10,7 @@
     <script src="/testem.js"></script>
     <script src="../../node_modules/infusion/tests/lib/qunit/addons/composite/qunit-composite.js"></script>
 
-    <!-- The static "safe rollup" function provided by gpii-testem -->
+    <!-- The static "safe rollup" function provided by fluid-testem -->
     <script src="../../node_modules/infusion/dist/infusion-all.js"></script>
     <script src="../../src/js/client/safeRollup.js"></script>
 
@@ -30,10 +30,10 @@
 <!-- This could easily be in a separate JS file, but is inline here for purposes of illustration -->
 <script type="text/javascript">
     // Two arguments, i.e. no Testem prefix
-    gpii.testem.safeRollup(["/tests/rollup-fixtures/test1.html", "/tests/rollup-fixtures/test2.html"], "../..");
+    fluid.testem.safeRollup(["/tests/rollup-fixtures/test1.html", "/tests/rollup-fixtures/test2.html"], "../..");
 
     // Three arguments, i.e. an explicit Testem prefix
-    gpii.testem.safeRollup(["test3.html", "test4.html"], "", "/tests/rollup-fixtures/");
+    fluid.testem.safeRollup(["test3.html", "test4.html"], "", "/tests/rollup-fixtures/");
 </script>
 </body>
 </html>

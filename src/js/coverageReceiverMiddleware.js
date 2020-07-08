@@ -1,21 +1,20 @@
 /* eslint-env node */
 "use strict";
 var fluid = require("infusion");
-var gpii  = fluid.registerNamespace("gpii");
 
-require("gpii-express");
-//fluid.require("%gpii-express");
+require("fluid-express");
+//fluid.require("%fluid-express");
 
 var fs     = require("fs");
 var path   = require("path");
 var mkdirp = require("mkdirp");
 
-fluid.registerNamespace("gpii.testem.coverage.receiver");
+fluid.registerNamespace("fluid.testem.coverage.receiver");
 
 
 // Adapted from `fluid.match`: https://github.com/fluid-project/infusion/blob/16a963d63dce313ab3f2e3a81c725c2cbef0af79/src/framework/core/js/FluidDocument.js#L31
 // (We can't use it directly because the rest of that file is designed to work only in a browser).
-gpii.testem.coverage.receiver.uaMatch = function (ua) {
+fluid.testem.coverage.receiver.uaMatch = function (ua) {
     ua = ua.toLowerCase();
 
     var match = /(chrome)[ \/]([\w.]+)/.exec( ua ) ||
@@ -30,19 +29,19 @@ gpii.testem.coverage.receiver.uaMatch = function (ua) {
     };
 };
 
-gpii.testem.coverage.receiver.initMiddleware = function (that) {
+fluid.testem.coverage.receiver.initMiddleware = function (that) {
     if (that.options.coverageDir) {
         var resolvedCoverageDir = fluid.module.resolvePath(that.options.coverageDir);
         mkdirp(resolvedCoverageDir);
     }
 };
 
-gpii.testem.coverage.receiver.middlewareImpl = function (that, request, response) {
+fluid.testem.coverage.receiver.middlewareImpl = function (that, request, response) {
     var resolvedCoverageDir = fluid.module.resolvePath(that.options.coverageDir);
 
     var coveragePayload = request.body.payload;
 
-    var browser      = gpii.testem.coverage.receiver.uaMatch(fluid.get(coveragePayload, "navigator.userAgent"));
+    var browser      = fluid.testem.coverage.receiver.uaMatch(fluid.get(coveragePayload, "navigator.userAgent"));
 
     var testPath     = fluid.get(coveragePayload.document, "URL");
     var testFilename = testPath ? testPath.split("/").pop() : "unknown";
@@ -60,19 +59,19 @@ gpii.testem.coverage.receiver.middlewareImpl = function (that, request, response
     });
 };
 
-fluid.defaults("gpii.testem.coverage.receiver.middleware", {
-    gradeNames: ["gpii.express.middleware"],
+fluid.defaults("fluid.testem.coverage.receiver.middleware", {
+    gradeNames: ["fluid.express.middleware"],
     path:   "/",
     method: ["put", "post"],
     invokers: {
         middleware: {
-            funcName: "gpii.testem.coverage.receiver.middlewareImpl",
+            funcName: "fluid.testem.coverage.receiver.middlewareImpl",
             args: ["{that}", "{arguments}.0", "{arguments}.1", "{arguments}.2"]
         }
     },
     listeners: {
         "onCreate.init": {
-            funcName: "gpii.testem.coverage.receiver.initMiddleware",
+            funcName: "fluid.testem.coverage.receiver.initMiddleware",
             args:     ["{that}"]
         }
     }

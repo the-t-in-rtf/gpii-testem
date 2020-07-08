@@ -1,14 +1,13 @@
 /* eslint-env node */
 "use strict";
 var fluid = require("infusion");
-var gpii  = fluid.registerNamespace("gpii");
 
-fluid.require("%gpii-testem");
+fluid.require("%fluid-testem");
 
-fluid.registerNamespace("gpii.tests.testem.harness");
+fluid.registerNamespace("fluid.tests.testem.harness");
 
 // Some of our temporary directories are based on the component ID.  This bit of logging gives us a way to find out where things are stored from the outside.
-gpii.tests.testem.harness.outputOptions = function (that) {
+fluid.tests.testem.harness.outputOptions = function (that) {
     //eslint-disable-next-line no-console
     console.log(
         "= START TESTEM COMPONENT OPTIONS =\n",
@@ -32,13 +31,13 @@ gpii.tests.testem.harness.outputOptions = function (that) {
     We output select options to console as text to facilitate this.
 
  */
-fluid.defaults("gpii.tests.testem.harness", {
-    gradeNames: ["gpii.testem"],
+fluid.defaults("fluid.tests.testem.harness", {
+    gradeNames: ["fluid.testem"],
     sourceDirs: {
-        src: "%gpii-testem/tests/testem-fixtures/coverage-fixtures/src"
+        src: "%fluid-testem/tests/testem-fixtures/coverage-fixtures/src"
     },
     contentDirs: {
-        nm: "%gpii-testem/node_modules"
+        nm: "%fluid-testem/node_modules"
     },
     testemOptions: {
         skip: "Safari,PhantomJS"
@@ -46,7 +45,7 @@ fluid.defaults("gpii.tests.testem.harness", {
     listeners: {
         "onTestemStart.logTestemOptions": {
             priority: "before:cleanup",
-            funcName: "gpii.tests.testem.harness.outputOptions",
+            funcName: "fluid.tests.testem.harness.outputOptions",
             args:     ["{that}"]
         },
         "constructFixtures.log": {

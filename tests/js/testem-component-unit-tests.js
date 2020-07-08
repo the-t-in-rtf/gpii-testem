@@ -6,19 +6,18 @@
 /* eslint-env node */
 "use strict";
 var fluid  = require("infusion");
-var gpii   = fluid.registerNamespace("gpii");
 var jqUnit = require("node-jqunit");
 
-fluid.require("%gpii-testem/src/js/testem-component.js");
+fluid.require("%fluid-testem/src/js/testem-component.js");
 
-fluid.defaults("gpii.tests.testem.eventTestingHarness", {
+fluid.defaults("fluid.tests.testem.eventTestingHarness", {
     gradeNames: ["fluid.component"],
     events: {
         myEvent: null
     },
     invokers: {
         getWrappedPromise: {
-            funcName: "gpii.testem.generateSingleUseEventListener",
+            funcName: "fluid.testem.generateSingleUseEventListener",
             args:     ["{that}", "{that}.events.myEvent"]
         }
     }
@@ -27,7 +26,7 @@ fluid.defaults("gpii.tests.testem.eventTestingHarness", {
 jqUnit.module("Testing event wrapper....");
 jqUnit.asyncTest("A promise should resolve when the associated event is fired...", function () {
     jqUnit.expect(2);
-    var testComponent = gpii.tests.testem.eventTestingHarness();
+    var testComponent = fluid.tests.testem.eventTestingHarness();
     var eventPromise = testComponent.getWrappedPromise();
     eventPromise.then(
         function () {
@@ -50,7 +49,7 @@ jqUnit.asyncTest("A promise should resolve when the associated event is fired...
 
 jqUnit.test("The event listener should not throw an error if the promise is resolved elsewhere...", function () {
     jqUnit.expect(1);
-    var testComponent = gpii.tests.testem.eventTestingHarness();
+    var testComponent = fluid.tests.testem.eventTestingHarness();
     var eventPromise = testComponent.getWrappedPromise();
     eventPromise.resolve();
 
@@ -62,7 +61,7 @@ jqUnit.test("The event listener should not throw an error if the promise is reso
 
 jqUnit.test("The event listener should not throw an error if the promise is rejected elsewhere...", function () {
     jqUnit.expect(1);
-    var testComponent = gpii.tests.testem.eventTestingHarness();
+    var testComponent = fluid.tests.testem.eventTestingHarness();
     var eventPromise = testComponent.getWrappedPromise();
     eventPromise.reject();
 
@@ -78,7 +77,7 @@ jqUnit.module("Testing promise timeout wrapper...");
 jqUnit.asyncTest("A promise should resolve after the a timeout if it is not rejected/resolve externally...", function () {
     jqUnit.expect(1);
 
-    var timeoutPromise = gpii.testem.addPromiseTimeout(fluid.promise(), "Timed out as expected...", 250);
+    var timeoutPromise = fluid.testem.addPromiseTimeout(fluid.promise(), "Timed out as expected...", 250);
 
     timeoutPromise.then(
         function () {
@@ -97,7 +96,7 @@ jqUnit.asyncTest("The timeout should be cleared if the promise is resolved exter
 
     var originalPromise = fluid.promise();
 
-    gpii.testem.addPromiseTimeout(originalPromise, "Timed out as expected...", 250);
+    fluid.testem.addPromiseTimeout(originalPromise, "Timed out as expected...", 250);
     originalPromise.then(
         function () {
             jqUnit.start();
@@ -120,7 +119,7 @@ jqUnit.asyncTest("The timeout should be cleared if the promise is rejected exter
 
     var originalPromise = fluid.promise();
 
-    gpii.testem.addPromiseTimeout(originalPromise, "Timed out as expected...", 250);
+    fluid.testem.addPromiseTimeout(originalPromise, "Timed out as expected...", 250);
     originalPromise.then(
         function () {
             jqUnit.start();
@@ -144,7 +143,7 @@ jqUnit.test("Adding a timeout to a resolved promise should be fine...", function
     var originalPromise = fluid.promise();
     originalPromise.resolve();
 
-    gpii.testem.addPromiseTimeout(originalPromise, "We should not reject with a time out...", 250);
+    fluid.testem.addPromiseTimeout(originalPromise, "We should not reject with a time out...", 250);
 
     // Wait longer than the timeout to confirm that a second rejection is not attempted.
     jqUnit.stop();
