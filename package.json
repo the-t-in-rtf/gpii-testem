@@ -39,7 +39,7 @@
         "eslint-config-fluid": "1.4.0",
         "form-data": "3.0.0",
         "fluid-grunt-lint-all": "1.0.8",
-        "fluid-webdriver": "1.1.1-dev.20200708T085824Z.de039d8.FLUID-6524",
+        "fluid-webdriver": "1.1.1",
         "grunt": "1.2.1",
         "kettle": "1.12.0",
         "qunitjs": "2.4.1"
