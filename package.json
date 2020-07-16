@@ -37,6 +37,7 @@
     "devDependencies": {
         "eslint": "7.4.0",
         "eslint-config-fluid": "1.4.0",
+        "eslint-plugin-markdown": "1.0.2",
         "form-data": "3.0.0",
         "fluid-grunt-lint-all": "1.0.8",
         "fluid-webdriver": "1.1.1",
