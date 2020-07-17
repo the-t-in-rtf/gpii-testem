@@ -16,7 +16,7 @@ that Testem has instrumented.  This results in empty or incomplete coverage repo
 This package provides a static function to allow test authors to write rollups for both use cases.  See below for full
 details and a working example.
 
-## `gpii.testem.safeRollup(rawTestSuitePaths, nonTestemPrefix, testemPrefix)`
+## `fluid.testem.safeRollup(rawTestSuitePaths, nonTestemPrefix, testemPrefix)`
 
 * `rawTestSuitePaths` - An array of "raw" paths (lacking either prefix).
 * `nonTestemPrefix` - The prefix to prepend to all paths when Testem is not available.
@@ -40,8 +40,8 @@ two other tests in monorepo-style sub-modules.  Your HTML might look something l
         <script src="/testem.js"></script>
         <script src="../node_modules/infusion/tests/lib/qunit/addons/composite/qunit-composite.js"></script>
 
-        <!-- The static "safe rollup" function provided by gpii-testem -->
-        <script src="../node_modules/gpii-testem/src/js/client/safeRollup.js"></script>
+        <!-- The static "safe rollup" function provided by fluid-testem -->
+        <script src="../node_modules/fluid-testem/src/js/client/safeRollup.js"></script>
     </head>
     <body>
         <!-- Your QUnit HTML fixtures -->
@@ -51,7 +51,7 @@ two other tests in monorepo-style sub-modules.  Your HTML might look something l
 
         <!-- This could easily be in a separate JS file, but is inline here for purposes of illustration -->
         <script type="text/javascript">
-            gpii.testem.safeRollup(
+            fluid.testem.safeRollup(
                 [
                     "/gpii/node_modules/submodule1/tests/test1.html",
                     "/gpii/node_modules/submodule2/tests/test2.html"

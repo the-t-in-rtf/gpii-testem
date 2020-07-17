@@ -1,7 +1,7 @@
 /*
 
     Client side component to send coverage data after each page's test run.  Served up by the "coverage" engine
-    wired into gpii.testem, by default this is available at:
+    wired into fluid.testem, by default this is available at:
 
     <script src="/coverage/client/coverageSender.js"></script>
 
@@ -17,13 +17,12 @@
 (function (Testem, QUnit) {
     "use strict";
     // Pure JS equivalent of a fluid.registerNamespace call.
-    window.gpii = window.gpii || {};
-    window.gpii.testem = window.gpii.testem || {};
-    window.gpii.testem.coverage = window.gpii.testem.coverage || {};
+    window.fluid.testem = window.fluid.testem || {};
+    window.fluid.testem.coverage = window.fluid.testem.coverage || {};
 
-    // A work-alike pure JS implementation of the previous gpii.testem.coverage.sender grade.
+    // A work-alike pure JS implementation of the previous fluid.testem.coverage.sender grade.
     // NOTE: Only options.coveragePort is meaningful.
-    window.gpii.testem.coverage.sender = function (options) {
+    window.fluid.testem.coverage.sender = function (options) {
         var afterTestsCallback = function (config, data, testemCallback) {
             if (window.__coverage__) {
                 var xhr = new XMLHttpRequest();
@@ -90,7 +89,7 @@
 
 
         if (options && options.exposeCallback) {
-            window.gpii.testem.coverage.afterTestsCallback = afterTestsCallback;
+            window.fluid.testem.coverage.afterTestsCallback = afterTestsCallback;
         }
 
         if (options && options.hookTestem && Testem) {

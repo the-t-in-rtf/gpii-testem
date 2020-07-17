@@ -1,4 +1,4 @@
-# `gpii.testem.instrumenter.instrument(inputPath, outputPath, instrumentationOptions)`
+# `fluid.testem.instrumenter.instrument(inputPath, outputPath, instrumentationOptions)`
 
 * `inputPath` `{String}` - The full or package-relative path to a directory containing code to instrument.
 * `outputPath` `{String}` - The full or package-relative path to the directory where you want to save the instrumented
@@ -23,4 +23,4 @@ all available in the instrumented output.
 | `istanbulOptions` | `{Object}` | Configuration options to pass to [istanbul-lib-instrument](https://github.com/istanbuljs/istanbuljs/tree/master/packages/istanbul-lib-instrument), the library we use to instrument all code. |
 
 Please note, `excludes`, `includes` and `nonSources` are destructively merged with the defaults, which can be found in
-the globally registered object `gpii.testem.instrumenter.defaultOptions`.
+the globally registered object `fluid.testem.instrumenter.defaultOptions`.

@@ -23,7 +23,7 @@ See below for an example.
 
 ```javascript
 var fluid = require("infusion");
-fluid.require("gpii-testem");
+fluid.require("fluid-testem");
 
 var my = fluid.registerNamespace("my");
 
@@ -37,7 +37,7 @@ my.testem.grade.gotToBeStartingSomething = function (that, callback) {
 };
 
 fluid.defaults("my.testem.grade", {
-    gradeNames: ["gpii.testem"],
+    gradeNames: ["fluid.testem"],
     testemOptions: {
         test_page: "tests/my-awesome-test.html",
         on_start:  "{that}.startSomething"
@@ -54,7 +54,7 @@ module.exports = my.testem.grade().getTestemOptions();
 
 ```
 
-Note that `gpii.testem` already makes use of the `on_start` and `on_exit` hooks.  If you simply want to start additional
+Note that `fluid.testem` already makes use of the `on_start` and `on_exit` hooks.  If you simply want to start additional
 fixtures, you can make use of the following pattern:
 
 1. Create your fixtures on the 'constructFixtures' event.
@@ -68,7 +68,7 @@ following:
 
 ```javascript
 fluid.defaults("my.testem.grade", {
-    gradeNames: ["gpii.testem"],
+    gradeNames: ["fluid.testem"],
     events: {
         onMyFixtureConstructed: null,
         onFixturesConstructed: {
@@ -110,4 +110,4 @@ fluid.defaults("my.testem.grade", {
 ```
 
 Note: In redefining `onFixturesConstructed` and `onFixturesStopped`, you should preserve the existing events, which can
-be found in [the `gpii.testem` component's source](../src/js/testem-component.js).
+be found in [the `fluid.testem` component's source](../src/js/testem-component.js).

@@ -1,14 +1,13 @@
 /* eslint-env node */
 "use strict";
 var fluid = require("infusion");
-var gpii  = fluid.registerNamespace("gpii");
 
-fluid.registerNamespace("gpii.tests.testem.instrumenter");
+fluid.registerNamespace("fluid.tests.testem.instrumenter");
 
-gpii.tests.testem.instrumenter.testDefs = {
+fluid.tests.testem.instrumenter.testDefs = {
     simple: {
         name:      "Test simple instrumentation and recursion.",
-        inputPath: "%gpii-testem/tests/instrumentation-fixtures/simple",
+        inputPath: "%fluid-testem/tests/instrumentation-fixtures/simple",
         outputPath: {
             expander: {
                 funcName: "path.resolve",
@@ -21,7 +20,7 @@ gpii.tests.testem.instrumenter.testDefs = {
     },
     withNodeModules: {
         name:      "Test content within a nested 'node_modules' directory.",
-        inputPath: "%gpii-testem/tests/instrumentation-fixtures/with-node-modules",
+        inputPath: "%fluid-testem/tests/instrumentation-fixtures/with-node-modules",
         instrumentationOptions: {
         },
         outputPath: {
@@ -36,7 +35,7 @@ gpii.tests.testem.instrumenter.testDefs = {
     },
     withNonJS: {
         name:      "Test inclusion of non javascript content.",
-        inputPath: "%gpii-testem/tests/instrumentation-fixtures/with-non-js",
+        inputPath: "%fluid-testem/tests/instrumentation-fixtures/with-non-js",
         instrumentationOptions: {
         },
         outputPath: {
@@ -52,7 +51,7 @@ gpii.tests.testem.instrumenter.testDefs = {
     },
     withoutNonJS: {
         name:      "Test exclusion of non javascript content.",
-        inputPath: "%gpii-testem/tests/instrumentation-fixtures/with-non-js",
+        inputPath: "%fluid-testem/tests/instrumentation-fixtures/with-non-js",
         instrumentationOptions: {
             nonSources: []
         },
@@ -69,7 +68,7 @@ gpii.tests.testem.instrumenter.testDefs = {
     },
     excludeFile: {
         name:      "Test exclusion of a specific file.",
-        inputPath: "%gpii-testem/tests/instrumentation-fixtures/with-non-js",
+        inputPath: "%fluid-testem/tests/instrumentation-fixtures/with-non-js",
         instrumentationOptions: {
             excludes: ["./src/text/sample.txt"]
         },
@@ -84,10 +83,10 @@ gpii.tests.testem.instrumenter.testDefs = {
         shouldBeInstrumented:    ["src/js/index.js"],
         shouldNotBeInstrumented: []
     },
-    // TODO: Create a test fixture for negated excludes once https://issues.gpii.net/browse/GPII-3308 is resolved.
+    // TODO: Create a test fixture for negated excludes once https://issues.fluid.net/browse/fluid-3308 is resolved.
     //negatedExclude: {
     //    name:      "Test negation of exclusions.",
-    //    inputPath: "%gpii-testem/tests/instrumentation-fixtures/negated-exclude",
+    //    inputPath: "%fluid-testem/tests/instrumentation-fixtures/negated-exclude",
     //    instrumentationOptions: {
     //        excludes: ["!./src/js/excluded/exception.js", "./src/js/excluded/*.js"]
     //    },
@@ -104,7 +103,7 @@ gpii.tests.testem.instrumenter.testDefs = {
     //},
     returnOutsideOfFunction: {
         name:      "Test instrumentation of (node) code with a return outside of a function.",
-        inputPath: "%gpii-testem/tests/instrumentation-fixtures/with-return-outside-of-function",
+        inputPath: "%fluid-testem/tests/instrumentation-fixtures/with-return-outside-of-function",
         instrumentationOptions: {
         },
         outputPath: {

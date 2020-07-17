@@ -15,7 +15,7 @@ collecting code coverage in your tests is to:
 6. Run your tests.
 7. (Once all tests are complete) Compile an overall coverage report.
 
-By default, the `gpii.testem` grade does everything but step 5 for you.  Step 5 requires you to load the client-side
+By default, the `fluid.testem` grade does everything but step 5 for you.  Step 5 requires you to load the client-side
 coverage sender using markup like the following:
 
 ```html
@@ -47,7 +47,7 @@ that your browser loads.
 
 | Option           | Type        | Description                           |
 | ---------------- | ----------- | ------------------------------------- |
-| `exposeCallback` | `{Boolean}` | Whether to expose the callback that sends coverage data as the global named variable `window.gpii.testem.coverage.afterTestsCallback` so that it can be called directly in situations where Testem and QUnit are not available. |
+| `exposeCallback` | `{Boolean}` | Whether to expose the callback that sends coverage data as the global named variable `window.fluid.testem.coverage.afterTestsCallback` so that it can be called directly in situations where Testem and QUnit are not available. |
 | `hookTestem`     | `{Boolean}` | Whether to hook the callback that sends coverage data into the Testem lifecycle, so that test results are sent when Testem detects that the tests on a page have completed.  Defaults to `true`. |
 | `hookQunit`      | `{Boolean}` | Whether to hook the callback that sends coverage data into the QUnit lifecycle, so that test results are sent when QUnit detects that the tests on a page have completed. Defaults to `false`. |
 

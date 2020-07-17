@@ -1,17 +1,16 @@
 /*
 
     Intentionally delay the instrumentation phase to ensure that it does not result in Testem reading incomplete
-    options.  See https://issues.gpii.net/browse/GPII-2507 for details.
+    options.  See https://issues.fluid.net/browse/fluid-2507 for details.
 
  */
 /* eslint-env node */
 "use strict";
 var fluid = require("infusion");
-var gpii  = fluid.registerNamespace("gpii");
 
 require("../../harness");
 
-fluid.registerNamespace("gpii.tests.testem.instrumentationTiming");
+fluid.registerNamespace("fluid.tests.testem.instrumentationTiming");
 
 /**
  *
@@ -19,7 +18,7 @@ fluid.registerNamespace("gpii.tests.testem.instrumentationTiming");
  *
  * @param {Number} timeout - The timeout, in milliseconds.
  */
-gpii.tests.testem.instrumentationTiming.sleep = function (timeout) {
+fluid.tests.testem.instrumentationTiming.sleep = function (timeout) {
     var start = new Date().getTime();
     var now = start;
     while ((now - start) < timeout) {
@@ -34,26 +33,26 @@ gpii.tests.testem.instrumentationTiming.sleep = function (timeout) {
  *
  * @param {Object} that - The component itself.
  */
-gpii.tests.testem.instrumentationTiming.instrumentSlowly = function (that) {
-    gpii.tests.testem.instrumentationTiming.sleep(that.options.instrumentationDelay);
+fluid.tests.testem.instrumentationTiming.instrumentSlowly = function (that) {
+    fluid.tests.testem.instrumentationTiming.sleep(that.options.instrumentationDelay);
     //eslint-disable-next-line no-console
     console.log("finally instrumenting code...");
-    gpii.testem.coverage.instrumentSource(that);
+    fluid.testem.coverage.instrumentSource(that);
 };
 
-fluid.defaults("gpii.tests.testem.instrumentationTiming.harness", {
-    gradeNames: ["gpii.tests.testem.harness"],
+fluid.defaults("fluid.tests.testem.instrumentationTiming.harness", {
+    gradeNames: ["fluid.tests.testem.harness"],
     instrumentationDelay: 5000,
     testPages:   ["complete.html"],
     cwd: __dirname, // required because we are working outside of our package root.
     listeners: {
         "onTestemStart.instrument": {
             priority: "after:cleanup",
-            funcName: "gpii.tests.testem.instrumentationTiming.instrumentSlowly",
+            funcName: "fluid.tests.testem.instrumentationTiming.instrumentSlowly",
             args:     ["{that}"]
         }
     }
 });
 
-var testemComponent = gpii.tests.testem.instrumentationTiming.harness();
+var testemComponent = fluid.tests.testem.instrumentationTiming.harness();
 module.exports = testemComponent.getTestemOptions();

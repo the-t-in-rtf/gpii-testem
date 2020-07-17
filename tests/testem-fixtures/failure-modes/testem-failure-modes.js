@@ -2,11 +2,10 @@
 /* eslint-env node */
 "use strict";
 var fluid = require("infusion");
-var gpii  = fluid.registerNamespace("gpii");
 
 require("../../harness");
 
-var testemComponent = gpii.tests.testem.harness({
+var testemComponent = fluid.tests.testem.harness({
     wrappedEventTimeout: 1000,
     sourceDirs:  {},
     contentDirs: {},

@@ -7,10 +7,8 @@
 "use strict";
 var fluid = require("infusion");
 
-var gpii  = fluid.registerNamespace("gpii");
-
-fluid.require("%gpii-express");
-fluid.require("%gpii-testem");
+fluid.require("%fluid-express");
+fluid.require("%fluid-testem");
 
 var fs      = require("fs");
 var os      = require("os");
@@ -23,7 +21,7 @@ require("./instrumenter");
 require("./reporter");
 require("./lib/resolveSafely");
 
-fluid.registerNamespace("gpii.testem");
+fluid.registerNamespace("fluid.testem");
 
 /**
  *
@@ -33,7 +31,7 @@ fluid.registerNamespace("gpii.testem");
  * @param {Function} testemCallback - A function that will be called, for example, when we are ready for Testem to run the tests.
  *
  */
-gpii.testem.handleTestemLifecycleEvent = function (componentEvent, testemCallback) {
+fluid.testem.handleTestemLifecycleEvent = function (componentEvent, testemCallback) {
     var eventTransformChain = fluid.promise.fireTransformEvent(componentEvent);
     eventTransformChain.then(
         function () {
@@ -55,9 +53,9 @@ gpii.testem.handleTestemLifecycleEvent = function (componentEvent, testemCallbac
  * @param {String} event - The event to listen to.
  * @return {Promise} - A promise that will be resolved the next time `event` is fired.
  */
-gpii.testem.wrapSecondaryEvent = function (that, event) {
-    var eventPromise = gpii.testem.generateSingleUseEventListener(that, event);
-    gpii.testem.addPromiseTimeout(eventPromise, "Timed out while waiting for event '" + event.name + "' to fire...", that.options.wrappedEventTimeout);
+fluid.testem.wrapSecondaryEvent = function (that, event) {
+    var eventPromise = fluid.testem.generateSingleUseEventListener(that, event);
+    fluid.testem.addPromiseTimeout(eventPromise, "Timed out while waiting for event '" + event.name + "' to fire...", that.options.wrappedEventTimeout);
     return eventPromise;
 };
 
@@ -72,11 +70,11 @@ gpii.testem.wrapSecondaryEvent = function (that, event) {
  * @param {String} event - The event to wrap with a promise.
  * @return {Promise} - The event promise.
  */
-gpii.testem.generateSingleUseEventListener = function (that, event) {
+fluid.testem.generateSingleUseEventListener = function (that, event) {
     var eventPromise = fluid.promise();
 
     // Ensure that the listener is removed whether we resolve the promise, or whether someone else does.
-    var listenerNamespace = "gpii.testem.singleUse." + that.id;
+    var listenerNamespace = "fluid.testem.singleUse." + that.id;
     var removeListener = function () { event.removeListener(listenerNamespace); };
     eventPromise.then(removeListener, removeListener);
     event.addListener(function () {
@@ -98,7 +96,7 @@ gpii.testem.generateSingleUseEventListener = function (that, event) {
  * @param {Number} timeoutInMillis - The number of milliseconds to wait before timing out.
  * @return {Object} - The original promise.
  */
-gpii.testem.addPromiseTimeout = function (originalPromise, rejectionPayload, timeoutInMillis) {
+fluid.testem.addPromiseTimeout = function (originalPromise, rejectionPayload, timeoutInMillis) {
     // Hold onto a handle so that we can clear the timeout if needed.
     var timeoutID = setTimeout(function () {
         fluid.log(rejectionPayload);
@@ -121,11 +119,11 @@ gpii.testem.addPromiseTimeout = function (originalPromise, rejectionPayload, tim
  * @return {Object} - The Testem options to use for this run.
  *
  */
-gpii.testem.getTestemOptions = function (that) {
+fluid.testem.getTestemOptions = function (that) {
     return fluid.copy(that.options.testemOptions);
 };
 
-gpii.testem.generateRimrafWrapper = function (path, rimrafOptions) {
+fluid.testem.generateRimrafWrapper = function (path, rimrafOptions) {
     return function () {
         var rimrafPromise = fluid.promise();
         rimraf(path, fluid.copy(rimrafOptions), function (rimrafError) {
@@ -149,13 +147,13 @@ gpii.testem.generateRimrafWrapper = function (path, rimrafOptions) {
  * @return {Promise} - A promise that will be resolved when cleanup is complete, or rejected if there is an error.
  *
  */
-gpii.testem.cleanupTestemContent = function (pathToCleanup, rimrafOptions) {
+fluid.testem.cleanupTestemContent = function (pathToCleanup, rimrafOptions) {
     var togo = fluid.promise();
 
     try {
-        var resolvedPath = gpii.testem.resolveFluidModulePathSafely(pathToCleanup);
+        var resolvedPath = fluid.testem.resolveFluidModulePathSafely(pathToCleanup);
         var cleanupPromises = [];
-        cleanupPromises.push(gpii.testem.generateRimrafWrapper(resolvedPath, rimrafOptions));
+        cleanupPromises.push(fluid.testem.generateRimrafWrapper(resolvedPath, rimrafOptions));
 
 
         // Cleanup the empty directories Testem leaves in os.tmpDir();
@@ -164,7 +162,7 @@ gpii.testem.cleanupTestemContent = function (pathToCleanup, rimrafOptions) {
         fluid.each(tmpFiles, function (tmpFile) {
             if (tmpFile.match(testemRegexp)) {
                 var fullPath = path.resolve(os.tmpdir(), tmpFile);
-                cleanupPromises.push(gpii.testem.generateRimrafWrapper(fullPath, rimrafOptions));
+                cleanupPromises.push(fluid.testem.generateRimrafWrapper(fullPath, rimrafOptions));
             }
         });
 
@@ -194,11 +192,11 @@ gpii.testem.cleanupTestemContent = function (pathToCleanup, rimrafOptions) {
  * @return {Function} - A promise-returning function which will be executed when it's our turn in the sequence.
  *
  */
-gpii.testem.cleanupDir = function (cleanupDef, rimrafOptions) {
+fluid.testem.cleanupDir = function (cleanupDef, rimrafOptions) {
     return function () {
         var resolvedPath = fluid.module.resolvePath(cleanupDef.path);
         if (cleanupDef.isTestemContent) {
-            return gpii.testem.cleanupTestemContent(resolvedPath, rimrafOptions);
+            return fluid.testem.cleanupTestemContent(resolvedPath, rimrafOptions);
         }
         else {
             var promise = fluid.promise();
@@ -245,7 +243,7 @@ gpii.testem.cleanupDir = function (cleanupDef, rimrafOptions) {
  * @return {Promise} - A promise that will be resolved when cleanup is complete.
  *
  */
-gpii.testem.cleanup = function (stage, cleanupDefs, rimrafOptions) {
+fluid.testem.cleanup = function (stage, cleanupDefs, rimrafOptions) {
     var togo = fluid.promise();
     togo.then(
         function () { fluid.log(stage, " cleanup completed successfully...");},
@@ -256,7 +254,7 @@ gpii.testem.cleanup = function (stage, cleanupDefs, rimrafOptions) {
 
     var cleanupPromises = [];
     fluid.each(cleanupDefs, function (singleDirEntry) {
-        var cleanupPromise = gpii.testem.cleanupDir(singleDirEntry, rimrafOptions);
+        var cleanupPromise = fluid.testem.cleanupDir(singleDirEntry, rimrafOptions);
         cleanupPromises.push(cleanupPromise);
     });
 
@@ -275,9 +273,9 @@ gpii.testem.cleanup = function (stage, cleanupDefs, rimrafOptions) {
  * @param {String} suffix - A "suffix" that will be appended to the end of the filename.
  * @return {String} - The full path to the unique subdirectory.
  */
-gpii.testem.generateUniqueDirName = function (basePath, prefix, suffix) {
+fluid.testem.generateUniqueDirName = function (basePath, prefix, suffix) {
     try {
-        var resolvedBasePath = gpii.testem.resolveFluidModulePathSafely(basePath);
+        var resolvedBasePath = fluid.testem.resolveFluidModulePathSafely(basePath);
         return path.resolve(resolvedBasePath, prefix + "-" + suffix);
     }
     catch (error) {
@@ -285,10 +283,10 @@ gpii.testem.generateUniqueDirName = function (basePath, prefix, suffix) {
     }
 };
 
-fluid.registerNamespace("gpii.testem.dirs");
+fluid.registerNamespace("fluid.testem.dirs");
 
 // A convenience variable to assist in cleaning up just the testem-unique temporary content.
-gpii.testem.dirs.onlyTestemContent = [
+fluid.testem.dirs.onlyTestemContent = [
     {
         name:            "testem",
         path:            "{that}.options.testemDir",
@@ -297,7 +295,7 @@ gpii.testem.dirs.onlyTestemContent = [
 ];
 
 // A convenience variable to assist in cleaning up everything but the coverage data.
-gpii.testem.dirs.everythingButCoverage = gpii.testem.dirs.onlyTestemContent.concat([
+fluid.testem.dirs.everythingButCoverage = fluid.testem.dirs.onlyTestemContent.concat([
     {
         name: "instrumented",
         path: "{that}.options.instrumentedSourceDir"
@@ -305,7 +303,7 @@ gpii.testem.dirs.everythingButCoverage = gpii.testem.dirs.onlyTestemContent.conc
 ]);
 
 // A convenience variable to assist in cleaning up everything, including coverage data.
-gpii.testem.dirs.everything = gpii.testem.dirs.everythingButCoverage.concat([
+fluid.testem.dirs.everything = fluid.testem.dirs.everythingButCoverage.concat([
     {
         name: "coverage",
         path: "{that}.options.coverageDir"
@@ -313,15 +311,15 @@ gpii.testem.dirs.everything = gpii.testem.dirs.everythingButCoverage.concat([
 ]);
 
 // Stop our express instance if it has been created and hasn't already been destroyed.
-gpii.testem.stopServer = function (that) {
+fluid.testem.stopServer = function (that) {
     if (that.express && !fluid.isDestroyed(that.express)) {
         fluid.log("Stopping express...");
-        gpii.express.stopServer(that.express);
+        fluid.express.stopServer(that.express);
     }
 };
 
 // An expander to allow us to toggle "HEADLESS" mode with an environment variable.
-gpii.testem.constructBrowserArgs = function (browserArgs, headlessBrowserArgs) {
+fluid.testem.constructBrowserArgs = function (browserArgs, headlessBrowserArgs) {
     return (process.env.HEADLESS && headlessBrowserArgs) || browserArgs;
 };
 
@@ -332,19 +330,19 @@ gpii.testem.constructBrowserArgs = function (browserArgs, headlessBrowserArgs) {
  * @param {Object} sourceDirs - An object whose top-level values each refer to a source directory definition.
  * @param {Object} contentDirs - An object whose top-level values each refer to a content directory definition.
  * @param {Object} additionalProxies - An array of additional proxy paths that should be directed to `coverageUrl`.
- * @param {String} coverageUrl - The URL where the gpii-express instance that collects coverage data (and hosts our content) is located.
+ * @param {String} coverageUrl - The URL where the fluid-express instance that collects coverage data (and hosts our content) is located.
  * @return {Object} - An object representing Testem proxy configuration options.
  *
  */
-gpii.testem.constructProxies = function (sourceDirs, contentDirs, additionalProxies, coverageUrl) {
+fluid.testem.constructProxies = function (sourceDirs, contentDirs, additionalProxies, coverageUrl) {
     var proxies = {};
 
     var dirPaths = [];
     fluid.each([sourceDirs, contentDirs], function (dirDefs) {
-        var expandedDefs = fluid.transform(dirDefs, gpii.testem.expandPath);
+        var expandedDefs = fluid.transform(dirDefs, fluid.testem.expandPath);
         var orderedDirDefs = fluid.parsePriorityRecords(expandedDefs, "testem-proxy-paths");
         fluid.each(orderedDirDefs, function (pathDef) {
-            dirPaths.push(gpii.testem.extractProxyPath(pathDef));
+            dirPaths.push(fluid.testem.extractProxyPath(pathDef));
         });
     });
 
@@ -361,7 +359,7 @@ gpii.testem.constructProxies = function (sourceDirs, contentDirs, additionalProx
     return proxies;
 };
 
-fluid.defaults("gpii.testem.base", {
+fluid.defaults("fluid.testem.base", {
     gradeNames:  ["fluid.component"],
     coveragePort: 7000,
     coverageUrl: {
@@ -376,18 +374,18 @@ fluid.defaults("gpii.testem.base", {
     },
     rimrafOptions: {},
     cleanup: {
-        initial:  gpii.testem.dirs.onlyTestemContent,
-        final:    gpii.testem.dirs.onlyTestemContent
+        initial:  fluid.testem.dirs.onlyTestemContent,
+        final:    fluid.testem.dirs.onlyTestemContent
     },
     testemDir: {
         expander: {
-            funcName: "gpii.testem.generateUniqueDirName",
+            funcName: "fluid.testem.generateUniqueDirName",
             args:     [os.tmpdir(), "user_data_dir", "{that}.id"] // basePath, prefix, suffix
         }
     },
     reportsDir: {
         expander: {
-            funcName: "gpii.testem.generateUniqueDirName",
+            funcName: "fluid.testem.generateUniqueDirName",
             args:     [os.tmpdir(), "reports", "{that}.id"] // basePath, prefix, suffix
         }
     },
@@ -443,12 +441,12 @@ fluid.defaults("gpii.testem.base", {
         browser_disconnect_timeout: 300, // Five minutes
         browser_start_timeout:      300,
         timeout: 300,
-        browser_args: "@expand:gpii.testem.constructBrowserArgs({that}.options.browserArgs, {that}.options.headlessBrowserArgs)",
+        browser_args: "@expand:fluid.testem.constructBrowserArgs({that}.options.browserArgs, {that}.options.headlessBrowserArgs)",
         framework:   "qunit",
         tap_quiet_logs: true,
         report_file: {
             expander: {
-                funcName: "gpii.testem.resolvePathSafely",
+                funcName: "fluid.testem.resolvePathSafely",
                 args:     ["{that}.options.reportsDir", "report.tap"]
             }
         },
@@ -458,19 +456,19 @@ fluid.defaults("gpii.testem.base", {
         src_files: [], // Explicitly tell testem not to watch or host any "source" content.
         serve_files: [], // Explicitly tell Testem not to host any additional content.
         test_page: "@expand:fluid.values({that}.options.testPages)", // Ensure that we can use mergeable objects for test pages.
-        proxies: "@expand:gpii.testem.constructProxies({that}.options.sourceDirs, {that}.options.contentDirs, {that}.options.additionalProxies, {that}.options.coverageUrl)"
+        proxies: "@expand:fluid.testem.constructProxies({that}.options.sourceDirs, {that}.options.contentDirs, {that}.options.additionalProxies, {that}.options.coverageUrl)"
     },
     invokers: {
         "handleTestemStart": {
-            funcName: "gpii.testem.handleTestemLifecycleEvent",
+            funcName: "fluid.testem.handleTestemLifecycleEvent",
             args:     ["{that}.events.onTestemStart", "{arguments}.2"] // componentEvent, testemCallback
         },
         "handleTestemExit": {
-            funcName: "gpii.testem.handleTestemLifecycleEvent",
+            funcName: "fluid.testem.handleTestemLifecycleEvent",
             args:     ["{that}.events.onTestemExit", "{arguments}.2"] // componentEvent, testemCallback
         },
         "getTestemOptions": {
-            funcName: "gpii.testem.getTestemOptions",
+            funcName: "fluid.testem.getTestemOptions",
             args:     ["{that}"]
         }
     },
@@ -482,7 +480,7 @@ fluid.defaults("gpii.testem.base", {
         // The unified "testem startup" promise chain.
         "onTestemStart.cleanup": {
             priority: "first",
-            funcName: "gpii.testem.cleanup",
+            funcName: "fluid.testem.cleanup",
             args:     ["Initial", "{that}.options.cleanup.initial", "{that}.options.rimrafOptions"] // , rimrafOptions
         },
         "onTestemStart.constructFixtures": {
@@ -492,41 +490,41 @@ fluid.defaults("gpii.testem.base", {
         },
         "onTestemStart.waitForFixtures": {
             priority: "after:constructFixtures",
-            funcName: "gpii.testem.wrapSecondaryEvent",
+            funcName: "fluid.testem.wrapSecondaryEvent",
             args:     ["{that}", "{that}.events.onFixturesConstructed"] // that, event
         },
         // The unified "testem shutdown" promise chain.
         "onTestemExit.stopExpress": {
             priority: "first",
-            funcName: "gpii.testem.stopServer",
+            funcName: "fluid.testem.stopServer",
             args:     ["{that}"]
         },
         "onTestemExit.waitForFixtures": {
             priority: "after:stopExpress",
-            funcName: "gpii.testem.wrapSecondaryEvent",
+            funcName: "fluid.testem.wrapSecondaryEvent",
             args:     ["{that}", "{that}.events.onFixturesStopped"] // that, event
         },
         "onTestemExit.cleanup": {
             priority: "last",
-            funcName: "gpii.testem.cleanup",
+            funcName: "fluid.testem.cleanup",
             args:     ["Final", "{that}.options.cleanup.final", "{that}.options.rimrafOptions"] // cleanupDefs, rimrafOptions
         }
     },
     components: {
         express: {
-            type: "gpii.testem.coverage.express",
+            type: "fluid.testem.coverage.express",
             createOnEvent: "constructFixtures",
             options: {
-                cwd:         "{gpii.testem.base}.options.cwd",
-                sourceDirs:  "{gpii.testem.base}.options.sourceDirs",
-                contentDirs: "{gpii.testem.base}.options.contentDirs",
-                port:        "{gpii.testem.base}.options.coveragePort",
+                cwd:         "{fluid.testem.base}.options.cwd",
+                sourceDirs:  "{fluid.testem.base}.options.sourceDirs",
+                contentDirs: "{fluid.testem.base}.options.contentDirs",
+                port:        "{fluid.testem.base}.options.coveragePort",
                 listeners: {
                     "onStarted.notifyParent": {
-                        func: "{gpii.testem.base}.events.onExpressStarted.fire"
+                        func: "{fluid.testem.base}.events.onExpressStarted.fire"
                     },
                     "onStopped.notifyParent": {
-                        func: "{gpii.testem.base}.events.onExpressStopped.fire"
+                        func: "{fluid.testem.base}.events.onExpressStopped.fire"
                     }
                 }
 
@@ -542,19 +540,19 @@ fluid.defaults("gpii.testem.base", {
  * @param {Object} that - The component itself.
  * @return {Promise} - A promise that will be resolved or rejected when the instrumentation pass finishes.
  */
-gpii.testem.coverage.instrumentSource = function (that) {
+fluid.testem.coverage.instrumentSource = function (that) {
     fluid.log("Instrumenting source.");
     var promises = [];
-    var expandedDefs = fluid.transform(that.options.sourceDirs, gpii.testem.expandPath);
+    var expandedDefs = fluid.transform(that.options.sourceDirs, fluid.testem.expandPath);
     var resolvedInstrumentationDir = fluid.module.resolvePath(that.options.instrumentedSourceDir);
     var resolvedCwd = fluid.module.resolvePath(that.options.cwd);
 
     fluid.each(expandedDefs, function (sourcePathDef) {
-        var resolvedSourcePath = gpii.testem.resolvePackageOrCwdRelativePath(resolvedCwd, sourcePathDef.filePath);
+        var resolvedSourcePath = fluid.testem.resolvePackageOrCwdRelativePath(resolvedCwd, sourcePathDef.filePath);
         promises.push(function () {
-            var lastDirSegment = gpii.testem.extractLastContentSegment(sourcePathDef, "");
-            var instrumentedPath = gpii.testem.resolvePackageOrCwdRelativePath(resolvedInstrumentationDir, lastDirSegment);
-            return gpii.testem.instrumenter.instrument(resolvedSourcePath, instrumentedPath, that.options.instrumentationOptions);
+            var lastDirSegment = fluid.testem.extractLastContentSegment(sourcePathDef, "");
+            var instrumentedPath = fluid.testem.resolvePackageOrCwdRelativePath(resolvedInstrumentationDir, lastDirSegment);
+            return fluid.testem.instrumenter.instrument(resolvedSourcePath, instrumentedPath, that.options.instrumentationOptions);
         });
     });
     var sequence = fluid.promise.sequence(promises);
@@ -580,75 +578,75 @@ gpii.testem.coverage.instrumentSource = function (that) {
  * @return {Array<String>} - An array of expanded paths.
  *
  */
-gpii.testem.coverage.expandInstrumentedSourceDirs = function (cwd, instrumentedSourceDir, sourceDirs) {
-    var resolvedInstrumentedSourceDir = gpii.testem.resolvePackageOrCwdRelativePath(cwd, instrumentedSourceDir);
+fluid.testem.coverage.expandInstrumentedSourceDirs = function (cwd, instrumentedSourceDir, sourceDirs) {
+    var resolvedInstrumentedSourceDir = fluid.testem.resolvePackageOrCwdRelativePath(cwd, instrumentedSourceDir);
 
-    var expandedDefs = fluid.transform(sourceDirs, gpii.testem.expandPath);
+    var expandedDefs = fluid.transform(sourceDirs, fluid.testem.expandPath);
     return fluid.transform(expandedDefs, function (sourcePathDef) {
-        var lastDirSegment = gpii.testem.extractLastContentSegment(sourcePathDef, "");
+        var lastDirSegment = fluid.testem.extractLastContentSegment(sourcePathDef, "");
         return path.resolve(resolvedInstrumentedSourceDir, lastDirSegment);
     });
 };
 
 
 // A grade that adds the proxy configuration required to collect coverage data, but which does not itself instrument anything.
-fluid.defaults("gpii.testem.coverage", {
-    gradeNames: ["gpii.testem.base"],
+fluid.defaults("fluid.testem.coverage", {
+    gradeNames: ["fluid.testem.base"],
     // The path where coverage data will be stored as it is collected.
     coverageDir: {
         expander: {
-            funcName: "gpii.testem.generateUniqueDirName",
+            funcName: "fluid.testem.generateUniqueDirName",
             args:     [os.tmpdir(), "coverage", "{that}.id"] // basePath, prefix, suffix
         }
     },
     // The path where all instrumented source will be stored.
     instrumentedSourceDir: {
         expander: {
-            funcName: "gpii.testem.generateUniqueDirName",
+            funcName: "fluid.testem.generateUniqueDirName",
             args:     [os.tmpdir(), "instrumented", "{that}.id"] // basePath, prefix, suffix
         }
     },
     // The full paths to individual pieces of instrumented source.
-    instrumentedSourceDirs: "@expand:gpii.testem.coverage.expandInstrumentedSourceDirs({that}.options.cwd, {that}.options.instrumentedSourceDir, {that}.options.sourceDirs)",
+    instrumentedSourceDirs: "@expand:fluid.testem.coverage.expandInstrumentedSourceDirs({that}.options.cwd, {that}.options.instrumentedSourceDir, {that}.options.sourceDirs)",
     // The coverage server implicitly hosts a coverage client and listener, we use this block to include that in our generated list of proxies for all content.
     additionalProxies: {
         coverage: "/coverage"
     },
     distributeOptions: {
         source: "{that}.options.coverageDir",
-        target: "{that gpii.testem.coverage.receiver.middleware}.options.coverageDir"
+        target: "{that fluid.testem.coverage.receiver.middleware}.options.coverageDir"
     },
     components: {
         express: {
             options: {
-                sourceDirs: "{gpii.testem.coverage}.options.instrumentedSourceDirs"
+                sourceDirs: "{fluid.testem.coverage}.options.instrumentedSourceDirs"
             }
         }
     },
     testemOptions: {
-        proxies: "@expand:gpii.testem.constructProxies({that}.options.instrumentedSourceDirs, {that}.options.contentDirs, {that}.options.additionalProxies, {that}.options.coverageUrl)"
+        proxies: "@expand:fluid.testem.constructProxies({that}.options.instrumentedSourceDirs, {that}.options.contentDirs, {that}.options.additionalProxies, {that}.options.coverageUrl)"
     }
 });
 
 // A grade that adds instrumentation of code, but which does not generate reports.
-fluid.defaults("gpii.testem.instrumentation", {
-    gradeNames: ["gpii.testem.coverage"],
+fluid.defaults("fluid.testem.instrumentation", {
+    gradeNames: ["fluid.testem.coverage"],
     cleanup: {
-        initial:  gpii.testem.dirs.everythingButCoverage,
-        final:    gpii.testem.dirs.everythingButCoverage
+        initial:  fluid.testem.dirs.everythingButCoverage,
+        final:    fluid.testem.dirs.everythingButCoverage
     },
     instrumentationOptions: {},
     // The path where all instrumented source will be stored.
     instrumentedSourceDir: {
         expander: {
-            funcName: "gpii.testem.generateUniqueDirName",
+            funcName: "fluid.testem.generateUniqueDirName",
             args:     [os.tmpdir(), "instrumented", "{that}.id"] // basePath, prefix, suffix
         }
     },
     listeners: {
         "onTestemStart.instrument": {
             priority: "after:cleanup",
-            funcName: "gpii.testem.coverage.instrumentSource",
+            funcName: "fluid.testem.coverage.instrumentSource",
             args:     ["{that}"]
         },
         "onTestemStart.constructFixtures": {
@@ -659,12 +657,12 @@ fluid.defaults("gpii.testem.instrumentation", {
 });
 
 // The default grade, which instruments source, collects coverage data, and generates reports.
-fluid.defaults("gpii.testem", {
-    gradeNames:  ["gpii.testem.instrumentation"],
+fluid.defaults("fluid.testem", {
+    gradeNames:  ["fluid.testem.instrumentation"],
     reports: ["text-summary", "html", "json-summary"],
     cleanup: {
-        initial:  gpii.testem.dirs.everything,
-        final:    gpii.testem.dirs.everything
+        initial:  fluid.testem.dirs.everything,
+        final:    fluid.testem.dirs.everything
     },
     listeners: {
         "onTestemExit.coverageReport": {
@@ -674,12 +672,12 @@ fluid.defaults("gpii.testem", {
     },
     components: {
         reporter: {
-            type: "gpii.testem.reporter",
+            type: "fluid.testem.reporter",
             options: {
-                coverageDir: "{gpii.testem}.options.coverageDir",
-                cwd:         "{gpii.testem}.options.cwd",
-                reportsDir:  "{gpii.testem}.options.reportsDir",
-                reports:     "{gpii.testem}.options.reports"
+                coverageDir: "{fluid.testem}.options.coverageDir",
+                cwd:         "{fluid.testem}.options.cwd",
+                reportsDir:  "{fluid.testem}.options.reportsDir",
+                reports:     "{fluid.testem}.options.reports"
             }
         }
     }

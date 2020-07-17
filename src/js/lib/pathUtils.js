@@ -1,11 +1,10 @@
 /* eslint-env node */
 "use strict";
 var fluid = require("infusion");
-var gpii  = fluid.registerNamespace("gpii");
 
 var path = require("path");
 
-fluid.registerNamespace("gpii.testem");
+fluid.registerNamespace("fluid.testem");
 
 /**
  *
@@ -16,9 +15,9 @@ fluid.registerNamespace("gpii.testem");
  * @return {String} - The last segment of the resolved path, prefixed by `leader`.
  *
  */
-gpii.testem.extractLastPathSegment = function (rawPath, leader) {
+fluid.testem.extractLastPathSegment = function (rawPath, leader) {
     var resolvedPath = fluid.module.resolvePath(rawPath);
-    return gpii.testem.forceLeadingSlash(path.basename(resolvedPath), leader);
+    return fluid.testem.forceLeadingSlash(path.basename(resolvedPath), leader);
 };
 
 /**
@@ -30,7 +29,7 @@ gpii.testem.extractLastPathSegment = function (rawPath, leader) {
  * @return {String} - The path, updated as needed to ensure that it begins with `leader`.
  *
  */
-gpii.testem.forceLeadingSlash = function (rawPath, leader) {
+fluid.testem.forceLeadingSlash = function (rawPath, leader) {
     leader = (leader || leader === "") ? leader : "/";
     if (typeof rawPath === "string") {
         return rawPath.indexOf(leader) === 0 ? rawPath : leader + rawPath;
@@ -52,10 +51,10 @@ gpii.testem.forceLeadingSlash = function (rawPath, leader) {
  * @return {String} - The router path, typically something like `/src`.
  *
  */
-gpii.testem.extractContentPath = function (cwd, pathDef) {
-    var expandedPathDef = gpii.testem.expandPath(pathDef);
+fluid.testem.extractContentPath = function (cwd, pathDef) {
+    var expandedPathDef = fluid.testem.expandPath(pathDef);
     var rawPath = fluid.get(expandedPathDef, "filePath");
-    return gpii.testem.resolvePackageOrCwdRelativePath(cwd, rawPath);
+    return fluid.testem.resolvePackageOrCwdRelativePath(cwd, rawPath);
 };
 
 /**
@@ -67,9 +66,9 @@ gpii.testem.extractContentPath = function (cwd, pathDef) {
  * @return {String} - The last segment of the content path.
  *
  */
-gpii.testem.extractLastContentSegment = function (pathDef, leader) {
-    var expandedPathDef = gpii.testem.expandPath(pathDef);
-    return gpii.testem.extractLastPathSegment(fluid.get(expandedPathDef, "filePath"), leader);
+fluid.testem.extractLastContentSegment = function (pathDef, leader) {
+    var expandedPathDef = fluid.testem.expandPath(pathDef);
+    return fluid.testem.extractLastPathSegment(fluid.get(expandedPathDef, "filePath"), leader);
 };
 
 /**
@@ -82,9 +81,9 @@ gpii.testem.extractLastContentSegment = function (pathDef, leader) {
  * @return {String} - The router path, typically something like `/src`.
  *
  */
-gpii.testem.extractRoutePath = function (pathDef) {
-    var expandedPathDef = gpii.testem.expandPath(pathDef);
-    return fluid.get(expandedPathDef, "routePath") || gpii.testem.extractLastContentSegment(expandedPathDef);
+fluid.testem.extractRoutePath = function (pathDef) {
+    var expandedPathDef = fluid.testem.expandPath(pathDef);
+    return fluid.get(expandedPathDef, "routePath") || fluid.testem.extractLastContentSegment(expandedPathDef);
 };
 
 
@@ -98,9 +97,9 @@ gpii.testem.extractRoutePath = function (pathDef) {
  * @return {String} - The proxy path, typically something like `/src`.
  *
  */
-gpii.testem.extractProxyPath = function (pathDef) {
-    var expandedPathDef = gpii.testem.expandPath(pathDef);
-    return fluid.get(expandedPathDef, "proxyPath") || gpii.testem.extractLastContentSegment(expandedPathDef);
+fluid.testem.extractProxyPath = function (pathDef) {
+    var expandedPathDef = fluid.testem.expandPath(pathDef);
+    return fluid.get(expandedPathDef, "proxyPath") || fluid.testem.extractLastContentSegment(expandedPathDef);
 };
 
 /**
@@ -114,7 +113,7 @@ gpii.testem.extractProxyPath = function (pathDef) {
  * @return {String} - The resolved full path.
  *
  */
-gpii.testem.resolvePackageOrCwdRelativePath = function (basePath, pathToResolve) {
+fluid.testem.resolvePackageOrCwdRelativePath = function (basePath, pathToResolve) {
     return path.resolve(fluid.module.resolvePath(basePath), fluid.module.resolvePath(pathToResolve));
 };
 
@@ -127,6 +126,6 @@ gpii.testem.resolvePackageOrCwdRelativePath = function (basePath, pathToResolve)
  * @return {Object} - The "long" notation for this path definition.
  *
  */
-gpii.testem.expandPath = function (singlePathDef) {
+fluid.testem.expandPath = function (singlePathDef) {
     return typeof singlePathDef === "string" ? { filePath: singlePathDef } : singlePathDef;
 };

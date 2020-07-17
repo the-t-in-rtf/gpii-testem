@@ -6,7 +6,6 @@
 /* eslint-env node */
 "use strict";
 var fluid  = require("infusion");
-var gpii   = fluid.registerNamespace("gpii");
 var jqUnit = require("node-jqunit");
 var fs     = require("fs");
 var path   = require("path");
@@ -17,19 +16,19 @@ require("../../");
 require("./instrumenter-testDefs");
 require("./lib/isInstrumented");
 
-fluid.registerNamespace("gpii.tests.testem.instrumenter");
+fluid.registerNamespace("fluid.tests.testem.instrumenter");
 
-gpii.tests.testem.instrumenter.runAllTests = function (that) {
+fluid.tests.testem.instrumenter.runAllTests = function (that) {
     jqUnit.module(that.options.moduleName);
-    fluid.each(that.options.testDefs, gpii.tests.testem.instrumenter.runSingleTest);
+    fluid.each(that.options.testDefs, fluid.tests.testem.instrumenter.runSingleTest);
     rimraf.sync(that.options.baseOutputDir);
     fluid.log("Removed temporary output.");
 };
 
-gpii.tests.testem.instrumenter.runSingleTest = function (testDef) {
+fluid.tests.testem.instrumenter.runSingleTest = function (testDef) {
     jqUnit.asyncTest(testDef.name, function () {
         try {
-            gpii.testem.instrumenter.instrument(testDef.inputPath, testDef.outputPath, testDef.instrumentationOptions).then(
+            fluid.testem.instrumenter.instrument(testDef.inputPath, testDef.outputPath, testDef.instrumentationOptions).then(
                 function () {
                     jqUnit.start();
                     jqUnit.assert("The instrumentation run should have completed successfully.");
@@ -51,12 +50,12 @@ gpii.tests.testem.instrumenter.runSingleTest = function (testDef) {
 
                     fluid.each(testDef.shouldBeInstrumented, function (relativeFilePath) {
                         var fileThatShouldBeInstrumented = path.resolve(testDef.outputPath, relativeFilePath);
-                        jqUnit.assertTrue("File '" + relativeFilePath + "' should be instrumented.", gpii.test.testem.isInstrumented(fileThatShouldBeInstrumented));
+                        jqUnit.assertTrue("File '" + relativeFilePath + "' should be instrumented.", fluid.test.testem.isInstrumented(fileThatShouldBeInstrumented));
                     });
 
                     fluid.each(testDef.shouldNotBeInstrumented, function (relativeFilePath) {
                         var fileThatShouldNotBeInstrumented = path.resolve(testDef.outputPath, relativeFilePath);
-                        jqUnit.assertFalse("File '" + relativeFilePath + "' should not be instrumented.", gpii.test.testem.isInstrumented(fileThatShouldNotBeInstrumented));
+                        jqUnit.assertFalse("File '" + relativeFilePath + "' should not be instrumented.", fluid.test.testem.isInstrumented(fileThatShouldNotBeInstrumented));
                     });
                 },
                 function (error) {
@@ -72,22 +71,22 @@ gpii.tests.testem.instrumenter.runSingleTest = function (testDef) {
     });
 };
 
-fluid.defaults("gpii.tests.testem.instrumenter.runner", {
+fluid.defaults("fluid.tests.testem.instrumenter.runner", {
     gradeNames: ["fluid.component"],
     moduleName: "Test the instrumentation functions.",
     baseOutputDir: {
         expander: {
-            funcName: "gpii.testem.generateUniqueDirName",
+            funcName: "fluid.testem.generateUniqueDirName",
             args:     [os.tmpdir(), "instrumenter-tests", "{that}.id"] // basePath, prefix, suffix
         }
     },
-    testDefs: gpii.tests.testem.instrumenter.testDefs,
+    testDefs: fluid.tests.testem.instrumenter.testDefs,
     listeners: {
         "onCreate.runTests": {
-            funcName: "gpii.tests.testem.instrumenter.runAllTests",
+            funcName: "fluid.tests.testem.instrumenter.runAllTests",
             args:     ["{that}"]
         }
     }
 });
 
-gpii.tests.testem.instrumenter.runner();
+fluid.tests.testem.instrumenter.runner();

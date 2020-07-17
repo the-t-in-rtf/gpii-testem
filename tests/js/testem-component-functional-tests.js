@@ -1,8 +1,6 @@
 /* eslint-env node */
 "use strict";
 var fluid  = require("infusion");
-var gpii   = fluid.registerNamespace("gpii");
-
 var jqUnit = require("node-jqunit");
 
 var exec   = require("child_process").exec;
@@ -12,16 +10,16 @@ var rimraf = require("rimraf");
 require("../../src/js/lib/pathUtils");
 require("../testem-fixtures/coverage-fixtures/package-relative");
 
-fluid.registerNamespace("gpii.tests.testem.runner");
+fluid.registerNamespace("fluid.tests.testem.runner");
 
-gpii.tests.testem.runner.runAllTests = function (that) {
+fluid.tests.testem.runner.runAllTests = function (that) {
     jqUnit.module("Testing coverage detection and reporting...");
     fluid.each(that.options.tests, function (testDef) {
-        gpii.tests.testem.runner.runSingleTest(that, testDef);
+        fluid.tests.testem.runner.runSingleTest(that, testDef);
     });
 };
 
-gpii.tests.testem.runner.runSingleTest = function (that, testDef) {
+fluid.tests.testem.runner.runSingleTest = function (that, testDef) {
     jqUnit.asyncTest(testDef.name, function () {
         var command = fluid.stringTemplate(that.options.commandTemplate, testDef);
         exec(command, {cwd: __dirname }, function (error, stdout, stderr) {
@@ -43,11 +41,11 @@ gpii.tests.testem.runner.runSingleTest = function (that, testDef) {
                 var testemOptions = JSON.parse(matches[1]);
 
                 if (!testDef.expectedErrors) {
-                    var tapReportPath = gpii.testem.resolvePackageOrCwdRelativePath (testemOptions.reportsDir, "report.tap");
+                    var tapReportPath = fluid.testem.resolvePackageOrCwdRelativePath (testemOptions.reportsDir, "report.tap");
                     jqUnit.assertTrue("There should be a TAP report...", fs.existsSync(tapReportPath));
 
-                    var htmlCoveragePath = gpii.testem.resolvePackageOrCwdRelativePath (testemOptions.reportsDir, "index.html");
-                    var coverageSummaryPath = gpii.testem.resolvePackageOrCwdRelativePath (testemOptions.reportsDir, "coverage-summary.json");
+                    var htmlCoveragePath = fluid.testem.resolvePackageOrCwdRelativePath (testemOptions.reportsDir, "index.html");
+                    var coverageSummaryPath = fluid.testem.resolvePackageOrCwdRelativePath (testemOptions.reportsDir, "coverage-summary.json");
 
                     if (testDef.hasCoverage) {
                         jqUnit.assertTrue("There should be an HTML coverage report...", fs.existsSync(htmlCoveragePath));
@@ -102,7 +100,7 @@ gpii.tests.testem.runner.runSingleTest = function (that, testDef) {
     });
 };
 
-fluid.defaults("gpii.tests.testem.runner", {
+fluid.defaults("fluid.tests.testem.runner", {
     gradeNames: ["fluid.component"],
     commandTemplate: "node ../../node_modules/testem/testem.js ci --file %configFile",
     tests: {
@@ -182,9 +180,9 @@ fluid.defaults("gpii.tests.testem.runner", {
     },
     listeners: {
         "onCreate.runAllTests": {
-            funcName: "gpii.tests.testem.runner.runAllTests",
+            funcName: "fluid.tests.testem.runner.runAllTests",
             args:     ["{that}"]
         }
     }
 });
-gpii.tests.testem.runner();
+fluid.tests.testem.runner();

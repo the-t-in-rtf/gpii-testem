@@ -2,10 +2,9 @@
 "use strict";
 
 var fluid = require("infusion");
-var gpii  = fluid.registerNamespace("gpii");
 var fs    = require("fs");
 
-fluid.registerNamespace("gpii.test.testem");
+fluid.registerNamespace("fluid.test.testem");
 
 /**
  *
@@ -16,7 +15,7 @@ fluid.registerNamespace("gpii.test.testem");
  * @return {Boolean} - Returns `true` if the file is instrumented, and `false` otherwise.
  *
  */
-gpii.test.testem.isInstrumented = function (fullPath) {
+fluid.test.testem.isInstrumented = function (fullPath) {
     var content = fs.readFileSync(fullPath, "utf8");
     return content.indexOf("__coverage__") !== -1;
 };

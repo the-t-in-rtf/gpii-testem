@@ -1,4 +1,4 @@
-# `gpii.testem`
+# `fluid.testem`
 
 This library provides a [Fluid
 component](http://docs.fluidproject.org/infusion/development/UnderstandingInfusionComponents.html) and static functions
@@ -14,7 +14,7 @@ that assist in using [Testem](https://github.com/testem/testem).
 ## Usage instructions
 
 To use this grade from Testem, install this package as a development dependency using a command like
-`npm install --save-dev gpii-testem`.  Note:  There is currently
+`npm install --save-dev fluid-testem`.  Note:  There is currently
 [a bug in newer versions of Testem](https://github.com/testem/testem/issues/1075), if you use anything higher than
 version 1.13.0, you may experience hangs when attempting to quit Testem from the console.
 
@@ -26,18 +26,18 @@ The most basic example of a file might look something like:
 
 ```javascript
 var fluid = require("infusion");
-fluid.require("%gpii-testem");
+fluid.require("%fluid-testem");
 
 var my  = fluid.registerNamespace("my");
 fluid.defaults("my.testem.grade", {
-    gradeNames: ["gpii.testem"],
+    gradeNames: ["fluid.testem"],
     testPages:  ["tests/my-awesome-test.html"]
 });
 
 module.exports = my.testem.grade().getTestemOptions();
 ```
 
-To make use of the code coverage support provided by gpii.testem, you must load the "coverage sender" in your HTML
+To make use of the code coverage support provided by fluid.testem, you must load the "coverage sender" in your HTML
 fixtures.  See [the coverage docs](docs/coverage.md) for details.
 
 Once you have created your configuration javascript file, you can launch Testem with your configuration.
@@ -60,7 +60,7 @@ If you are testing browser code in combination with node code, please see the ex
 
 For more information, check out the documentation links below:
 
-* [The `gpii.testem` Component](docs/testem-component.md)
+* [The `fluid.testem` Component](docs/testem-component.md)
 * [The Testem Lifecycle](docs/testem-lifecycle.md)
 * [Code Coverage](docs/coverage.md)
 
