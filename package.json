@@ -1,6 +1,6 @@
 {
     "name": "fluid-testem",
-    "version": "2.1.13",
+    "version": "2.1.14",
     "description": "A library to assist in using Testem within the Fluid ecosystem.",
     "main": "index.js",
     "nyc": {
