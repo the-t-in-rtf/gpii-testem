@@ -14,8 +14,6 @@ jqUnit.asyncTest("Testing 'safe rollup' with Testem.", function () {
 
         jqUnit.assertEquals("There should be no errors.", null, error);
 
-        jqUnit.assertTrue("Standard error should be empty.", stderr.length === 0);
-
         var expectedPatterns = [
             /ok [0-9]+ .+ - Composition #1: \/tests\/rollup-fixtures\/test1.html/,
             /ok [0-9]+ .+ - Composition #1: \/tests\/rollup-fixtures\/test2.html/,
