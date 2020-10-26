@@ -9,7 +9,7 @@ require("../../");
 jqUnit.asyncTest("Testing 'safe rollup' with Testem.", function () {
     var command = "node node_modules/testem/testem.js ci --file tests/rollup-fixtures/testem.js";
 
-    exec(command, {cwd: fluid.module.resolvePath("%fluid-testem") }, function (error, stdout, stderr) {
+    exec(command, {cwd: fluid.module.resolvePath("%fluid-testem") }, function (error, stdout) {
         jqUnit.start();
 
         jqUnit.assertEquals("There should be no errors.", null, error);
