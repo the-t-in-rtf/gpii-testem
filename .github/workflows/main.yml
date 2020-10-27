@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 
 jobs:
   build:
@@ -13,7 +13,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [12.x]
+        node-version: [12.x, 14.x]
 
     env:
       HEADLESS: true
@@ -30,7 +30,7 @@ jobs:
         run: npm install
 
       - name: Lint Code
-        run: $(npm bin)/grunt lint
+        run: npm run lint
 
       - name: Node Tests
         run: xvfb-run --auto-servernum npm test
