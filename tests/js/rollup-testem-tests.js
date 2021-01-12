@@ -9,12 +9,10 @@ require("../../");
 jqUnit.asyncTest("Testing 'safe rollup' with Testem.", function () {
     var command = "node node_modules/testem/testem.js ci --file tests/rollup-fixtures/testem.js";
 
-    exec(command, {cwd: fluid.module.resolvePath("%fluid-testem") }, function (error, stdout, stderr) {
+    exec(command, {cwd: fluid.module.resolvePath("%fluid-testem") }, function (error, stdout) {
         jqUnit.start();
 
         jqUnit.assertEquals("There should be no errors.", null, error);
-
-        jqUnit.assertTrue("Standard error should be empty.", stderr.length === 0);
 
         var expectedPatterns = [
             /ok [0-9]+ .+ - Composition #1: \/tests\/rollup-fixtures\/test1.html/,
