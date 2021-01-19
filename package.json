@@ -39,8 +39,8 @@
         "eslint": "7.17.0",
         "eslint-config-fluid": "2.0.0",
         "form-data": "3.0.0",
-        "fluid-lint-all": "1.0.0-dev.20210111T144240Z.ee70ce3.GH-1",
-        "fluid-webdriver": "1.1.1",
+        "fluid-lint-all": "1.0.0",
+        "fluid-webdriver": "1.1.2",
         "kettle": "2.0.0",
         "qunitjs": "2.4.1"
     }

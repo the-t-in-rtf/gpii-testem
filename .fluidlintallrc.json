@@ -9,8 +9,10 @@
     "eslint": {
         "md": {
             "options": {
-                "rules": {
-                    "no-redeclare": false
+                "configOverrides": {
+                    "rules": {
+                        "no-redeclare": false
+                    }
                 }
             }
         }
